@@ -27,5 +27,5 @@ networkx==3.4.2               # Representação e análise do grafo de rotas
 simpy==4.1.1                # Simulação de eventos discretos (voos simultâneos)
 
 # ─── Testes ────────────────────────────────────────────────────────────
-pytest==9.0.2               # Framework de testes
+pytest==8.4.2              # Framework de testes
 pytest-cov==7.0.0          # Cobertura de testes

@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "lat": -19.9300,
+    "lon": -43.9500,
+    "peso_kg": 0.5,
+    "prioridade": 1,
+    "descricao": "Insulina - UTI Hospital das Clínicas"
+  },
+  {
+    "id": 2,
+    "lat": -19.9450,
+    "lon": -43.9650,
+    "peso_kg": 0.8,
+    "prioridade": 2,
+    "descricao": "Anti-hipertensivos - UBS Barro Preto"
+  },
+  {
+    "id": 3,
+    "lat": -19.9100,
+    "lon": -43.9200,
+    "peso_kg": 0.3,
+    "prioridade": 2,
+    "descricao": "Antibióticos - UBS Santa Efigênia"
+  },
+  {
+    "id": 4,
+    "lat": -19.9600,
+    "lon": -43.9800,
+    "peso_kg": 1.2,
+    "prioridade": 3,
+    "descricao": "Reabastecimento vitaminas - Farmácia Savassi"
+  },
+  {
+    "id": 5,
+    "lat": -19.9050,
+    "lon": -43.9400,
+    "peso_kg": 0.4,
+    "prioridade": 1,
+    "descricao": "Anticoagulante - UPA Nordeste"
+  }
+]

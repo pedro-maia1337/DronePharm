@@ -16,16 +16,18 @@ pyserial==3.5               # Comunicação serial USB/Bluetooth com Arduino
 
 # ─── Meteorologia em Tempo Real ────────────────────────────────────────
 requests==2.32.5            # Consulta a APIs externas (clima, elevação)
-python-dotenv==1.2.2       # Variáveis de ambiente (chaves de API, portas seriais)
+python-dotenv==1.2.2        # Variáveis de ambiente (chaves de API, portas seriais)
 
 # ─── Visualização de Rotas ─────────────────────────────────────────────
 matplotlib==3.10.8           # Plots 2D das rotas calculadas
-folium==0.20.0             # Mapas interativos HTML com rotas sobrepostas
-networkx==3.4.2               # Representação e análise do grafo de rotas
+folium==0.20.0               # Mapas interativos HTML com rotas sobrepostas
+networkx==3.4.2              # Representação e análise do grafo de rotas
 
 # ─── Simulação ─────────────────────────────────────────────────────────
-simpy==4.1.1                # Simulação de eventos discretos (voos simultâneos)
+simpy==4.1.1                 # Simulação de eventos discretos (voos simultâneos)
 
 # ─── Testes ────────────────────────────────────────────────────────────
-pytest==8.4.2              # Framework de testes
-pytest-cov==7.0.0          # Cobertura de testes
+pytest==8.4.2                # Framework de testes
+pytest-cov==7.0.0            # Cobertura de testes
+
+folium==0.20.0

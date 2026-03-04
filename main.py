@@ -24,6 +24,7 @@ from algorithms.algoritmo_genetico import otimizar_todas_rotas
 from algorithms.custo import calcular_custo_detalhado
 from constraints.verificador import Verificador
 from simulation.simulador import SimuladorVoo
+from view.mapa import gerar_mapa_rotas
 
 # ─── Configuração de logging ──────────────────────────────────────────────────
 logging.basicConfig(
@@ -65,9 +66,11 @@ def imprimir_rotas(rotas_seq: List, rotas_obj: List[Rota], titulo: str = ""):
 # =============================================================================
 
 def executar_pipeline(
-    caminho_pedidos: str = "data/pedidos_exemplo.json",
+    caminho_pedidos: str  = "data/pedidos_exemplo.json",
     simular_voo:     bool = False,
     enviar_drone:    bool = False,
+    gerar_mapa:      bool = True,
+    abrir_mapa:      bool = True,
 ) -> List[Rota]:
     """
     Executa o pipeline completo de roteirização.
@@ -77,6 +80,8 @@ def executar_pipeline(
     caminho_pedidos : caminho para o JSON de pedidos
     simular_voo     : se True, simula o voo da primeira rota
     enviar_drone    : se True, envia rotas para o drone via MAVLink
+    gerar_mapa      : se True, gera mapa HTML interativo com folium
+    abrir_mapa      : se True, abre o mapa no navegador após gerar
 
     Retorna
     -------
@@ -137,7 +142,22 @@ def executar_pipeline(
     print(f"  Pedidos urgentes atendidos: "
           f"{sum(1 for p in pedidos if p.urgente)}/{sum(1 for p in pedidos if p.urgente)}")
 
-    # ─── 7. Simulação (opcional) ──────────────────────────────────────────────
+    # ─── 7. Mapa interativo com Folium ───────────────────────────────────────
+    if gerar_mapa:
+        imprimir_separador("MAPA INTERATIVO — Folium")
+        try:
+            caminho_mapa = gerar_mapa_rotas(
+                drone=drone,
+                pedidos=pedidos,
+                rotas=rotas_ga_obj,
+                caminho="output/mapa_rotas.html",
+                abrir=abrir_mapa,
+            )
+            print(f"  ✓ Mapa gerado: {caminho_mapa}")
+        except ImportError as e:
+            print(f"  ⚠ {e}")
+
+    # ─── 8. Simulação (opcional) ──────────────────────────────────────────────
     if simular_voo and rotas_ga_obj:
         imprimir_separador("SIMULAÇÃO DE VOO — Rota 1")
         rota_sim = rotas_ga_obj[0]
@@ -145,7 +165,7 @@ def executar_pipeline(
         sim = SimuladorVoo(drone_sim, rota_sim, vento_ms=3.0, verbose=True)
         sim.executar()
 
-    # ─── 8. Envio para drone (opcional) ───────────────────────────────────────
+    # ─── 9. Envio para drone (opcional) ───────────────────────────────────────
     if enviar_drone:
         imprimir_separador("ENVIO PARA DRONE — MAVLink")
         from communication.mavlink_sender import MAVLinkSender
@@ -173,8 +193,12 @@ def executar_pipeline(
 if __name__ == "__main__":
     # Para simular o voo, mude simular_voo=True
     # Para enviar ao drone físico, mude enviar_drone=True
+    # Para desabilitar o mapa, mude gerar_mapa=False
+    # Para não abrir o navegador automaticamente, mude abrir_mapa=False
     rotas = executar_pipeline(
         caminho_pedidos="data/pedidos_exemplo.json",
         simular_voo=False,
         enviar_drone=False,
+        gerar_mapa=True,
+        abrir_mapa=True,
     )

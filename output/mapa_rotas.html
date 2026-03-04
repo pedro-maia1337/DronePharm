@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_efd586e1af20c16ee21987c236005525 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.css"/>
+    <script src="https://cdn.jsdelivr.net/gh/ardhi/Leaflet.MousePosition/src/L.Control.MousePosition.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ardhi/Leaflet.MousePosition/src/L.Control.MousePosition.min.css"/>
+    <script src="https://cdn.jsdelivr.net/gh/ljagis/leaflet-measure@2.1.7/dist/leaflet-measure.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ljagis/leaflet-measure@2.1.7/dist/leaflet-measure.min.css"/>
+</head>
+<body>
+    
+    
+        <div id="painel-resumo" style="
+            position:fixed;top:80px;right:12px;z-index:1000;
+            background:white;border-radius:10px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.2);
+            font-family:Arial;font-size:12px;
+            min-width:340px;max-width:400px;
+            border-top:4px solid #1A237E;
+        ">
+            <!-- Cabeçalho -->
+            <div style="
+                background:#1A237E;color:white;
+                padding:10px 14px;border-radius:6px 6px 0 0;
+                display:flex;justify-content:space-between;align-items:center;
+            ">
+                <div>
+                    <div style="font-size:14px;font-weight:bold">✈ DronePharm</div>
+                    <div style="font-size:10px;opacity:0.85">DronePharm — Rotas de Entrega</div>
+                </div>
+                <div style="font-size:10px;opacity:0.75">04/03/2026 20:35</div>
+            </div>
+
+            <!-- Métricas gerais -->
+            <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #eee">
+                
+        <div style="
+            background:#F0F4FF;border-radius:6px;
+            padding:5px 8px;text-align:center;min-width:70px;flex:1;
+        ">
+            <div style="font-size:14px">📦</div>
+            <div style="font-size:15px;font-weight:bold;">5</div>
+            <div style="font-size:9px;color:#666">Pedidos</div>
+        </div>
+                
+        <div style="
+            background:#F0F4FF;border-radius:6px;
+            padding:5px 8px;text-align:center;min-width:70px;flex:1;
+        ">
+            <div style="font-size:14px">✈️</div>
+            <div style="font-size:15px;font-weight:bold;">3</div>
+            <div style="font-size:9px;color:#666">Voos</div>
+        </div>
+                
+        <div style="
+            background:#F0F4FF;border-radius:6px;
+            padding:5px 8px;text-align:center;min-width:70px;flex:1;
+        ">
+            <div style="font-size:14px">🚨</div>
+            <div style="font-size:15px;font-weight:bold;color:#B71C1C;">2</div>
+            <div style="font-size:9px;color:#666">Urgentes</div>
+        </div>
+                
+        <div style="
+            background:#F0F4FF;border-radius:6px;
+            padding:5px 8px;text-align:center;min-width:70px;flex:1;
+        ">
+            <div style="font-size:14px">📏</div>
+            <div style="font-size:15px;font-weight:bold;">27.8 km</div>
+            <div style="font-size:9px;color:#666">Distância</div>
+        </div>
+                
+        <div style="
+            background:#F0F4FF;border-radius:6px;
+            padding:5px 8px;text-align:center;min-width:70px;flex:1;
+        ">
+            <div style="font-size:14px">⏱</div>
+            <div style="font-size:15px;font-weight:bold;">49 min</div>
+            <div style="font-size:9px;color:#666">Tempo</div>
+        </div>
+                
+        <div style="
+            background:#F0F4FF;border-radius:6px;
+            padding:5px 8px;text-align:center;min-width:70px;flex:1;
+        ">
+            <div style="font-size:14px">⚡</div>
+            <div style="font-size:15px;font-weight:bold;">488 Wh</div>
+            <div style="font-size:9px;color:#666">Energia</div>
+        </div>
+            </div>
+
+            <!-- Drone -->
+            <div style="padding:8px 14px;background:#F5F7FA;border-bottom:1px solid #eee;font-size:11px">
+                🤖 <b>DronePharm-01</b> &nbsp;|&nbsp;
+                Capacidade: 2.0 kg &nbsp;|&nbsp;
+                Autonomia: 10.0 km &nbsp;|&nbsp;
+                Bateria: 100%
+            </div>
+
+            <!-- Tabela de voos -->
+            <div style="padding:8px 14px">
+                <div style="font-weight:bold;margin-bottom:6px;color:#1A237E">
+                    Detalhes por Voo
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:11px">
+                    <thead>
+                        <tr style="background:#EEF2FF;color:#1A237E">
+                            <th style="padding:4px 8px;text-align:left">Voo</th>
+                            <th style="padding:4px 8px;text-align:left">Pedidos</th>
+                            <th style="padding:4px 8px;text-align:left">Dist.</th>
+                            <th style="padding:4px 8px;text-align:left">Tempo</th>
+                            <th style="padding:4px 8px;text-align:left">Carga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td style="padding:3px 8px">
+                    <span style="color:#2196F3;font-weight:bold">■ Voo 1</span>
+                </td>
+                <td style="padding:3px 8px">4</td>
+                <td style="padding:3px 8px">13.54 km</td>
+                <td style="padding:3px 8px">23 min</td>
+                <td style="padding:3px 8px">1.20 kg</td>
+            </tr>
+            <tr>
+                <td style="padding:3px 8px">
+                    <span style="color:#4CAF50;font-weight:bold">■ Voo 2</span>
+                </td>
+                <td style="padding:3px 8px">1, 2</td>
+                <td style="padding:3px 8px">8.96 km</td>
+                <td style="padding:3px 8px">16 min</td>
+                <td style="padding:3px 8px">1.30 kg</td>
+            </tr>
+            <tr>
+                <td style="padding:3px 8px">
+                    <span style="color:#FF9800;font-weight:bold">■ Voo 3</span>
+                </td>
+                <td style="padding:3px 8px">5, 3</td>
+                <td style="padding:3px 8px">5.28 km</td>
+                <td style="padding:3px 8px">10 min</td>
+                <td style="padding:3px 8px">0.70 kg</td>
+            </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botão minimizar -->
+            <div style="
+                padding:6px 14px;text-align:right;
+                border-top:1px solid #eee;
+            ">
+                <button onclick="
+                    var corpo=document.getElementById('painel-corpo');
+                    corpo.style.display=corpo.style.display==='none'?'block':'none';
+                    this.textContent=corpo.style.display==='none'?'▼ Expandir':'▲ Minimizar';
+                " style="
+                    font-size:10px;padding:2px 8px;cursor:pointer;
+                    background:#1A237E;color:white;border:none;
+                    border-radius:4px;
+                ">▲ Minimizar</button>
+            </div>
+        </div>
+        
+    
+        <div style="
+            position:fixed;bottom:40px;left:12px;z-index:1000;
+            background:white;border-radius:8px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.2);
+            font-family:Arial;font-size:11px;padding:10px 14px;
+            border-left:4px solid #1A237E;
+        ">
+            <div style="font-weight:bold;color:#1A237E;margin-bottom:6px">
+                Legenda — Prioridade
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+                <div>
+                    <span style="
+                        background:#B71C1C;color:white;
+                        border-radius:50%;padding:1px 6px;font-weight:bold;font-size:10px
+                    ">1</span>
+                    &nbsp; <b>Urgente</b> — UTI / Emergência
+                </div>
+                <div>
+                    <span style="
+                        background:#1565C0;color:white;
+                        border-radius:50%;padding:1px 6px;font-weight:bold;font-size:10px
+                    ">2</span>
+                    &nbsp; <b>Normal</b> — Entrega padrão
+                </div>
+                <div>
+                    <span style="
+                        background:#2E7D32;color:white;
+                        border-radius:50%;padding:1px 6px;font-weight:bold;font-size:10px
+                    ">3</span>
+                    &nbsp; <b>Reabastecimento</b> — Estoque
+                </div>
+                <hr style="margin:4px 0;border-color:#eee">
+                <div>
+                    <span style="color:#1A237E;font-size:14px">🏭</span>
+                    &nbsp; Depósito / Farmácia-polo
+                </div>
+            </div>
+        </div>
+        
+    
+            <div class="folium-map" id="map_efd586e1af20c16ee21987c236005525" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_efd586e1af20c16ee21987c236005525 = L.map(
+                "map_efd586e1af20c16ee21987c236005525",
+                {
+                    center: [-19.927783333333334, -43.94825],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+            L.control.scale().addTo(map_efd586e1af20c16ee21987c236005525);
+
+            
+
+        
+    
+            var tile_layer_51ea3c38ddc7fd5f7628f8f7150af6be = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_51ea3c38ddc7fd5f7628f8f7150af6be.addTo(map_efd586e1af20c16ee21987c236005525);
+        
+    
+            var tile_layer_ba7daeb04d6dd276f5283c12d8147ecc = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+            var mini_map_add27b26260d35fb264014235063c3cf = new L.Control.MiniMap(
+                tile_layer_ba7daeb04d6dd276f5283c12d8147ecc,
+                {
+  "position": "bottomright",
+  "width": 150,
+  "height": 150,
+  "collapsedWidth": 25,
+  "collapsedHeight": 25,
+  "zoomLevelOffset": -5,
+  "centerFixed": false,
+  "zoomAnimation": false,
+  "toggleDisplay": true,
+  "autoToggleDisplay": false,
+  "minimized": false,
+}
+            );
+            map_efd586e1af20c16ee21987c236005525.addControl(mini_map_add27b26260d35fb264014235063c3cf);
+        
+    
+            var mouse_position_b82b15236c1adcc31e00423bd9a9db6c = new L.Control.MousePosition(
+                {
+  "position": "bottomleft",
+  "separator": " | lon: ",
+  "emptyString": "Unavailable",
+  "lngFirst": false,
+  "numDigits": 5,
+  "prefix": "lat: ",
+}
+            );
+            mouse_position_b82b15236c1adcc31e00423bd9a9db6c.options["latFormatter"] =
+                undefined;
+            mouse_position_b82b15236c1adcc31e00423bd9a9db6c.options["lngFormatter"] =
+                undefined;
+            map_efd586e1af20c16ee21987c236005525.addControl(mouse_position_b82b15236c1adcc31e00423bd9a9db6c);
+        
+    
+            var measure_control_a8dd493e648bda3a0a028b901107268b = new L.Control.Measure(
+                {
+  "position": "topright",
+  "primaryLengthUnit": "kilometers",
+  "secondaryLengthUnit": "miles",
+  "primaryAreaUnit": "sqmeters",
+  "secondaryAreaUnit": "acres",
+});
+            map_efd586e1af20c16ee21987c236005525.addControl(measure_control_a8dd493e648bda3a0a028b901107268b);
+
+            // Workaround for using this plugin with Leaflet>=1.8.0
+            // https://github.com/ljagis/leaflet-measure/issues/171
+            L.Control.Measure.include({
+                _setCaptureMarkerIcon: function () {
+                    // disable autopan
+                    this._captureMarker.options.autoPanOnFocus = false;
+                    // default function
+                    this._captureMarker.setIcon(
+                        L.divIcon({
+                            iconSize: this._map.getSize().multiplyBy(2)
+                        })
+                    );
+                },
+            });
+
+        
+    
+            var feature_group_addb7abc2208fe28a6c61a16463273ec = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_9dc30b9066a8c6eeeedc20dee1797e38 = L.marker(
+                [-19.9167, -43.9345],
+                {
+}
+            ).addTo(feature_group_addb7abc2208fe28a6c61a16463273ec);
+        
+    
+            var div_icon_6d1d46981d9c2a6dff59daad4689dffa = L.divIcon({
+  "html": "\n            \u003cdiv style=\"\n                background:#1A237E;\n                border:3px solid white;\n                border-radius:50%;\n                width:22px; height:22px;\n                display:flex; align-items:center; justify-content:center;\n                box-shadow:0 2px 6px rgba(0,0,0,0.5);\n                font-size:12px;\n            \"\u003e\ud83c\udfed\u003c/div\u003e",
+  "iconSize": [28, 28],
+  "iconAnchor": [14, 14],
+  "className": "empty",
+});
+        
+    
+        var popup_1746db396174726a251c4a7b7365f65e = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_7e242423e3d0457be6553cb9cdc66ac6 = $(`<div id="html_7e242423e3d0457be6553cb9cdc66ac6" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:220px">             <h4 style="color:#1A237E;margin:0 0 8px 0">🏭 Depósito Central</h4>             <b>Farmácia Popular Central - BH</b><br>             <hr style="margin:6px 0">             <table style="width:100%;font-size:12px">                 <tr><td>Latitude</td><td><b>-19.916700</b></td></tr>                 <tr><td>Longitude</td><td><b>-43.934500</b></td></tr>                 <tr><td>Drone</td><td><b>DronePharm-01</b></td></tr>                 <tr><td>Capacidade</td><td><b>2.0 kg</b></td></tr>                 <tr><td>Autonomia</td><td><b>10.0 km</b></td></tr>                 <tr><td>Voos planejados</td><td><b>3</b></td></tr>             </table>         </div>         </div>`)[0];
+                popup_1746db396174726a251c4a7b7365f65e.setContent(html_7e242423e3d0457be6553cb9cdc66ac6);
+            
+        
+
+        marker_9dc30b9066a8c6eeeedc20dee1797e38.bindPopup(popup_1746db396174726a251c4a7b7365f65e)
+        ;
+
+        
+    
+    
+            marker_9dc30b9066a8c6eeeedc20dee1797e38.bindTooltip(
+                `<div>
+                     🏭 Farmácia Popular Central - BH
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9dc30b9066a8c6eeeedc20dee1797e38.setIcon(div_icon_6d1d46981d9c2a6dff59daad4689dffa);
+            
+    
+            feature_group_addb7abc2208fe28a6c61a16463273ec.addTo(map_efd586e1af20c16ee21987c236005525);
+        
+    
+            var feature_group_c154c56236620cf13cff6f59fc206d30 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_6567ec032ce349de065ccb6b9525bcba = L.marker(
+                [-19.93, -43.95],
+                {
+}
+            ).addTo(feature_group_c154c56236620cf13cff6f59fc206d30);
+        
+    
+            var div_icon_67c2512150fde969a707a23b5fd6d656 = L.divIcon({
+  "html": "\n                \u003cdiv style=\"\n                    background:#B71C1C;\n                    border:2.5px solid #4CAF50;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e1\u003c/div\u003e",
+  "iconSize": [24, 24],
+  "iconAnchor": [12, 12],
+  "className": "empty",
+});
+        
+    
+        var popup_66b5097d7ab9217b17fa468635718d88 = L.popup({
+  "maxWidth": 280,
+});
+
+        
+            
+                var html_105a16a0118e73c0c564bda8912d75b8 = $(`<div id="html_105a16a0118e73c0c564bda8912d75b8" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#B71C1C;margin:0 0 6px 0">🚨 Pedido #1</h4>                 <b>Insulina - UTI Hospital das Clínicas</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#B71C1C">Urgente (P1)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.5 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>59 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#4CAF50">Voo 2</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.930000,<br>                             -43.950000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_66b5097d7ab9217b17fa468635718d88.setContent(html_105a16a0118e73c0c564bda8912d75b8);
+            
+        
+
+        marker_6567ec032ce349de065ccb6b9525bcba.bindPopup(popup_66b5097d7ab9217b17fa468635718d88)
+        ;
+
+        
+    
+    
+            marker_6567ec032ce349de065ccb6b9525bcba.bindTooltip(
+                `<div>
+                     🚨 Pedido #1 — Urgente (P1) | 0.5kg
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6567ec032ce349de065ccb6b9525bcba.setIcon(div_icon_67c2512150fde969a707a23b5fd6d656);
+            
+    
+            var marker_88fef8d50d12dfcb5031b194584414e3 = L.marker(
+                [-19.945, -43.965],
+                {
+}
+            ).addTo(feature_group_c154c56236620cf13cff6f59fc206d30);
+        
+    
+            var div_icon_b08786689b5e42456920a22168ed21e7 = L.divIcon({
+  "html": "\n                \u003cdiv style=\"\n                    background:#1565C0;\n                    border:2.5px solid #4CAF50;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e2\u003c/div\u003e",
+  "iconSize": [24, 24],
+  "iconAnchor": [12, 12],
+  "className": "empty",
+});
+        
+    
+        var popup_90c9d5efea4f0aa8edba0378cc945b9e = L.popup({
+  "maxWidth": 280,
+});
+
+        
+            
+                var html_2aef310d25d04342960c9cefd44a2342 = $(`<div id="html_2aef310d25d04342960c9cefd44a2342" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #2</h4>                 <b>Anti-hipertensivos - UBS Barro Preto</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.8 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>239 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#4CAF50">Voo 2</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.945000,<br>                             -43.965000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_90c9d5efea4f0aa8edba0378cc945b9e.setContent(html_2aef310d25d04342960c9cefd44a2342);
+            
+        
+
+        marker_88fef8d50d12dfcb5031b194584414e3.bindPopup(popup_90c9d5efea4f0aa8edba0378cc945b9e)
+        ;
+
+        
+    
+    
+            marker_88fef8d50d12dfcb5031b194584414e3.bindTooltip(
+                `<div>
+                     📦 Pedido #2 — Normal (P2) | 0.8kg
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_88fef8d50d12dfcb5031b194584414e3.setIcon(div_icon_b08786689b5e42456920a22168ed21e7);
+            
+    
+            var marker_c10c23782bd1ec46f0c0a3a0f480cd0a = L.marker(
+                [-19.91, -43.92],
+                {
+}
+            ).addTo(feature_group_c154c56236620cf13cff6f59fc206d30);
+        
+    
+            var div_icon_e82d7c41c749ec8799db59e3ccc18af3 = L.divIcon({
+  "html": "\n                \u003cdiv style=\"\n                    background:#1565C0;\n                    border:2.5px solid #FF9800;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e3\u003c/div\u003e",
+  "iconSize": [24, 24],
+  "iconAnchor": [12, 12],
+  "className": "empty",
+});
+        
+    
+        var popup_87ef760a8c9b95144f12c5fd80f9cd04 = L.popup({
+  "maxWidth": 280,
+});
+
+        
+            
+                var html_6a3af4a6fbd007bf2ba4e68c903100f9 = $(`<div id="html_6a3af4a6fbd007bf2ba4e68c903100f9" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #3</h4>                 <b>Antibióticos - UBS Santa Efigênia</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.3 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>239 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF9800">Voo 3</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.910000,<br>                             -43.920000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_87ef760a8c9b95144f12c5fd80f9cd04.setContent(html_6a3af4a6fbd007bf2ba4e68c903100f9);
+            
+        
+
+        marker_c10c23782bd1ec46f0c0a3a0f480cd0a.bindPopup(popup_87ef760a8c9b95144f12c5fd80f9cd04)
+        ;
+
+        
+    
+    
+            marker_c10c23782bd1ec46f0c0a3a0f480cd0a.bindTooltip(
+                `<div>
+                     📦 Pedido #3 — Normal (P2) | 0.3kg
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_c10c23782bd1ec46f0c0a3a0f480cd0a.setIcon(div_icon_e82d7c41c749ec8799db59e3ccc18af3);
+            
+    
+            var marker_ddfbda2cf3239e743892912219f28167 = L.marker(
+                [-19.96, -43.98],
+                {
+}
+            ).addTo(feature_group_c154c56236620cf13cff6f59fc206d30);
+        
+    
+            var div_icon_595025ea5c47be0bb3af4ebdc107eaf4 = L.divIcon({
+  "html": "\n                \u003cdiv style=\"\n                    background:#2E7D32;\n                    border:2.5px solid #2196F3;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e4\u003c/div\u003e",
+  "iconSize": [24, 24],
+  "iconAnchor": [12, 12],
+  "className": "empty",
+});
+        
+    
+        var popup_a90a2caff6dd45a0a77d5ef95b0e284f = L.popup({
+  "maxWidth": 280,
+});
+
+        
+            
+                var html_97abcefe3440fae4b558f0d7a56b3208 = $(`<div id="html_97abcefe3440fae4b558f0d7a56b3208" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#2E7D32;margin:0 0 6px 0">🔄 Pedido #4</h4>                 <b>Reabastecimento vitaminas - Farmácia Savassi</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#2E7D32">Reabastecimento (P3)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>1.2 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>1439 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#2196F3">Voo 1</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.960000,<br>                             -43.980000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_a90a2caff6dd45a0a77d5ef95b0e284f.setContent(html_97abcefe3440fae4b558f0d7a56b3208);
+            
+        
+
+        marker_ddfbda2cf3239e743892912219f28167.bindPopup(popup_a90a2caff6dd45a0a77d5ef95b0e284f)
+        ;
+
+        
+    
+    
+            marker_ddfbda2cf3239e743892912219f28167.bindTooltip(
+                `<div>
+                     🔄 Pedido #4 — Reabastecimento (P3) | 1.2kg
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_ddfbda2cf3239e743892912219f28167.setIcon(div_icon_595025ea5c47be0bb3af4ebdc107eaf4);
+            
+    
+            var marker_11aefcdd2a0281e94d52ab0589d07e9c = L.marker(
+                [-19.905, -43.94],
+                {
+}
+            ).addTo(feature_group_c154c56236620cf13cff6f59fc206d30);
+        
+    
+            var div_icon_c0faf6f295e8e5119b4a1e55aa45df2a = L.divIcon({
+  "html": "\n                \u003cdiv style=\"\n                    background:#B71C1C;\n                    border:2.5px solid #FF9800;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e5\u003c/div\u003e",
+  "iconSize": [24, 24],
+  "iconAnchor": [12, 12],
+  "className": "empty",
+});
+        
+    
+        var popup_cf7ab9d705e5f758b12321de43c14487 = L.popup({
+  "maxWidth": 280,
+});
+
+        
+            
+                var html_eeefee13c50f617376da643645627753 = $(`<div id="html_eeefee13c50f617376da643645627753" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#B71C1C;margin:0 0 6px 0">🚨 Pedido #5</h4>                 <b>Anticoagulante - UPA Nordeste</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#B71C1C">Urgente (P1)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.4 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>59 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF9800">Voo 3</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.905000,<br>                             -43.940000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_cf7ab9d705e5f758b12321de43c14487.setContent(html_eeefee13c50f617376da643645627753);
+            
+        
+
+        marker_11aefcdd2a0281e94d52ab0589d07e9c.bindPopup(popup_cf7ab9d705e5f758b12321de43c14487)
+        ;
+
+        
+    
+    
+            marker_11aefcdd2a0281e94d52ab0589d07e9c.bindTooltip(
+                `<div>
+                     🚨 Pedido #5 — Urgente (P1) | 0.4kg
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_11aefcdd2a0281e94d52ab0589d07e9c.setIcon(div_icon_c0faf6f295e8e5119b4a1e55aa45df2a);
+            
+    
+            feature_group_c154c56236620cf13cff6f59fc206d30.addTo(map_efd586e1af20c16ee21987c236005525);
+        
+    
+            var feature_group_f904532f8556abb89b1cc55d88ff54d5 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var poly_line_4c6420511f6593511f2113252215e3f4 = L.polyline(
+                [[-19.9167, -43.9345], [-19.96, -43.98], [-19.9167, -43.9345]],
+                {"bubblingMouseEvents": true, "color": "#2196F3", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#2196F3", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+        var popup_3c82a58019df09c688699851f024c9c9 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_7571d94b4cb6e2bf7c82ef8b88ba3a2a = $(`<div id="html_7571d94b4cb6e2bf7c82ef8b88ba3a2a" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#2196F3;margin:0 0 8px 0">✈ Voo 1</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 4 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>13.54 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>23.1 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>1.20 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>239.6 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_3c82a58019df09c688699851f024c9c9.setContent(html_7571d94b4cb6e2bf7c82ef8b88ba3a2a);
+            
+        
+
+        poly_line_4c6420511f6593511f2113252215e3f4.bindPopup(popup_3c82a58019df09c688699851f024c9c9)
+        ;
+
+        
+    
+    
+            poly_line_4c6420511f6593511f2113252215e3f4.bindTooltip(
+                `<div>
+                     Voo 1: 4
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_6c94ab441863e4ca6c3b8446b64a7f76 = L.marker(
+                [-19.93835, -43.95725],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_46f995cfabc15167926ce6f3869f8cc9 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-133.5808002827894deg);\n                        font-size:16px;\n                        color:#2196F3;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_6c94ab441863e4ca6c3b8446b64a7f76.bindTooltip(
+                `<div>
+                     Voo 1 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6c94ab441863e4ca6c3b8446b64a7f76.setIcon(div_icon_46f995cfabc15167926ce6f3869f8cc9);
+            
+    
+            var marker_fce74233f7c5b20e0210cc9e6349ca30 = L.marker(
+                [-19.93835, -43.95725],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_b96274f35e29e5a4ebd14bf231e9aeb5 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(46.419199717210596deg);\n                        font-size:16px;\n                        color:#2196F3;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_fce74233f7c5b20e0210cc9e6349ca30.bindTooltip(
+                `<div>
+                     Voo 1 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_fce74233f7c5b20e0210cc9e6349ca30.setIcon(div_icon_b96274f35e29e5a4ebd14bf231e9aeb5);
+            
+    
+            var marker_23cff1b6cf595880fc2f62d5eb820a4b = L.marker(
+                [-19.93113333333333, -43.949666666666666],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_d81d0b0a3cbcb5ba99cbc1944f0739f3 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        background:#2196F3;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 1\u003c/div\u003e",
+  "iconSize": [65, 22],
+  "iconAnchor": [32, 11],
+  "className": "empty",
+});
+        
+    
+            marker_23cff1b6cf595880fc2f62d5eb820a4b.bindTooltip(
+                `<div>
+                     Voo 1 — 13.54 km | 23.1 min
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_23cff1b6cf595880fc2f62d5eb820a4b.setIcon(div_icon_d81d0b0a3cbcb5ba99cbc1944f0739f3);
+            
+    
+            var poly_line_c61ab36c2d830bddd33f88e8e54895a2 = L.polyline(
+                [[-19.9167, -43.9345], [-19.93, -43.95], [-19.945, -43.965], [-19.9167, -43.9345]],
+                {"bubblingMouseEvents": true, "color": "#4CAF50", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#4CAF50", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+        var popup_03cf32fce7da3bc37873c75f56a50a3c = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_35004e7d00d200eff977e3c1705feab7 = $(`<div id="html_35004e7d00d200eff977e3c1705feab7" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#4CAF50;margin:0 0 8px 0">✈ Voo 2</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 1 → 2 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>2</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>8.96 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>15.9 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>1.30 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>160.7 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:green">✓ Sim</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_03cf32fce7da3bc37873c75f56a50a3c.setContent(html_35004e7d00d200eff977e3c1705feab7);
+            
+        
+
+        poly_line_c61ab36c2d830bddd33f88e8e54895a2.bindPopup(popup_03cf32fce7da3bc37873c75f56a50a3c)
+        ;
+
+        
+    
+    
+            poly_line_c61ab36c2d830bddd33f88e8e54895a2.bindTooltip(
+                `<div>
+                     Voo 2: 1 → 2
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_9969fead96af2d41435ed67ca3982b5e = L.marker(
+                [-19.92335, -43.94225],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_6c490c86e14bc847e1e9791910168889 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-130.6317225654083deg);\n                        font-size:16px;\n                        color:#4CAF50;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_9969fead96af2d41435ed67ca3982b5e.bindTooltip(
+                `<div>
+                     Voo 2 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9969fead96af2d41435ed67ca3982b5e.setIcon(div_icon_6c490c86e14bc847e1e9791910168889);
+            
+    
+            var marker_0a28d9879b1e15f19149fbdcada88ff5 = L.marker(
+                [-19.9375, -43.9575],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_bacbde87255609a6e718d082efc75420 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-135.0deg);\n                        font-size:16px;\n                        color:#4CAF50;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_0a28d9879b1e15f19149fbdcada88ff5.bindTooltip(
+                `<div>
+                     Voo 2 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0a28d9879b1e15f19149fbdcada88ff5.setIcon(div_icon_bacbde87255609a6e718d082efc75420);
+            
+    
+            var marker_2965aa9d81d27d68b12227d1d2310131 = L.marker(
+                [-19.93085, -43.94975],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_cc14a5b6221cc3c8629b2231ed7acade = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(47.142720164480316deg);\n                        font-size:16px;\n                        color:#4CAF50;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_2965aa9d81d27d68b12227d1d2310131.bindTooltip(
+                `<div>
+                     Voo 2 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_2965aa9d81d27d68b12227d1d2310131.setIcon(div_icon_cc14a5b6221cc3c8629b2231ed7acade);
+            
+    
+            var marker_ccd93d39c22a50d600c9ea8afe7786cb = L.marker(
+                [-19.9271, -43.946],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_1413eacff46baba68df98b140ace7b7b = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        background:#4CAF50;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 2\u003c/div\u003e",
+  "iconSize": [65, 22],
+  "iconAnchor": [32, 11],
+  "className": "empty",
+});
+        
+    
+            marker_ccd93d39c22a50d600c9ea8afe7786cb.bindTooltip(
+                `<div>
+                     Voo 2 — 8.96 km | 15.9 min
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_ccd93d39c22a50d600c9ea8afe7786cb.setIcon(div_icon_1413eacff46baba68df98b140ace7b7b);
+            
+    
+            var poly_line_a63ea8d6dee0a122dec9ec2174084161 = L.polyline(
+                [[-19.9167, -43.9345], [-19.905, -43.94], [-19.91, -43.92], [-19.9167, -43.9345]],
+                {"bubblingMouseEvents": true, "color": "#FF9800", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#FF9800", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+        var popup_343904f8e4ef049eed5be0535e021b53 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_bb7d54cce6c2a677c1c60fc5dee22aaf = $(`<div id="html_bb7d54cce6c2a677c1c60fc5dee22aaf" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#FF9800;margin:0 0 8px 0">✈ Voo 3</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 5 → 3 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>2</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>5.28 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>9.8 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.70 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>87.4 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:green">✓ Sim</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_343904f8e4ef049eed5be0535e021b53.setContent(html_bb7d54cce6c2a677c1c60fc5dee22aaf);
+            
+        
+
+        poly_line_a63ea8d6dee0a122dec9ec2174084161.bindPopup(popup_343904f8e4ef049eed5be0535e021b53)
+        ;
+
+        
+    
+    
+            poly_line_a63ea8d6dee0a122dec9ec2174084161.bindTooltip(
+                `<div>
+                     Voo 3: 5 → 3
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_b9fa99424b3b5efba77a773cd27c66bd = L.marker(
+                [-19.91085, -43.93725],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_208c7994942151f1bbc5c1179c304920 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-25.177535429630645deg);\n                        font-size:16px;\n                        color:#FF9800;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_b9fa99424b3b5efba77a773cd27c66bd.bindTooltip(
+                `<div>
+                     Voo 3 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_b9fa99424b3b5efba77a773cd27c66bd.setIcon(div_icon_208c7994942151f1bbc5c1179c304920);
+            
+    
+            var marker_9b76f701c882b2a4e00ead6967b76ebb = L.marker(
+                [-19.9075, -43.93],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_b684dcfc3513cdb4b27658110566f8b4 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(104.03624346792648deg);\n                        font-size:16px;\n                        color:#FF9800;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_9b76f701c882b2a4e00ead6967b76ebb.bindTooltip(
+                `<div>
+                     Voo 3 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9b76f701c882b2a4e00ead6967b76ebb.setIcon(div_icon_b684dcfc3513cdb4b27658110566f8b4);
+            
+    
+            var marker_83da44316017ebd6fcc100f135513ffa = L.marker(
+                [-19.91335, -43.92725],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_3d49345b503664339e5db43540c510e0 = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-114.80019337856406deg);\n                        font-size:16px;\n                        color:#FF9800;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
+  "iconSize": [20, 20],
+  "iconAnchor": [10, 10],
+  "className": "empty",
+});
+        
+    
+            marker_83da44316017ebd6fcc100f135513ffa.bindTooltip(
+                `<div>
+                     Voo 3 — sentido de voo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_83da44316017ebd6fcc100f135513ffa.setIcon(div_icon_3d49345b503664339e5db43540c510e0);
+            
+    
+            var marker_6763af8e7f51e53862777d0b1e0a81f2 = L.marker(
+                [-19.9121, -43.932249999999996],
+                {
+}
+            ).addTo(feature_group_f904532f8556abb89b1cc55d88ff54d5);
+        
+    
+            var div_icon_51ceaada54bc525e412fd83a69bfa7ec = L.divIcon({
+  "html": "\n                    \u003cdiv style=\"\n                        background:#FF9800;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 3\u003c/div\u003e",
+  "iconSize": [65, 22],
+  "iconAnchor": [32, 11],
+  "className": "empty",
+});
+        
+    
+            marker_6763af8e7f51e53862777d0b1e0a81f2.bindTooltip(
+                `<div>
+                     Voo 3 — 5.28 km | 9.8 min
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6763af8e7f51e53862777d0b1e0a81f2.setIcon(div_icon_51ceaada54bc525e412fd83a69bfa7ec);
+            
+    
+            feature_group_f904532f8556abb89b1cc55d88ff54d5.addTo(map_efd586e1af20c16ee21987c236005525);
+        
+    
+            var feature_group_8c5e48c7ca918310fa96f095e8abc5ca = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_12dba6061615c31895880a3e44c41263 = L.circle(
+                [-19.9167, -43.9345],
+                {"bubblingMouseEvents": true, "color": "#1A237E", "dashArray": "8", "dashOffset": null, "fill": true, "fillColor": "#1A237E", "fillOpacity": 0.05, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000.0, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_8c5e48c7ca918310fa96f095e8abc5ca);
+        
+    
+            circle_12dba6061615c31895880a3e44c41263.bindTooltip(
+                `<div>
+                     Alcance operacional: 5.0 km (raio)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var layer_control_7a9987a891e495a2af0ff396d2f4ba81_layers = {
+                base_layers : {
+                    "openstreetmap" : tile_layer_51ea3c38ddc7fd5f7628f8f7150af6be,
+                },
+                overlays :  {
+                    "\ud83c\udfed Dep\u00f3sito" : feature_group_addb7abc2208fe28a6c61a16463273ec,
+                    "\ud83d\udce6 Pontos de Entrega" : feature_group_c154c56236620cf13cff6f59fc206d30,
+                    "\u2708\ufe0f Rotas" : feature_group_f904532f8556abb89b1cc55d88ff54d5,
+                    "\ud83d\udce1 Alcance do Drone" : feature_group_8c5e48c7ca918310fa96f095e8abc5ca,
+                },
+            };
+            let layer_control_7a9987a891e495a2af0ff396d2f4ba81 = L.control.layers(
+                layer_control_7a9987a891e495a2af0ff396d2f4ba81_layers.base_layers,
+                layer_control_7a9987a891e495a2af0ff396d2f4ba81_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_efd586e1af20c16ee21987c236005525);
+
+        
+</script>
+</html>

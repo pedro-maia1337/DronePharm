@@ -1,0 +1,27 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="numpy" />
+          <option value="scipy" />
+          <option value="deap" />
+          <option value="haversine" />
+          <option value="shapely" />
+          <option value="geojson" />
+          <option value="pymavlink" />
+          <option value="pyserial" />
+          <option value="requests" />
+          <option value="python-dotenv" />
+          <option value="matplotlib" />
+          <option value="folium" />
+          <option value="networkx" />
+          <option value="simpy" />
+          <option value="pytest" />
+          <option value="pytest-cov" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

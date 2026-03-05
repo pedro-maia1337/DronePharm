@@ -1,0 +1,14 @@
+# Ambiente e Variáveis Sensíveis
+.env
+
+# Python (Arquivos temporários e compilados)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/

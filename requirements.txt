@@ -1,3 +1,5 @@
+# pip install -r requirements.txt
+
 # ─── Núcleo do Algoritmo ───────────────────────────────────────────────
 numpy==2.2.6                # Operações matriciais (matriz de distâncias, fitness)
 scipy==1.15.3               # Otimização matemática auxiliar
@@ -27,7 +29,19 @@ networkx==3.4.2              # Representação e análise do grafo de rotas
 simpy==4.1.1                 # Simulação de eventos discretos (voos simultâneos)
 
 # ─── Testes ────────────────────────────────────────────────────────────
-pytest==8.4.2                # Framework de testes
+pytest==9.0.2               # Framework de testes
 pytest-cov==7.0.0            # Cobertura de testes
+pytest-asyncio==0.23.7
+httpx==0.27.0
 
-folium==0.20.0
+
+# ── Banco de Dados PostgreSQL + PostGIS ────────────────────────────────────────
+sqlalchemy==2.0.31
+asyncpg==0.31.0
+alembic==1.13.2
+
+# ── Servidor FastAPI ───────────────────────────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+#validar depois
+pydantic==2.7.4

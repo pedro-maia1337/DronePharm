@@ -1,14 +1,11 @@
 # =============================================================================
 # banco/repositories/pedido_repo.py
-# Operações de banco para a tabela pedidos
 # =============================================================================
 
 from datetime import datetime
 from typing import List, Optional
-
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from bd.models import Pedido
 
 
@@ -45,6 +42,7 @@ class PedidoRepository:
         prioridade:  Optional[int] = None,
         farmacia_id: Optional[int] = None,
         limite:      int           = 100,
+        offset:      int           = 0,
     ) -> List[Pedido]:
         query = select(Pedido)
         if status:
@@ -53,12 +51,12 @@ class PedidoRepository:
             query = query.where(Pedido.prioridade == prioridade)
         if farmacia_id:
             query = query.where(Pedido.farmacia_id == farmacia_id)
-        query = query.order_by(Pedido.criado_em.desc()).limit(limite)
+        query = query.order_by(Pedido.criado_em.desc()).offset(offset).limit(limite)
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
     async def atualizar_status(self, pedido_id: int, status: str):
-        kwargs = {"status": status}
+        kwargs: dict = {"status": status}
         if status == "entregue":
             kwargs["entregue_em"] = datetime.now()
         await self.db.execute(
@@ -71,8 +69,8 @@ class PedidoRepository:
         status:  str,
         rota_id: Optional[int] = None,
     ):
-        kwargs = {"status": status}
-        if rota_id:
+        kwargs: dict = {"status": status}
+        if rota_id is not None:
             kwargs["rota_id"] = rota_id
         if status == "entregue":
             kwargs["entregue_em"] = datetime.now()

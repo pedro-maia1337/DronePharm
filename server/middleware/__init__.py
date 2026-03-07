@@ -1,0 +1,3 @@
+from server.middleware.logging_middleware import LoggingMiddleware
+from server.middleware.error_handler import ErrorHandlerMiddleware
+from server.middleware.cors_config import configurar_cors

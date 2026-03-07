@@ -126,10 +126,10 @@ class VisualizadorRotas:
         MeasureControl(primary_length_unit="kilometers").add_to(self._mapa)
 
         # ── Grupos de camadas (podem ser ligados/desligados no mapa) ──────────
-        grupo_deposito = folium.FeatureGroup(name="🏭 Depósito", show=True)
-        grupo_pedidos  = folium.FeatureGroup(name="📦 Pontos de Entrega", show=True)
-        grupo_rotas    = folium.FeatureGroup(name="✈️ Rotas", show=True)
-        grupo_alcance  = folium.FeatureGroup(name="📡 Alcance do Drone", show=False)
+        grupo_deposito = folium.FeatureGroup(name="Depósito", show=True)
+        grupo_pedidos  = folium.FeatureGroup(name="Pontos de Entrega", show=True)
+        grupo_rotas    = folium.FeatureGroup(name="Rotas", show=True)
+        grupo_alcance  = folium.FeatureGroup(name="Alcance do Drone", show=False)
 
         # ── Renderiza cada camada ─────────────────────────────────────────────
         self._adicionar_deposito(grupo_deposito)

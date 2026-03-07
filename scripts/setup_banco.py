@@ -79,33 +79,6 @@ async def setup():
                 else:
                     log.warning(f"  ⚠ {ext} não habilitado (não crítico): {e}")
 
-    # ── 3. Cria tabelas ORM ───────────────────────────────────────────────────
-    log.info("Criando tabelas no Azure PostgreSQL...")
-    await init_db()
-
-    # ── 4. Executa migração SQL ───────────────────────────────────────────────
-    log.info("Executando migração SQL inicial (índices, views, seed)...")
-    migration_path = os.path.join(
-        os.path.dirname(__file__), "..", "bd", "migrations", "001_initial.sql"
-    )
-    with open(migration_path, encoding="utf-8") as f:
-        sql = f.read()
-
-    async with engine.begin() as conn:
-        for stmt in sql.split(";"):
-            stmt = stmt.strip()
-            # Ignora comentários e statements vazios
-            if not stmt or stmt.startswith("--"):
-                continue
-            try:
-                await conn.execute(text(stmt))
-            except Exception as e:
-                err = str(e).lower()
-                # Erros esperados em re-execução: "já existe"
-                if any(k in err for k in ("already exists", "já existe", "duplicate")):
-                    continue
-                log.warning(f"SQL ignorado: {e}")
-
     # ── 5. Resumo ─────────────────────────────────────────────────────────────
     host = os.getenv("AZURE_PG_HOST", "?")
     db   = os.getenv("AZURE_PG_DATABASE", "dronepharm")

@@ -1,3 +1,7 @@
+# =============================================================================
+# banco/repositories/rota_repo.py
+# =============================================================================
+
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import select, update
@@ -37,15 +41,22 @@ class RotaRepository:
         result = await self.db.execute(select(Rota).where(Rota.id == rota_id))
         return result.scalar_one_or_none()
 
-    async def listar_recentes(self, limite: int = 50) -> List[Rota]:
+    async def listar_recentes(self, limite: int = 50, drone_id: Optional[str] = None) -> List[Rota]:
+        query = select(Rota).order_by(Rota.criada_em.desc())
+        if drone_id:
+            query = query.where(Rota.drone_id == drone_id)
+        result = await self.db.execute(query.limit(limite))
+        return list(result.scalars().all())
+
+    async def listar_por_status(self, status: str) -> List[Rota]:
         result = await self.db.execute(
-            select(Rota).order_by(Rota.criada_em.desc()).limit(limite)
+            select(Rota).where(Rota.status == status).order_by(Rota.criada_em.desc())
         )
         return list(result.scalars().all())
 
     async def atualizar_status(self, rota_id: int, status: str):
-        kwargs = {"status": status}
-        if status == "concluida":
+        kwargs: dict = {"status": status}
+        if status in ("concluida", "abortada"):
             kwargs["concluida_em"] = datetime.now()
         await self.db.execute(
             update(Rota).where(Rota.id == rota_id).values(**kwargs)

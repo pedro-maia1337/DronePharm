@@ -2,17 +2,31 @@
 # servidor/app.py
 # Servidor central DronePharm — FastAPI
 #
-# Rodar:
-#   uvicorn server.app:app --reload --host 0.0.0.0 --port 8000
+# Rodar (SEMPRE a partir da raiz do projeto):
+#   cd DronePharm
+#   uvicorn servidor.app:app --reload --host 0.0.0.0 --port 8000
 # Docs:
 #   http://localhost:8000/docs
 # =============================================================================
+
+# ── Garante que a raiz do projeto esteja no sys.path ─────────────────────────
+# Necessário para que imports como "from visualizacao.mapa import ..."
+# funcionem independente de como/onde o uvicorn for invocado.
+import sys
+import os
+
+_RAIZ_PROJETO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _RAIZ_PROJETO not in sys.path:
+    sys.path.insert(0, _RAIZ_PROJETO)
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 from contextlib import asynccontextmanager
 import logging
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from server.middleware.logging_middleware import LoggingMiddleware
 from server.middleware.error_handler import ErrorHandlerMiddleware
@@ -37,10 +51,8 @@ async def lifespan(app: FastAPI):
     log.info("Banco de dados conectado.")
 
     # ── Sincroniza depósito do banco → settings em memória ─────────────────
-    # Usa query sem criada_em para ser resiliente caso a coluna ainda não exista.
-    # Execute banco/migrations/003_add_farmacias_criada_em.sql para corrigir.
+    # Usa raw SQL direto (sem ORM) para ser resiliente a colunas faltando.
     from bd.database import AsyncSessionLocal
-    from sqlalchemy import text
     from config import settings as cfg
 
     async with AsyncSessionLocal() as session:
@@ -60,22 +72,20 @@ async def lifespan(app: FastAPI):
                 cfg.DEPOSITO_LONGITUDE = deposito["longitude"]
                 cfg.DEPOSITO_NOME      = deposito["nome"]
                 log.info(
-                    f"Depósito carregado: {deposito['nome']} "
+                    f"Depósito: {deposito['nome']} "
                     f"({deposito['latitude']}, {deposito['longitude']})"
                 )
             else:
                 log.warning(
-                    "Nenhum depósito cadastrado no banco. "
-                    "Cadastre uma farmácia com deposito=true e ativa=true."
+                    "Nenhum depósito ativo no banco. "
+                    "Cadastre uma farmácia com deposito=true via POST /api/v1/farmacias"
                 )
 
         except Exception as exc:
             log.error(
-                f"Falha ao carregar depósito do banco: {exc}\n"
-                "Se o erro for 'column criada_em does not exist', execute:\n"
-                "  psql ... -f banco/migrations/003_add_farmacias_criada_em.sql"
+                f"Falha ao carregar depósito: {exc}\n"
+                "Verifique a conexão com o banco Azure e execute as migrations pendentes."
             )
-            # Não interrompe o servidor — usa coordenadas padrão do settings.py
 
     yield
 

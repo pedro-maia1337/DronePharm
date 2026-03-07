@@ -10,7 +10,6 @@ from bd.models import Farmacia
 
 log = logging.getLogger(__name__)
 
-
 class FarmaciaRepository:
     def __init__(self, db: AsyncSession):
         self.db = db

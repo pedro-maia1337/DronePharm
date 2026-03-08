@@ -11,6 +11,12 @@
 #   python main.py --simular            # simula o voo da primeira rota
 #   python main.py --drone-id=DP-02     # especifica qual drone usar
 #
+# Tests:
+    #pytest tests/test_suite_algoritmos.py
+    #pytest tests/test_suite_api.py
+    #pytest tests/test_suite_distancia.py
+    #pytest tests/test_suite_modelos.py
+#
 # Para iniciar o servidor FastAPI:
 #   uvicorn server.app:app --reload --host 0.0.0.0 --port 8000
 # =============================================================================

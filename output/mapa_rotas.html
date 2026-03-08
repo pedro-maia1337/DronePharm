@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_d8cde7108be851f938ddf90f61450f01 {
+                #map_0cea4177daceeb9b7a7eae9f3aa2e586 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -78,7 +78,7 @@
                     <div style="font-size:14px;font-weight:bold">✈ DronePharm</div>
                     <div style="font-size:10px;opacity:0.85">DronePharm — Rotas de Entrega</div>
                 </div>
-                <div style="font-size:10px;opacity:0.75">07/03/2026 11:52</div>
+                <div style="font-size:10px;opacity:0.75">07/03/2026 19:32</div>
             </div>
 
             <!-- Métricas gerais -->
@@ -290,14 +290,14 @@
         </div>
         
     
-            <div class="folium-map" id="map_d8cde7108be851f938ddf90f61450f01" ></div>
+            <div class="folium-map" id="map_0cea4177daceeb9b7a7eae9f3aa2e586" ></div>
         
 </body>
 <script>
     
     
-            var map_d8cde7108be851f938ddf90f61450f01 = L.map(
-                "map_d8cde7108be851f938ddf90f61450f01",
+            var map_0cea4177daceeb9b7a7eae9f3aa2e586 = L.map(
+                "map_0cea4177daceeb9b7a7eae9f3aa2e586",
                 {
                     center: [-19.913291111111114, -43.95540333333334],
                     crs: L.CRS.EPSG3857,
@@ -309,13 +309,13 @@
 
                 }
             );
-            L.control.scale().addTo(map_d8cde7108be851f938ddf90f61450f01);
+            L.control.scale().addTo(map_0cea4177daceeb9b7a7eae9f3aa2e586);
 
             
 
         
     
-            var tile_layer_fda46825ffeb9229d95a39f56489c8b0 = L.tileLayer(
+            var tile_layer_38dfbb39ff6a9aa30c84ca03f7a46f5d = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {
   "minZoom": 0,
@@ -332,15 +332,15 @@
             );
         
     
-            tile_layer_fda46825ffeb9229d95a39f56489c8b0.addTo(map_d8cde7108be851f938ddf90f61450f01);
+            tile_layer_38dfbb39ff6a9aa30c84ca03f7a46f5d.addTo(map_0cea4177daceeb9b7a7eae9f3aa2e586);
         
     
-            var tile_layer_08dd813c00ac8e5a822c16b6ee3e4379 = L.tileLayer(
+            var tile_layer_193d07cd7ac5d60225aaf8709ad689f4 = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
             );
-            var mini_map_9c4b9bd5031aa71bdb40e5d3bec6ecbf = new L.Control.MiniMap(
-                tile_layer_08dd813c00ac8e5a822c16b6ee3e4379,
+            var mini_map_230d4e1cd8b14dd855493af40342f567 = new L.Control.MiniMap(
+                tile_layer_193d07cd7ac5d60225aaf8709ad689f4,
                 {
   "position": "bottomright",
   "width": 150,
@@ -355,10 +355,10 @@
   "minimized": false,
 }
             );
-            map_d8cde7108be851f938ddf90f61450f01.addControl(mini_map_9c4b9bd5031aa71bdb40e5d3bec6ecbf);
+            map_0cea4177daceeb9b7a7eae9f3aa2e586.addControl(mini_map_230d4e1cd8b14dd855493af40342f567);
         
     
-            var mouse_position_b12354dbddf93371df1766041fd3f573 = new L.Control.MousePosition(
+            var mouse_position_e9adc3e713481d86ab4afd639c1f43e3 = new L.Control.MousePosition(
                 {
   "position": "bottomleft",
   "separator": " | lon: ",
@@ -368,14 +368,14 @@
   "prefix": "lat: ",
 }
             );
-            mouse_position_b12354dbddf93371df1766041fd3f573.options["latFormatter"] =
+            mouse_position_e9adc3e713481d86ab4afd639c1f43e3.options["latFormatter"] =
                 undefined;
-            mouse_position_b12354dbddf93371df1766041fd3f573.options["lngFormatter"] =
+            mouse_position_e9adc3e713481d86ab4afd639c1f43e3.options["lngFormatter"] =
                 undefined;
-            map_d8cde7108be851f938ddf90f61450f01.addControl(mouse_position_b12354dbddf93371df1766041fd3f573);
+            map_0cea4177daceeb9b7a7eae9f3aa2e586.addControl(mouse_position_e9adc3e713481d86ab4afd639c1f43e3);
         
     
-            var measure_control_360122f0e783f384555769a6d3608f2b = new L.Control.Measure(
+            var measure_control_05dd09f90294ec783e9c3757d17a0f54 = new L.Control.Measure(
                 {
   "position": "topright",
   "primaryLengthUnit": "kilometers",
@@ -383,7 +383,7 @@
   "primaryAreaUnit": "sqmeters",
   "secondaryAreaUnit": "acres",
 });
-            map_d8cde7108be851f938ddf90f61450f01.addControl(measure_control_360122f0e783f384555769a6d3608f2b);
+            map_0cea4177daceeb9b7a7eae9f3aa2e586.addControl(measure_control_05dd09f90294ec783e9c3757d17a0f54);
 
             // Workaround for using this plugin with Leaflet>=1.8.0
             // https://github.com/ljagis/leaflet-measure/issues/171
@@ -402,20 +402,20 @@
 
         
     
-            var feature_group_fbaa7182d4d6ec1a709329bcf07fe18e = L.featureGroup(
+            var feature_group_b96912000e341b695e8bff0ed0f7b45f = L.featureGroup(
                 {
 }
             );
         
     
-            var marker_19d31f7ab93738bbcdd9bd147507e621 = L.marker(
+            var marker_81abc242c7956354ae4dfb6ae30004e1 = L.marker(
                 [-19.91854, -43.93698],
                 {
 }
-            ).addTo(feature_group_fbaa7182d4d6ec1a709329bcf07fe18e);
+            ).addTo(feature_group_b96912000e341b695e8bff0ed0f7b45f);
         
     
-            var div_icon_ba359f61e8bfc96cb0fd0ae7f77fe764 = L.divIcon({
+            var div_icon_53f25dbd0436b7145cfc8e3036bca91b = L.divIcon({
   "html": "\n            \u003cdiv style=\"\n                background:#1A237E;\n                border:3px solid white;\n                border-radius:50%;\n                width:22px; height:22px;\n                display:flex; align-items:center; justify-content:center;\n                box-shadow:0 2px 6px rgba(0,0,0,0.5);\n                font-size:12px;\n            \"\u003e\ud83c\udfed\u003c/div\u003e",
   "iconSize": [28, 28],
   "iconAnchor": [14, 14],
@@ -423,24 +423,24 @@
 });
         
     
-        var popup_bda6ae630dba0b27010d53c8040a0d9a = L.popup({
+        var popup_baac992bdddc9be236db9612a17abb9f = L.popup({
   "maxWidth": 260,
 });
 
         
             
-                var html_0a7a33282583084225c16b54201b25eb = $(`<div id="html_0a7a33282583084225c16b54201b25eb" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:220px">             <h4 style="color:#1A237E;margin:0 0 8px 0">🏭 Depósito Central</h4>             <b>Farmácia Popular Central — Polo BH</b><br>             <hr style="margin:6px 0">             <table style="width:100%;font-size:12px">                 <tr><td>Latitude</td><td><b>-19.918540</b></td></tr>                 <tr><td>Longitude</td><td><b>-43.936980</b></td></tr>                 <tr><td>Drone</td><td><b>DronePharm-01</b></td></tr>                 <tr><td>Capacidade</td><td><b>2.0 kg</b></td></tr>                 <tr><td>Autonomia</td><td><b>10.0 km</b></td></tr>                 <tr><td>Voos planejados</td><td><b>7</b></td></tr>             </table>         </div>         </div>`)[0];
-                popup_bda6ae630dba0b27010d53c8040a0d9a.setContent(html_0a7a33282583084225c16b54201b25eb);
+                var html_6086f634e7387fe1f8a4efb44829dbd5 = $(`<div id="html_6086f634e7387fe1f8a4efb44829dbd5" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:220px">             <h4 style="color:#1A237E;margin:0 0 8px 0">🏭 Depósito Central</h4>             <b>Farmácia Popular Central — Polo BH</b><br>             <hr style="margin:6px 0">             <table style="width:100%;font-size:12px">                 <tr><td>Latitude</td><td><b>-19.918540</b></td></tr>                 <tr><td>Longitude</td><td><b>-43.936980</b></td></tr>                 <tr><td>Drone</td><td><b>DronePharm-01</b></td></tr>                 <tr><td>Capacidade</td><td><b>2.0 kg</b></td></tr>                 <tr><td>Autonomia</td><td><b>10.0 km</b></td></tr>                 <tr><td>Voos planejados</td><td><b>7</b></td></tr>             </table>         </div>         </div>`)[0];
+                popup_baac992bdddc9be236db9612a17abb9f.setContent(html_6086f634e7387fe1f8a4efb44829dbd5);
             
         
 
-        marker_19d31f7ab93738bbcdd9bd147507e621.bindPopup(popup_bda6ae630dba0b27010d53c8040a0d9a)
+        marker_81abc242c7956354ae4dfb6ae30004e1.bindPopup(popup_baac992bdddc9be236db9612a17abb9f)
         ;
 
         
     
     
-            marker_19d31f7ab93738bbcdd9bd147507e621.bindTooltip(
+            marker_81abc242c7956354ae4dfb6ae30004e1.bindTooltip(
                 `<div>
                      🏭 Farmácia Popular Central — Polo BH
                  </div>`,
@@ -450,26 +450,26 @@
             );
         
     
-                marker_19d31f7ab93738bbcdd9bd147507e621.setIcon(div_icon_ba359f61e8bfc96cb0fd0ae7f77fe764);
+                marker_81abc242c7956354ae4dfb6ae30004e1.setIcon(div_icon_53f25dbd0436b7145cfc8e3036bca91b);
             
     
-            feature_group_fbaa7182d4d6ec1a709329bcf07fe18e.addTo(map_d8cde7108be851f938ddf90f61450f01);
+            feature_group_b96912000e341b695e8bff0ed0f7b45f.addTo(map_0cea4177daceeb9b7a7eae9f3aa2e586);
         
     
-            var feature_group_5e4f2a4100c738a5ac7bd2321948e35d = L.featureGroup(
+            var feature_group_1ca5a3475ce83cc678bfbc0631c72d5e = L.featureGroup(
                 {
 }
             );
         
     
-            var marker_8e39b4245cbf4a4e18dddedc00f83001 = L.marker(
+            var marker_92dc85fbe1ccee9f7f6dea76bce0af02 = L.marker(
                 [-19.86718, -43.96605],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_09924ad0896ac4d7527055268d993b31 = L.divIcon({
+            var div_icon_02a9965f36ee9e78ae385b69525e9a1f = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#B71C1C;\n                    border:2.5px solid #2196F3;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e17\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -477,24 +477,24 @@
 });
         
     
-        var popup_b7b1dfe3df890572b8d22caff733b972 = L.popup({
+        var popup_a360fc91b314d0cdc2a299b66db40d68 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_a84bced2bda00ff6f9b9f1640f366ce7 = $(`<div id="html_a84bced2bda00ff6f9b9f1640f366ce7" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#B71C1C;margin:0 0 6px 0">🚨 Pedido #17</h4>                 <b>Insulina NPH 100UI/mL — paciente UTI</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#B71C1C">Urgente (P1)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.35 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#2196F3">Voo 1</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.867180,<br>                             -43.966050                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_b7b1dfe3df890572b8d22caff733b972.setContent(html_a84bced2bda00ff6f9b9f1640f366ce7);
+                var html_32f4170520e69d2a4ee57d36ed8aa543 = $(`<div id="html_32f4170520e69d2a4ee57d36ed8aa543" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#B71C1C;margin:0 0 6px 0">🚨 Pedido #17</h4>                 <b>Insulina NPH 100UI/mL — paciente UTI</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#B71C1C">Urgente (P1)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.35 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#2196F3">Voo 1</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.867180,<br>                             -43.966050                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_a360fc91b314d0cdc2a299b66db40d68.setContent(html_32f4170520e69d2a4ee57d36ed8aa543);
             
         
 
-        marker_8e39b4245cbf4a4e18dddedc00f83001.bindPopup(popup_b7b1dfe3df890572b8d22caff733b972)
+        marker_92dc85fbe1ccee9f7f6dea76bce0af02.bindPopup(popup_a360fc91b314d0cdc2a299b66db40d68)
         ;
 
         
     
     
-            marker_8e39b4245cbf4a4e18dddedc00f83001.bindTooltip(
+            marker_92dc85fbe1ccee9f7f6dea76bce0af02.bindTooltip(
                 `<div>
                      🚨 Pedido #17 — Urgente (P1) | 0.35kg
                  </div>`,
@@ -504,17 +504,17 @@
             );
         
     
-                marker_8e39b4245cbf4a4e18dddedc00f83001.setIcon(div_icon_09924ad0896ac4d7527055268d993b31);
+                marker_92dc85fbe1ccee9f7f6dea76bce0af02.setIcon(div_icon_02a9965f36ee9e78ae385b69525e9a1f);
             
     
-            var marker_38628648be123c870e2c17253b643e09 = L.marker(
+            var marker_99cec99dcfcdfc839d076c28610829c9 = L.marker(
                 [-19.9387, -43.9322],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_8fb715551141f31a38faf4a3c50bbe96 = L.divIcon({
+            var div_icon_7fd2fd7f7a78bf532e5bf30fd691237e = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#B71C1C;\n                    border:2.5px solid #4CAF50;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e18\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -522,24 +522,24 @@
 });
         
     
-        var popup_d6cda770d43fa77a65c921548edb7988 = L.popup({
+        var popup_7a2c5daedb59c9e45a64301b8bfd9dd4 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_532a3154176eb2e7250857199cf3e562 = $(`<div id="html_532a3154176eb2e7250857199cf3e562" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#B71C1C;margin:0 0 6px 0">🚨 Pedido #18</h4>                 <b>Adrenalina 1mg/mL — emergência</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#B71C1C">Urgente (P1)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.5 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#4CAF50">Voo 2</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.938700,<br>                             -43.932200                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_d6cda770d43fa77a65c921548edb7988.setContent(html_532a3154176eb2e7250857199cf3e562);
+                var html_2b367ce43e9ba994388e74f12752bb96 = $(`<div id="html_2b367ce43e9ba994388e74f12752bb96" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#B71C1C;margin:0 0 6px 0">🚨 Pedido #18</h4>                 <b>Adrenalina 1mg/mL — emergência</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#B71C1C">Urgente (P1)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.5 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#4CAF50">Voo 2</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.938700,<br>                             -43.932200                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_7a2c5daedb59c9e45a64301b8bfd9dd4.setContent(html_2b367ce43e9ba994388e74f12752bb96);
             
         
 
-        marker_38628648be123c870e2c17253b643e09.bindPopup(popup_d6cda770d43fa77a65c921548edb7988)
+        marker_99cec99dcfcdfc839d076c28610829c9.bindPopup(popup_7a2c5daedb59c9e45a64301b8bfd9dd4)
         ;
 
         
     
     
-            marker_38628648be123c870e2c17253b643e09.bindTooltip(
+            marker_99cec99dcfcdfc839d076c28610829c9.bindTooltip(
                 `<div>
                      🚨 Pedido #18 — Urgente (P1) | 0.5kg
                  </div>`,
@@ -549,17 +549,17 @@
             );
         
     
-                marker_38628648be123c870e2c17253b643e09.setIcon(div_icon_8fb715551141f31a38faf4a3c50bbe96);
+                marker_99cec99dcfcdfc839d076c28610829c9.setIcon(div_icon_7fd2fd7f7a78bf532e5bf30fd691237e);
             
     
-            var marker_7b2c2e7ddaaba672fb3c0b9f6a2752bc = L.marker(
+            var marker_5ae1d339ddbf7df04b098893c08faca0 = L.marker(
                 [-19.925, -43.93],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_1730e949e06f2841f828e19052e0d5e7 = L.divIcon({
+            var div_icon_5f3edb98ce311ead0580dfc6175039b2 = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#1565C0;\n                    border:2.5px solid #FF5722;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e19\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -567,24 +567,24 @@
 });
         
     
-        var popup_dd7c0381a17d6553a9b468f235142099 = L.popup({
+        var popup_bc2949b9574c2a77afb22770e7cf34a4 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_f2b34df1f3242a9956e958d966dd9435 = $(`<div id="html_f2b34df1f3242a9956e958d966dd9435" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #19</h4>                 <b>Metformina 500mg — caixa 60 comprimidos</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.8 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF5722">Voo 7</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.925000,<br>                             -43.930000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_dd7c0381a17d6553a9b468f235142099.setContent(html_f2b34df1f3242a9956e958d966dd9435);
+                var html_d45bab4e896604d1a2158e55d7bbdcd8 = $(`<div id="html_d45bab4e896604d1a2158e55d7bbdcd8" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #19</h4>                 <b>Metformina 500mg — caixa 60 comprimidos</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.8 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF5722">Voo 7</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.925000,<br>                             -43.930000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_bc2949b9574c2a77afb22770e7cf34a4.setContent(html_d45bab4e896604d1a2158e55d7bbdcd8);
             
         
 
-        marker_7b2c2e7ddaaba672fb3c0b9f6a2752bc.bindPopup(popup_dd7c0381a17d6553a9b468f235142099)
+        marker_5ae1d339ddbf7df04b098893c08faca0.bindPopup(popup_bc2949b9574c2a77afb22770e7cf34a4)
         ;
 
         
     
     
-            marker_7b2c2e7ddaaba672fb3c0b9f6a2752bc.bindTooltip(
+            marker_5ae1d339ddbf7df04b098893c08faca0.bindTooltip(
                 `<div>
                      📦 Pedido #19 — Normal (P2) | 0.8kg
                  </div>`,
@@ -594,17 +594,17 @@
             );
         
     
-                marker_7b2c2e7ddaaba672fb3c0b9f6a2752bc.setIcon(div_icon_1730e949e06f2841f828e19052e0d5e7);
+                marker_5ae1d339ddbf7df04b098893c08faca0.setIcon(div_icon_5f3edb98ce311ead0580dfc6175039b2);
             
     
-            var marker_48db26cfd1cbc26e9256cf7ef7fbd4c9 = L.marker(
+            var marker_0761725c115ac9b99d6a73e7c097eaa3 = L.marker(
                 [-19.87, -43.972],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_ba08e98c69ba69efb1b3152dd9d4cad1 = L.divIcon({
+            var div_icon_7a815e25916da24f31890dd23de57662 = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#1565C0;\n                    border:2.5px solid #FF9800;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e20\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -612,24 +612,24 @@
 });
         
     
-        var popup_0b1f385cf99e5313de548fecefb1a86f = L.popup({
+        var popup_dd9a7cdad6b75a520dff6acfc526a157 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_da029175ede7b4109f1e74b87d166c86 = $(`<div id="html_da029175ede7b4109f1e74b87d166c86" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #20</h4>                 <b>Losartana 50mg — caixa 30 comprimidos</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.4 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF9800">Voo 3</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.870000,<br>                             -43.972000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_0b1f385cf99e5313de548fecefb1a86f.setContent(html_da029175ede7b4109f1e74b87d166c86);
+                var html_84ef257889d1db1ad4e4618c5b4cdfb9 = $(`<div id="html_84ef257889d1db1ad4e4618c5b4cdfb9" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #20</h4>                 <b>Losartana 50mg — caixa 30 comprimidos</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.4 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF9800">Voo 3</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.870000,<br>                             -43.972000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_dd9a7cdad6b75a520dff6acfc526a157.setContent(html_84ef257889d1db1ad4e4618c5b4cdfb9);
             
         
 
-        marker_48db26cfd1cbc26e9256cf7ef7fbd4c9.bindPopup(popup_0b1f385cf99e5313de548fecefb1a86f)
+        marker_0761725c115ac9b99d6a73e7c097eaa3.bindPopup(popup_dd9a7cdad6b75a520dff6acfc526a157)
         ;
 
         
     
     
-            marker_48db26cfd1cbc26e9256cf7ef7fbd4c9.bindTooltip(
+            marker_0761725c115ac9b99d6a73e7c097eaa3.bindTooltip(
                 `<div>
                      📦 Pedido #20 — Normal (P2) | 0.4kg
                  </div>`,
@@ -639,17 +639,17 @@
             );
         
     
-                marker_48db26cfd1cbc26e9256cf7ef7fbd4c9.setIcon(div_icon_ba08e98c69ba69efb1b3152dd9d4cad1);
+                marker_0761725c115ac9b99d6a73e7c097eaa3.setIcon(div_icon_7a815e25916da24f31890dd23de57662);
             
     
-            var marker_af43890056d51edc20a0283feabdc580 = L.marker(
+            var marker_506ee353ec71ec4ae1f5a1004e5c5eae = L.marker(
                 [-19.832, -43.958],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_7ce827fbd4a49e98aa225cd06a10fbfe = L.divIcon({
+            var div_icon_f78fa8a300c23c6bd89306a9c2b200ee = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#1565C0;\n                    border:2.5px solid #9C27B0;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e21\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -657,24 +657,24 @@
 });
         
     
-        var popup_6b46caeb55c09b252350a0d6467a0454 = L.popup({
+        var popup_be3b53eaffc30c36ee2b1000e2e245d5 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_6c6dff9a83783c27b463ec5a6cdf9096 = $(`<div id="html_6c6dff9a83783c27b463ec5a6cdf9096" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #21</h4>                 <b>Atenolol 25mg — caixa 30 comprimidos</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.55 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#9C27B0">Voo 4</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.832000,<br>                             -43.958000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_6b46caeb55c09b252350a0d6467a0454.setContent(html_6c6dff9a83783c27b463ec5a6cdf9096);
+                var html_4aed4875c20ef28c14ecd70ac36b4c75 = $(`<div id="html_4aed4875c20ef28c14ecd70ac36b4c75" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #21</h4>                 <b>Atenolol 25mg — caixa 30 comprimidos</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.55 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#9C27B0">Voo 4</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.832000,<br>                             -43.958000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_be3b53eaffc30c36ee2b1000e2e245d5.setContent(html_4aed4875c20ef28c14ecd70ac36b4c75);
             
         
 
-        marker_af43890056d51edc20a0283feabdc580.bindPopup(popup_6b46caeb55c09b252350a0d6467a0454)
+        marker_506ee353ec71ec4ae1f5a1004e5c5eae.bindPopup(popup_be3b53eaffc30c36ee2b1000e2e245d5)
         ;
 
         
     
     
-            marker_af43890056d51edc20a0283feabdc580.bindTooltip(
+            marker_506ee353ec71ec4ae1f5a1004e5c5eae.bindTooltip(
                 `<div>
                      📦 Pedido #21 — Normal (P2) | 0.55kg
                  </div>`,
@@ -684,17 +684,17 @@
             );
         
     
-                marker_af43890056d51edc20a0283feabdc580.setIcon(div_icon_7ce827fbd4a49e98aa225cd06a10fbfe);
+                marker_506ee353ec71ec4ae1f5a1004e5c5eae.setIcon(div_icon_f78fa8a300c23c6bd89306a9c2b200ee);
             
     
-            var marker_3730e35e1882abe9b9b8a1692cdd0a3f = L.marker(
+            var marker_aa4168431d8e7c27a1208e1559be20be = L.marker(
                 [-20.0045, -44.0412],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_30fb1abb10536b6d0f7a35c3f4205707 = L.divIcon({
+            var div_icon_1bec86e4f4d2342a64b21e4778eb9644 = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#1565C0;\n                    border:2.5px solid #F44336;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e22\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -702,24 +702,24 @@
 });
         
     
-        var popup_880a9f4d4fd191b5dc8c6c180ff80214 = L.popup({
+        var popup_6a9d11cacf9daa87986e038946823555 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_2a2675bdb28134ec6a02f06c01a4672f = $(`<div id="html_2a2675bdb28134ec6a02f06c01a4672f" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #22</h4>                 <b>Amoxicilina 500mg — caixa 21 cápsulas</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.7 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#F44336">Voo 5</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -20.004500,<br>                             -44.041200                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_880a9f4d4fd191b5dc8c6c180ff80214.setContent(html_2a2675bdb28134ec6a02f06c01a4672f);
+                var html_ac70ba3e11ff0a2b17657a29ef76fd5c = $(`<div id="html_ac70ba3e11ff0a2b17657a29ef76fd5c" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#1565C0;margin:0 0 6px 0">📦 Pedido #22</h4>                 <b>Amoxicilina 500mg — caixa 21 cápsulas</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#1565C0">Normal (P2)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.7 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#F44336">Voo 5</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -20.004500,<br>                             -44.041200                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_6a9d11cacf9daa87986e038946823555.setContent(html_ac70ba3e11ff0a2b17657a29ef76fd5c);
             
         
 
-        marker_3730e35e1882abe9b9b8a1692cdd0a3f.bindPopup(popup_880a9f4d4fd191b5dc8c6c180ff80214)
+        marker_aa4168431d8e7c27a1208e1559be20be.bindPopup(popup_6a9d11cacf9daa87986e038946823555)
         ;
 
         
     
     
-            marker_3730e35e1882abe9b9b8a1692cdd0a3f.bindTooltip(
+            marker_aa4168431d8e7c27a1208e1559be20be.bindTooltip(
                 `<div>
                      📦 Pedido #22 — Normal (P2) | 0.7kg
                  </div>`,
@@ -729,17 +729,17 @@
             );
         
     
-                marker_3730e35e1882abe9b9b8a1692cdd0a3f.setIcon(div_icon_30fb1abb10536b6d0f7a35c3f4205707);
+                marker_aa4168431d8e7c27a1208e1559be20be.setIcon(div_icon_1bec86e4f4d2342a64b21e4778eb9644);
             
     
-            var marker_7cbedc89d57558556dc9b9b89d9cad16 = L.marker(
+            var marker_6a67db959f80b10788561a52e9c232a5 = L.marker(
                 [-19.9387, -43.9322],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_ecff4dd64fceead9f7aa963bd1d715d6 = L.divIcon({
+            var div_icon_66e2108be06eed52cc791444084e374a = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#2E7D32;\n                    border:2.5px solid #00BCD4;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e23\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -747,24 +747,24 @@
 });
         
     
-        var popup_95b044b2213683986d04323059201303 = L.popup({
+        var popup_f8df60fc275b2bd6f5b3995f3c843c74 = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_d5585869849b33dd40b44ae89981be00 = $(`<div id="html_d5585869849b33dd40b44ae89981be00" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#2E7D32;margin:0 0 6px 0">🔄 Pedido #23</h4>                 <b>Kit reabastecimento — dipirona, paracetamol, ibuprofeno</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#2E7D32">Reabastecimento (P3)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>1.2 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>124 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#00BCD4">Voo 6</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.938700,<br>                             -43.932200                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_95b044b2213683986d04323059201303.setContent(html_d5585869849b33dd40b44ae89981be00);
+                var html_48ae2eb938b6f2669d11b4f26347739e = $(`<div id="html_48ae2eb938b6f2669d11b4f26347739e" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#2E7D32;margin:0 0 6px 0">🔄 Pedido #23</h4>                 <b>Kit reabastecimento — dipirona, paracetamol, ibuprofeno</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#2E7D32">Reabastecimento (P3)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>1.2 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#00BCD4">Voo 6</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.938700,<br>                             -43.932200                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_f8df60fc275b2bd6f5b3995f3c843c74.setContent(html_48ae2eb938b6f2669d11b4f26347739e);
             
         
 
-        marker_7cbedc89d57558556dc9b9b89d9cad16.bindPopup(popup_95b044b2213683986d04323059201303)
+        marker_6a67db959f80b10788561a52e9c232a5.bindPopup(popup_f8df60fc275b2bd6f5b3995f3c843c74)
         ;
 
         
     
     
-            marker_7cbedc89d57558556dc9b9b89d9cad16.bindTooltip(
+            marker_6a67db959f80b10788561a52e9c232a5.bindTooltip(
                 `<div>
                      🔄 Pedido #23 — Reabastecimento (P3) | 1.2kg
                  </div>`,
@@ -774,17 +774,17 @@
             );
         
     
-                marker_7cbedc89d57558556dc9b9b89d9cad16.setIcon(div_icon_ecff4dd64fceead9f7aa963bd1d715d6);
+                marker_6a67db959f80b10788561a52e9c232a5.setIcon(div_icon_66e2108be06eed52cc791444084e374a);
             
     
-            var marker_0fb0c8524f48b3ba1afafb5b0e7a9ec9 = L.marker(
+            var marker_4cd4a26886b9b80243e5b30c1f4db0c6 = L.marker(
                 [-19.925, -43.93],
                 {
 }
-            ).addTo(feature_group_5e4f2a4100c738a5ac7bd2321948e35d);
+            ).addTo(feature_group_1ca5a3475ce83cc678bfbc0631c72d5e);
         
     
-            var div_icon_42b0a7057c2895da534c292499e2686a = L.divIcon({
+            var div_icon_e11231386bb385ab66d6fe415cef242d = L.divIcon({
   "html": "\n                \u003cdiv style=\"\n                    background:#2E7D32;\n                    border:2.5px solid #FF5722;\n                    border-radius:50%;\n                    width:20px; height:20px;\n                    display:flex; align-items:center; justify-content:center;\n                    box-shadow:0 2px 5px rgba(0,0,0,0.4);\n                    font-size:11px;\n                    color:white;\n                    font-weight:bold;\n                \"\u003e24\u003c/div\u003e",
   "iconSize": [24, 24],
   "iconAnchor": [12, 12],
@@ -792,24 +792,24 @@
 });
         
     
-        var popup_5f6d0631ea831cb121aa40795773fd9a = L.popup({
+        var popup_31344857ac329db25d479d20afbed6cc = L.popup({
   "maxWidth": 280,
 });
 
         
             
-                var html_136480779d408b384d1bc447c3dea1ea = $(`<div id="html_136480779d408b384d1bc447c3dea1ea" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#2E7D32;margin:0 0 6px 0">🔄 Pedido #24</h4>                 <b>Vitamina D3 2000UI — frasco 60 cápsulas</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#2E7D32">Reabastecimento (P3)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.9 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>124 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF5722">Voo 7</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.925000,<br>                             -43.930000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
-                popup_5f6d0631ea831cb121aa40795773fd9a.setContent(html_136480779d408b384d1bc447c3dea1ea);
+                var html_c39629af273525b83feb23533d9fb6e5 = $(`<div id="html_c39629af273525b83feb23533d9fb6e5" style="width: 100.0%; height: 100.0%;">             <div style="font-family:Arial;min-width:240px">                 <h4 style="color:#2E7D32;margin:0 0 6px 0">🔄 Pedido #24</h4>                 <b>Vitamina D3 2000UI — frasco 60 cápsulas</b><br>                 <hr style="margin:6px 0">                 <table style="width:100%;font-size:12px;border-collapse:collapse">                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Prioridade</td>                         <td style="padding:3px 6px"><b style="color:#2E7D32">Reabastecimento (P3)</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Peso</td>                         <td style="padding:3px 6px"><b>0.9 kg</b></td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Tempo restante</td>                         <td style="padding:3px 6px"><b>0 min</b></td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Voo designado</td>                         <td style="padding:3px 6px">                             <b style="color:#FF5722">Voo 7</b>                         </td>                     </tr>                     <tr style="background:#f5f5f5">                         <td style="padding:3px 6px">Coordenadas</td>                         <td style="padding:3px 6px;font-size:10px">                             -19.925000,<br>                             -43.930000                         </td>                     </tr>                     <tr>                         <td style="padding:3px 6px">Status</td>                         <td style="padding:3px 6px">                             <b style="color:orange">⏳ Pendente</b>                         </td>                     </tr>                 </table>             </div>             </div>`)[0];
+                popup_31344857ac329db25d479d20afbed6cc.setContent(html_c39629af273525b83feb23533d9fb6e5);
             
         
 
-        marker_0fb0c8524f48b3ba1afafb5b0e7a9ec9.bindPopup(popup_5f6d0631ea831cb121aa40795773fd9a)
+        marker_4cd4a26886b9b80243e5b30c1f4db0c6.bindPopup(popup_31344857ac329db25d479d20afbed6cc)
         ;
 
         
     
     
-            marker_0fb0c8524f48b3ba1afafb5b0e7a9ec9.bindTooltip(
+            marker_4cd4a26886b9b80243e5b30c1f4db0c6.bindTooltip(
                 `<div>
                      🔄 Pedido #24 — Reabastecimento (P3) | 0.9kg
                  </div>`,
@@ -819,42 +819,42 @@
             );
         
     
-                marker_0fb0c8524f48b3ba1afafb5b0e7a9ec9.setIcon(div_icon_42b0a7057c2895da534c292499e2686a);
+                marker_4cd4a26886b9b80243e5b30c1f4db0c6.setIcon(div_icon_e11231386bb385ab66d6fe415cef242d);
             
     
-            feature_group_5e4f2a4100c738a5ac7bd2321948e35d.addTo(map_d8cde7108be851f938ddf90f61450f01);
+            feature_group_1ca5a3475ce83cc678bfbc0631c72d5e.addTo(map_0cea4177daceeb9b7a7eae9f3aa2e586);
         
     
-            var feature_group_9fb042dcafba48087f08fa4ec1e245de = L.featureGroup(
+            var feature_group_bf495d0b8275c9c494a442842a08d7fc = L.featureGroup(
                 {
 }
             );
         
     
-            var poly_line_bee95f4a0e0a4340dde1cce131e49386 = L.polyline(
+            var poly_line_280638bc075e42c9cc4c12425d865a12 = L.polyline(
                 [[-19.91854, -43.93698], [-19.86718, -43.96605], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#2196F3", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#2196F3", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_c446c0de0828e5c5cea40b62f372f378 = L.popup({
+        var popup_07bd0e6c49d85f6dc8a57d96c8389361 = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_a8bf024109d603ba648aec9d830fd832 = $(`<div id="html_a8bf024109d603ba648aec9d830fd832" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#2196F3;margin:0 0 8px 0">✈ Voo 1</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 17 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>12.94 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>22.1 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.35 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>204.3 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_c446c0de0828e5c5cea40b62f372f378.setContent(html_a8bf024109d603ba648aec9d830fd832);
+                var html_62ef29a2f7663e0859d6bf999c9404e3 = $(`<div id="html_62ef29a2f7663e0859d6bf999c9404e3" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#2196F3;margin:0 0 8px 0">✈ Voo 1</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 17 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>12.94 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>22.1 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.35 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>204.3 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_07bd0e6c49d85f6dc8a57d96c8389361.setContent(html_62ef29a2f7663e0859d6bf999c9404e3);
             
         
 
-        poly_line_bee95f4a0e0a4340dde1cce131e49386.bindPopup(popup_c446c0de0828e5c5cea40b62f372f378)
+        poly_line_280638bc075e42c9cc4c12425d865a12.bindPopup(popup_07bd0e6c49d85f6dc8a57d96c8389361)
         ;
 
         
     
     
-            poly_line_bee95f4a0e0a4340dde1cce131e49386.bindTooltip(
+            poly_line_280638bc075e42c9cc4c12425d865a12.bindTooltip(
                 `<div>
                      Voo 1: 17
                  </div>`,
@@ -864,14 +864,14 @@
             );
         
     
-            var marker_d15e1e82990dc5eda2dd2023a8d50a28 = L.marker(
+            var marker_470e240c19ee670762502db9afc544e3 = L.marker(
                 [-19.89286, -43.951515],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_e41cc725c69c173e5ebc7d144473d43c = L.divIcon({
+            var div_icon_121bdffabfd7197b48598a335f9b5fd3 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-29.51006384315277deg);\n                        font-size:16px;\n                        color:#2196F3;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -879,7 +879,7 @@
 });
         
     
-            marker_d15e1e82990dc5eda2dd2023a8d50a28.bindTooltip(
+            marker_470e240c19ee670762502db9afc544e3.bindTooltip(
                 `<div>
                      Voo 1 — sentido de voo
                  </div>`,
@@ -889,17 +889,17 @@
             );
         
     
-                marker_d15e1e82990dc5eda2dd2023a8d50a28.setIcon(div_icon_e41cc725c69c173e5ebc7d144473d43c);
+                marker_470e240c19ee670762502db9afc544e3.setIcon(div_icon_121bdffabfd7197b48598a335f9b5fd3);
             
     
-            var marker_f9e0c4229fffaf8a2765d886663a49fe = L.marker(
+            var marker_dad10f5a6d32876092c8feee2d3f68e3 = L.marker(
                 [-19.89286, -43.951515],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_a3cdff4527437525797acaf5aaeaa855 = L.divIcon({
+            var div_icon_a3cfcbbbb5435c21e553672f5c32455b = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(150.48993615684722deg);\n                        font-size:16px;\n                        color:#2196F3;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -907,7 +907,7 @@
 });
         
     
-            marker_f9e0c4229fffaf8a2765d886663a49fe.bindTooltip(
+            marker_dad10f5a6d32876092c8feee2d3f68e3.bindTooltip(
                 `<div>
                      Voo 1 — sentido de voo
                  </div>`,
@@ -917,17 +917,17 @@
             );
         
     
-                marker_f9e0c4229fffaf8a2765d886663a49fe.setIcon(div_icon_a3cdff4527437525797acaf5aaeaa855);
+                marker_dad10f5a6d32876092c8feee2d3f68e3.setIcon(div_icon_a3cfcbbbb5435c21e553672f5c32455b);
             
     
-            var marker_eb312b0d7c589d9c615ca057c600211a = L.marker(
+            var marker_ac545e658a2910099b94fbf791036184 = L.marker(
                 [-19.90142, -43.946670000000005],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_0c9fb1aef144a23d17cfd6e11282a269 = L.divIcon({
+            var div_icon_c9df7bf2a24e6f93cdee25db4485d046 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#2196F3;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 1\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -935,7 +935,7 @@
 });
         
     
-            marker_eb312b0d7c589d9c615ca057c600211a.bindTooltip(
+            marker_ac545e658a2910099b94fbf791036184.bindTooltip(
                 `<div>
                      Voo 1 — 12.94 km | 22.1 min
                  </div>`,
@@ -945,33 +945,33 @@
             );
         
     
-                marker_eb312b0d7c589d9c615ca057c600211a.setIcon(div_icon_0c9fb1aef144a23d17cfd6e11282a269);
+                marker_ac545e658a2910099b94fbf791036184.setIcon(div_icon_c9df7bf2a24e6f93cdee25db4485d046);
             
     
-            var poly_line_0ef8e71c3799f46350ae8e7acf12351e = L.polyline(
+            var poly_line_8131b6f4b16241c88f222a731b8ee73b = L.polyline(
                 [[-19.91854, -43.93698], [-19.9387, -43.9322], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#4CAF50", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#4CAF50", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_d71d2a73d144f0138ee148471faf3471 = L.popup({
+        var popup_adea68723eac5d144413b20a6349edbc = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_aad411c6a32992cda767b9e596e48839 = $(`<div id="html_aad411c6a32992cda767b9e596e48839" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#4CAF50;margin:0 0 8px 0">✈ Voo 2</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 18 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>4.59 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>8.2 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.50 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>74.1 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_d71d2a73d144f0138ee148471faf3471.setContent(html_aad411c6a32992cda767b9e596e48839);
+                var html_5ec990d0a3266a75637ad90d0f191284 = $(`<div id="html_5ec990d0a3266a75637ad90d0f191284" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#4CAF50;margin:0 0 8px 0">✈ Voo 2</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 18 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>4.59 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>8.2 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.50 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>74.1 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_adea68723eac5d144413b20a6349edbc.setContent(html_5ec990d0a3266a75637ad90d0f191284);
             
         
 
-        poly_line_0ef8e71c3799f46350ae8e7acf12351e.bindPopup(popup_d71d2a73d144f0138ee148471faf3471)
+        poly_line_8131b6f4b16241c88f222a731b8ee73b.bindPopup(popup_adea68723eac5d144413b20a6349edbc)
         ;
 
         
     
     
-            poly_line_0ef8e71c3799f46350ae8e7acf12351e.bindTooltip(
+            poly_line_8131b6f4b16241c88f222a731b8ee73b.bindTooltip(
                 `<div>
                      Voo 2: 18
                  </div>`,
@@ -981,14 +981,14 @@
             );
         
     
-            var marker_bba944639eb32533573ff7cc8c87926d = L.marker(
+            var marker_c30fc99eec54e6588bc098c1f34eaa9b = L.marker(
                 [-19.928620000000002, -43.93459],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_6b1f3533c814ce2a36dd2f6a2e7ae572 = L.divIcon({
+            var div_icon_c8986ba26ce0e7f70d6be0002fb052fa = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(166.6613058958627deg);\n                        font-size:16px;\n                        color:#4CAF50;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -996,7 +996,7 @@
 });
         
     
-            marker_bba944639eb32533573ff7cc8c87926d.bindTooltip(
+            marker_c30fc99eec54e6588bc098c1f34eaa9b.bindTooltip(
                 `<div>
                      Voo 2 — sentido de voo
                  </div>`,
@@ -1006,17 +1006,17 @@
             );
         
     
-                marker_bba944639eb32533573ff7cc8c87926d.setIcon(div_icon_6b1f3533c814ce2a36dd2f6a2e7ae572);
+                marker_c30fc99eec54e6588bc098c1f34eaa9b.setIcon(div_icon_c8986ba26ce0e7f70d6be0002fb052fa);
             
     
-            var marker_2e916787b04a721322b008f067a6a2fa = L.marker(
+            var marker_6e9e870cdfc8a4b0e9acce0ae498d8c5 = L.marker(
                 [-19.928620000000002, -43.93459],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_cc648393125f785996741a898622bf33 = L.divIcon({
+            var div_icon_0beb7a2b0a961225557274d8ddd1090c = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-13.338694104137312deg);\n                        font-size:16px;\n                        color:#4CAF50;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1024,7 +1024,7 @@
 });
         
     
-            marker_2e916787b04a721322b008f067a6a2fa.bindTooltip(
+            marker_6e9e870cdfc8a4b0e9acce0ae498d8c5.bindTooltip(
                 `<div>
                      Voo 2 — sentido de voo
                  </div>`,
@@ -1034,17 +1034,17 @@
             );
         
     
-                marker_2e916787b04a721322b008f067a6a2fa.setIcon(div_icon_cc648393125f785996741a898622bf33);
+                marker_6e9e870cdfc8a4b0e9acce0ae498d8c5.setIcon(div_icon_0beb7a2b0a961225557274d8ddd1090c);
             
     
-            var marker_18762f2262e1ba71d536305caa88db8c = L.marker(
+            var marker_89409b2b5d5b625e26677f58ab427823 = L.marker(
                 [-19.925259999999998, -43.935386666666666],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_e78c8e9749e55da8a62be6e2d8a51dc6 = L.divIcon({
+            var div_icon_dc5349097b2a7129f4bbd27b91e1c0b7 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#4CAF50;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 2\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -1052,7 +1052,7 @@
 });
         
     
-            marker_18762f2262e1ba71d536305caa88db8c.bindTooltip(
+            marker_89409b2b5d5b625e26677f58ab427823.bindTooltip(
                 `<div>
                      Voo 2 — 4.59 km | 8.2 min
                  </div>`,
@@ -1062,33 +1062,33 @@
             );
         
     
-                marker_18762f2262e1ba71d536305caa88db8c.setIcon(div_icon_e78c8e9749e55da8a62be6e2d8a51dc6);
+                marker_89409b2b5d5b625e26677f58ab427823.setIcon(div_icon_dc5349097b2a7129f4bbd27b91e1c0b7);
             
     
-            var poly_line_e3f21a2251891e4522c2ddf99663da79 = L.polyline(
+            var poly_line_43b582dbf92f31090916b8a4ebefdb96 = L.polyline(
                 [[-19.91854, -43.93698], [-19.87, -43.972], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#FF9800", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#FF9800", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_efaf25d571f0dc0154108d469b1fa1df = L.popup({
+        var popup_5d30928d9438804761d9f1242227867c = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_1fbb677958bf12f6fa6536595fea86b6 = $(`<div id="html_1fbb677958bf12f6fa6536595fea86b6" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#FF9800;margin:0 0 8px 0">✈ Voo 3</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 20 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>13.04 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>22.2 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.40 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>207.4 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_efaf25d571f0dc0154108d469b1fa1df.setContent(html_1fbb677958bf12f6fa6536595fea86b6);
+                var html_6bdb9a5f170087c64f4a38887ebb4bde = $(`<div id="html_6bdb9a5f170087c64f4a38887ebb4bde" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#FF9800;margin:0 0 8px 0">✈ Voo 3</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 20 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>13.04 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>22.2 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.40 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>207.4 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_5d30928d9438804761d9f1242227867c.setContent(html_6bdb9a5f170087c64f4a38887ebb4bde);
             
         
 
-        poly_line_e3f21a2251891e4522c2ddf99663da79.bindPopup(popup_efaf25d571f0dc0154108d469b1fa1df)
+        poly_line_43b582dbf92f31090916b8a4ebefdb96.bindPopup(popup_5d30928d9438804761d9f1242227867c)
         ;
 
         
     
     
-            poly_line_e3f21a2251891e4522c2ddf99663da79.bindTooltip(
+            poly_line_43b582dbf92f31090916b8a4ebefdb96.bindTooltip(
                 `<div>
                      Voo 3: 20
                  </div>`,
@@ -1098,14 +1098,14 @@
             );
         
     
-            var marker_2421d55fb7fb4e4b863b2d7df9f0fa84 = L.marker(
+            var marker_f164cb9b714806f69fa990523b57b1a7 = L.marker(
                 [-19.89427, -43.95449],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_abe69b65309b2d9d4bc7e169ddd264ee = L.divIcon({
+            var div_icon_4360b7fbe39e1c6cc91920dc1f037ead = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-35.80919864242549deg);\n                        font-size:16px;\n                        color:#FF9800;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1113,7 +1113,7 @@
 });
         
     
-            marker_2421d55fb7fb4e4b863b2d7df9f0fa84.bindTooltip(
+            marker_f164cb9b714806f69fa990523b57b1a7.bindTooltip(
                 `<div>
                      Voo 3 — sentido de voo
                  </div>`,
@@ -1123,17 +1123,17 @@
             );
         
     
-                marker_2421d55fb7fb4e4b863b2d7df9f0fa84.setIcon(div_icon_abe69b65309b2d9d4bc7e169ddd264ee);
+                marker_f164cb9b714806f69fa990523b57b1a7.setIcon(div_icon_4360b7fbe39e1c6cc91920dc1f037ead);
             
     
-            var marker_f7345610467ed59a4e84659d251d419e = L.marker(
+            var marker_eaa862f31f20dad2d1bcba7cf6629396 = L.marker(
                 [-19.89427, -43.95449],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_2b45f07dc051fda43ec2057f632dc60b = L.divIcon({
+            var div_icon_cddbb14d4771e1a367bd402cf0e9222d = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(144.19080135757451deg);\n                        font-size:16px;\n                        color:#FF9800;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1141,7 +1141,7 @@
 });
         
     
-            marker_f7345610467ed59a4e84659d251d419e.bindTooltip(
+            marker_eaa862f31f20dad2d1bcba7cf6629396.bindTooltip(
                 `<div>
                      Voo 3 — sentido de voo
                  </div>`,
@@ -1151,17 +1151,17 @@
             );
         
     
-                marker_f7345610467ed59a4e84659d251d419e.setIcon(div_icon_2b45f07dc051fda43ec2057f632dc60b);
+                marker_eaa862f31f20dad2d1bcba7cf6629396.setIcon(div_icon_cddbb14d4771e1a367bd402cf0e9222d);
             
     
-            var marker_1639bafa7bbada8259e7aecff63b6277 = L.marker(
+            var marker_865a1b6b149d38674c5469035620e935 = L.marker(
                 [-19.90236, -43.94865333333333],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_2a3b5c68082cbff128e4baaebc0304d7 = L.divIcon({
+            var div_icon_218fb4516c245eec8d98920fa3f18a9b = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#FF9800;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 3\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -1169,7 +1169,7 @@
 });
         
     
-            marker_1639bafa7bbada8259e7aecff63b6277.bindTooltip(
+            marker_865a1b6b149d38674c5469035620e935.bindTooltip(
                 `<div>
                      Voo 3 — 13.04 km | 22.2 min
                  </div>`,
@@ -1179,33 +1179,33 @@
             );
         
     
-                marker_1639bafa7bbada8259e7aecff63b6277.setIcon(div_icon_2a3b5c68082cbff128e4baaebc0304d7);
+                marker_865a1b6b149d38674c5469035620e935.setIcon(div_icon_218fb4516c245eec8d98920fa3f18a9b);
             
     
-            var poly_line_615a8b54e143e1c58db90993ad1d5ae2 = L.polyline(
+            var poly_line_15332a589fd8d706a28c71d1d29019ce = L.polyline(
                 [[-19.91854, -43.93698], [-19.832, -43.958], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#9C27B0", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#9C27B0", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_c86ab0b0ccbc9e5a15feee033f24a09f = L.popup({
+        var popup_b5e32b9e5cff1707904412cd65bbbda2 = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_438dae886b735379bacb595d126d9b1d = $(`<div id="html_438dae886b735379bacb595d126d9b1d" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#9C27B0;margin:0 0 8px 0">✈ Voo 4</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 21 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>19.74 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>33.4 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.55 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>320.6 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_c86ab0b0ccbc9e5a15feee033f24a09f.setContent(html_438dae886b735379bacb595d126d9b1d);
+                var html_b7bed6c7636eff9009dee2937c3585ee = $(`<div id="html_b7bed6c7636eff9009dee2937c3585ee" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#9C27B0;margin:0 0 8px 0">✈ Voo 4</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 21 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>19.74 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>33.4 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.55 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>320.6 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_b5e32b9e5cff1707904412cd65bbbda2.setContent(html_b7bed6c7636eff9009dee2937c3585ee);
             
         
 
-        poly_line_615a8b54e143e1c58db90993ad1d5ae2.bindPopup(popup_c86ab0b0ccbc9e5a15feee033f24a09f)
+        poly_line_15332a589fd8d706a28c71d1d29019ce.bindPopup(popup_b5e32b9e5cff1707904412cd65bbbda2)
         ;
 
         
     
     
-            poly_line_615a8b54e143e1c58db90993ad1d5ae2.bindTooltip(
+            poly_line_15332a589fd8d706a28c71d1d29019ce.bindTooltip(
                 `<div>
                      Voo 4: 21
                  </div>`,
@@ -1215,14 +1215,14 @@
             );
         
     
-            var marker_42fd19581e376fa3da3100d0c7fd7d19 = L.marker(
+            var marker_9d1e958ff6635942352a4b77c341da06 = L.marker(
                 [-19.87527, -43.94749],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_f9f89050c0958d5383ff90cf6d388ebd = L.divIcon({
+            var div_icon_f2196bd0796bfd680c05330478c8303d = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-13.652384028974216deg);\n                        font-size:16px;\n                        color:#9C27B0;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1230,7 +1230,7 @@
 });
         
     
-            marker_42fd19581e376fa3da3100d0c7fd7d19.bindTooltip(
+            marker_9d1e958ff6635942352a4b77c341da06.bindTooltip(
                 `<div>
                      Voo 4 — sentido de voo
                  </div>`,
@@ -1240,17 +1240,17 @@
             );
         
     
-                marker_42fd19581e376fa3da3100d0c7fd7d19.setIcon(div_icon_f9f89050c0958d5383ff90cf6d388ebd);
+                marker_9d1e958ff6635942352a4b77c341da06.setIcon(div_icon_f2196bd0796bfd680c05330478c8303d);
             
     
-            var marker_ecfe84b8bdca307bc7f2da9413c17af9 = L.marker(
+            var marker_78bc7bbda8328d5807d8d41bcdd19398 = L.marker(
                 [-19.87527, -43.94749],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_5f46d3194089139f3f1fe5a46834ef41 = L.divIcon({
+            var div_icon_29210760bb269a98357687ea6a3f4e0e = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(166.3476159710258deg);\n                        font-size:16px;\n                        color:#9C27B0;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1258,7 +1258,7 @@
 });
         
     
-            marker_ecfe84b8bdca307bc7f2da9413c17af9.bindTooltip(
+            marker_78bc7bbda8328d5807d8d41bcdd19398.bindTooltip(
                 `<div>
                      Voo 4 — sentido de voo
                  </div>`,
@@ -1268,17 +1268,17 @@
             );
         
     
-                marker_ecfe84b8bdca307bc7f2da9413c17af9.setIcon(div_icon_5f46d3194089139f3f1fe5a46834ef41);
+                marker_78bc7bbda8328d5807d8d41bcdd19398.setIcon(div_icon_29210760bb269a98357687ea6a3f4e0e);
             
     
-            var marker_3a958e12ce3415e3d7085ea1908a4371 = L.marker(
+            var marker_f126d9c83392f41e8e12aba0e17e1c39 = L.marker(
                 [-19.889693333333334, -43.94398666666666],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_a4434332ed5676950240f4bcd96a38c2 = L.divIcon({
+            var div_icon_a8a864e6e1bbb2fa363022cf31204966 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#9C27B0;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 4\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -1286,7 +1286,7 @@
 });
         
     
-            marker_3a958e12ce3415e3d7085ea1908a4371.bindTooltip(
+            marker_f126d9c83392f41e8e12aba0e17e1c39.bindTooltip(
                 `<div>
                      Voo 4 — 19.74 km | 33.4 min
                  </div>`,
@@ -1296,33 +1296,33 @@
             );
         
     
-                marker_3a958e12ce3415e3d7085ea1908a4371.setIcon(div_icon_a4434332ed5676950240f4bcd96a38c2);
+                marker_f126d9c83392f41e8e12aba0e17e1c39.setIcon(div_icon_a8a864e6e1bbb2fa363022cf31204966);
             
     
-            var poly_line_db73abb2a33d5e24c8c0ac1be96b20bb = L.polyline(
+            var poly_line_3fb34cd5645963e8fb347e1ce2134702 = L.polyline(
                 [[-19.91854, -43.93698], [-20.0045, -44.0412], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#F44336", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#F44336", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_12ee8e6cb0ca4ab0fdd78a4e7d120ce4 = L.popup({
+        var popup_2105248554192defbda9b7ab61a39201 = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_692b9b33d3205c9de43dda6b524442bb = $(`<div id="html_692b9b33d3205c9de43dda6b524442bb" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#F44336;margin:0 0 8px 0">✈ Voo 5</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 22 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>28.98 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>48.8 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.70 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>480.4 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_12ee8e6cb0ca4ab0fdd78a4e7d120ce4.setContent(html_692b9b33d3205c9de43dda6b524442bb);
+                var html_365b748bfc3172b0fc42007210ac71cf = $(`<div id="html_365b748bfc3172b0fc42007210ac71cf" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#F44336;margin:0 0 8px 0">✈ Voo 5</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 22 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>28.98 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>48.8 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>0.70 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>480.4 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:red">✗ Não</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_2105248554192defbda9b7ab61a39201.setContent(html_365b748bfc3172b0fc42007210ac71cf);
             
         
 
-        poly_line_db73abb2a33d5e24c8c0ac1be96b20bb.bindPopup(popup_12ee8e6cb0ca4ab0fdd78a4e7d120ce4)
+        poly_line_3fb34cd5645963e8fb347e1ce2134702.bindPopup(popup_2105248554192defbda9b7ab61a39201)
         ;
 
         
     
     
-            poly_line_db73abb2a33d5e24c8c0ac1be96b20bb.bindTooltip(
+            poly_line_3fb34cd5645963e8fb347e1ce2134702.bindTooltip(
                 `<div>
                      Voo 5: 22
                  </div>`,
@@ -1332,14 +1332,14 @@
             );
         
     
-            var marker_1c090441e68d0d1ed57017c1371a6d90 = L.marker(
+            var marker_5ecb4caf8ffeb00152cc7e6f9bbd68b2 = L.marker(
                 [-19.96152, -43.989090000000004],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_90ff3e9041bf0156aea8ae2989ca9951 = L.divIcon({
+            var div_icon_cf172d487a625fc26c343dc1b8fae3b8 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-129.5155975818103deg);\n                        font-size:16px;\n                        color:#F44336;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1347,7 +1347,7 @@
 });
         
     
-            marker_1c090441e68d0d1ed57017c1371a6d90.bindTooltip(
+            marker_5ecb4caf8ffeb00152cc7e6f9bbd68b2.bindTooltip(
                 `<div>
                      Voo 5 — sentido de voo
                  </div>`,
@@ -1357,17 +1357,17 @@
             );
         
     
-                marker_1c090441e68d0d1ed57017c1371a6d90.setIcon(div_icon_90ff3e9041bf0156aea8ae2989ca9951);
+                marker_5ecb4caf8ffeb00152cc7e6f9bbd68b2.setIcon(div_icon_cf172d487a625fc26c343dc1b8fae3b8);
             
     
-            var marker_45e6f3e658c591306cb508da4fd45def = L.marker(
+            var marker_8df60fb24e27cb269108f82a0e3a21d1 = L.marker(
                 [-19.96152, -43.989090000000004],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_262da049a4a63caa9bc37185f249d661 = L.divIcon({
+            var div_icon_2263dc1b02449a702fc1d380bee0478e = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(50.484402418189674deg);\n                        font-size:16px;\n                        color:#F44336;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1375,7 +1375,7 @@
 });
         
     
-            marker_45e6f3e658c591306cb508da4fd45def.bindTooltip(
+            marker_8df60fb24e27cb269108f82a0e3a21d1.bindTooltip(
                 `<div>
                      Voo 5 — sentido de voo
                  </div>`,
@@ -1385,17 +1385,17 @@
             );
         
     
-                marker_45e6f3e658c591306cb508da4fd45def.setIcon(div_icon_262da049a4a63caa9bc37185f249d661);
+                marker_8df60fb24e27cb269108f82a0e3a21d1.setIcon(div_icon_2263dc1b02449a702fc1d380bee0478e);
             
     
-            var marker_806107aad5db5425c1d1b9ff5a27cd5a = L.marker(
+            var marker_c75e7f33503cf57401cc04688ccad5e1 = L.marker(
                 [-19.947193333333335, -43.971720000000005],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_4a5e527fea135bb0320e1e2e7f06e467 = L.divIcon({
+            var div_icon_1ffa3f09c4f0b3a5579beee6919a8608 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#F44336;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 5\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -1403,7 +1403,7 @@
 });
         
     
-            marker_806107aad5db5425c1d1b9ff5a27cd5a.bindTooltip(
+            marker_c75e7f33503cf57401cc04688ccad5e1.bindTooltip(
                 `<div>
                      Voo 5 — 28.98 km | 48.8 min
                  </div>`,
@@ -1413,33 +1413,33 @@
             );
         
     
-                marker_806107aad5db5425c1d1b9ff5a27cd5a.setIcon(div_icon_4a5e527fea135bb0320e1e2e7f06e467);
+                marker_c75e7f33503cf57401cc04688ccad5e1.setIcon(div_icon_1ffa3f09c4f0b3a5579beee6919a8608);
             
     
-            var poly_line_1c1da9858c2d8043484a670112a0eed3 = L.polyline(
+            var poly_line_567f4bf891237f8cb6c5e98a8493941d = L.polyline(
                 [[-19.91854, -43.93698], [-19.9387, -43.9322], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#00BCD4", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#00BCD4", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_c9313127fc2aaf17cc3516df48d15d00 = L.popup({
+        var popup_55f25306b15e78a4dec83b52d39cd773 = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_1145ff08928859fc2ac5973682b06186 = $(`<div id="html_1145ff08928859fc2ac5973682b06186" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#00BCD4;margin:0 0 8px 0">✈ Voo 6</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 23 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>4.59 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>8.2 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>1.20 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>81.3 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:green">✓ Sim</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_c9313127fc2aaf17cc3516df48d15d00.setContent(html_1145ff08928859fc2ac5973682b06186);
+                var html_d8f7a388741af9322c6ffbf54e8f9439 = $(`<div id="html_d8f7a388741af9322c6ffbf54e8f9439" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#00BCD4;margin:0 0 8px 0">✈ Voo 6</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 23 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>1</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>4.59 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>8.2 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>1.20 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>81.3 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:green">✓ Sim</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_55f25306b15e78a4dec83b52d39cd773.setContent(html_d8f7a388741af9322c6ffbf54e8f9439);
             
         
 
-        poly_line_1c1da9858c2d8043484a670112a0eed3.bindPopup(popup_c9313127fc2aaf17cc3516df48d15d00)
+        poly_line_567f4bf891237f8cb6c5e98a8493941d.bindPopup(popup_55f25306b15e78a4dec83b52d39cd773)
         ;
 
         
     
     
-            poly_line_1c1da9858c2d8043484a670112a0eed3.bindTooltip(
+            poly_line_567f4bf891237f8cb6c5e98a8493941d.bindTooltip(
                 `<div>
                      Voo 6: 23
                  </div>`,
@@ -1449,14 +1449,14 @@
             );
         
     
-            var marker_d9a059e2e313dea3ce753d526f04c0c0 = L.marker(
+            var marker_b825fd626f0ae450e5ee5ee03886a191 = L.marker(
                 [-19.928620000000002, -43.93459],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_a74ae57ec837d4a77cf656e21e285d6a = L.divIcon({
+            var div_icon_252d4bc528ced68e500968c2cea09caf = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(166.6613058958627deg);\n                        font-size:16px;\n                        color:#00BCD4;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1464,7 +1464,7 @@
 });
         
     
-            marker_d9a059e2e313dea3ce753d526f04c0c0.bindTooltip(
+            marker_b825fd626f0ae450e5ee5ee03886a191.bindTooltip(
                 `<div>
                      Voo 6 — sentido de voo
                  </div>`,
@@ -1474,17 +1474,17 @@
             );
         
     
-                marker_d9a059e2e313dea3ce753d526f04c0c0.setIcon(div_icon_a74ae57ec837d4a77cf656e21e285d6a);
+                marker_b825fd626f0ae450e5ee5ee03886a191.setIcon(div_icon_252d4bc528ced68e500968c2cea09caf);
             
     
-            var marker_782e592dd4a40c5058dd42fdca5da51b = L.marker(
+            var marker_7f18bf2184a2895c5430e383b8b5a70d = L.marker(
                 [-19.928620000000002, -43.93459],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_b7078d086cc1e19e528edc938e981b94 = L.divIcon({
+            var div_icon_bef5b181e3c50cfa7f918d68b24786c6 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-13.338694104137312deg);\n                        font-size:16px;\n                        color:#00BCD4;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1492,7 +1492,7 @@
 });
         
     
-            marker_782e592dd4a40c5058dd42fdca5da51b.bindTooltip(
+            marker_7f18bf2184a2895c5430e383b8b5a70d.bindTooltip(
                 `<div>
                      Voo 6 — sentido de voo
                  </div>`,
@@ -1502,17 +1502,17 @@
             );
         
     
-                marker_782e592dd4a40c5058dd42fdca5da51b.setIcon(div_icon_b7078d086cc1e19e528edc938e981b94);
+                marker_7f18bf2184a2895c5430e383b8b5a70d.setIcon(div_icon_bef5b181e3c50cfa7f918d68b24786c6);
             
     
-            var marker_62e85d6b4626fe7fa1c39ac12cf987aa = L.marker(
+            var marker_89dc3fa0900aef7606389437a0748ff0 = L.marker(
                 [-19.925259999999998, -43.935386666666666],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_c457bedc729f055c7dde18c184b9a1c2 = L.divIcon({
+            var div_icon_f3b02c28378a3763076949495e603e95 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#00BCD4;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 6\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -1520,7 +1520,7 @@
 });
         
     
-            marker_62e85d6b4626fe7fa1c39ac12cf987aa.bindTooltip(
+            marker_89dc3fa0900aef7606389437a0748ff0.bindTooltip(
                 `<div>
                      Voo 6 — 4.59 km | 8.2 min
                  </div>`,
@@ -1530,33 +1530,33 @@
             );
         
     
-                marker_62e85d6b4626fe7fa1c39ac12cf987aa.setIcon(div_icon_c457bedc729f055c7dde18c184b9a1c2);
+                marker_89dc3fa0900aef7606389437a0748ff0.setIcon(div_icon_f3b02c28378a3763076949495e603e95);
             
     
-            var poly_line_b40aaccd326dc6d9d847041da0e97aa6 = L.polyline(
+            var poly_line_eb29d4c201461fab24678d1f9790bbd0 = L.polyline(
                 [[-19.91854, -43.93698], [-19.925, -43.93], [-19.925, -43.93], [-19.91854, -43.93698]],
                 {"bubblingMouseEvents": true, "color": "#FF5722", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#FF5722", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.85, "smoothFactor": 1.0, "stroke": true, "weight": 3.5}
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-        var popup_777594795f6a4cf8610ef0d7ab103322 = L.popup({
+        var popup_75851224a0dd9652515185d1e175e886 = L.popup({
   "maxWidth": 300,
 });
 
         
             
-                var html_e27d2ff391fa831227dc179ad6870d7b = $(`<div id="html_e27d2ff391fa831227dc179ad6870d7b" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#FF5722;margin:0 0 8px 0">✈ Voo 7</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 19 → 24 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>2</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>2.05 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>4.4 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>1.70 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>38.5 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:green">✓ Sim</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
-                popup_777594795f6a4cf8610ef0d7ab103322.setContent(html_e27d2ff391fa831227dc179ad6870d7b);
+                var html_f6d773388612d678785aa16d8fa8c426 = $(`<div id="html_f6d773388612d678785aa16d8fa8c426" style="width: 100.0%; height: 100.0%;">         <div style="font-family:Arial;min-width:240px">             <h4 style="color:#FF5722;margin:0 0 8px 0">✈ Voo 7</h4>             <table style="width:100%;font-size:12px;border-collapse:collapse">                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Sequência</td>                     <td style="padding:4px 8px"><b>Depósito → 19 → 24 → Depósito</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Entregas</td>                     <td style="padding:4px 8px"><b>2</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Distância</td>                     <td style="padding:4px 8px"><b>2.05 km</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Tempo estimado</td>                     <td style="padding:4px 8px"><b>4.4 min</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Carga total</td>                     <td style="padding:4px 8px"><b>1.70 kg</b></td>                 </tr>                 <tr>                     <td style="padding:4px 8px">Energia est.</td>                     <td style="padding:4px 8px"><b>38.5 Wh</b></td>                 </tr>                 <tr style="background:#f5f5f5">                     <td style="padding:4px 8px">Viável</td>                     <td style="padding:4px 8px">                         <b style="color:green">✓ Sim</b>                     </td>                 </tr>             </table>         </div>         </div>`)[0];
+                popup_75851224a0dd9652515185d1e175e886.setContent(html_f6d773388612d678785aa16d8fa8c426);
             
         
 
-        poly_line_b40aaccd326dc6d9d847041da0e97aa6.bindPopup(popup_777594795f6a4cf8610ef0d7ab103322)
+        poly_line_eb29d4c201461fab24678d1f9790bbd0.bindPopup(popup_75851224a0dd9652515185d1e175e886)
         ;
 
         
     
     
-            poly_line_b40aaccd326dc6d9d847041da0e97aa6.bindTooltip(
+            poly_line_eb29d4c201461fab24678d1f9790bbd0.bindTooltip(
                 `<div>
                      Voo 7: 19 → 24
                  </div>`,
@@ -1566,14 +1566,14 @@
             );
         
     
-            var marker_64b60678005d8fd843e6ca0ca9eda499 = L.marker(
+            var marker_73215ef34e719b2b60139211d541f9a9 = L.marker(
                 [-19.921770000000002, -43.93349],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_35c966dad908ea34ae17d421ba8d887d = L.divIcon({
+            var div_icon_efd72cc348dd4d500a9325a5ec27380f = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(132.78430416341885deg);\n                        font-size:16px;\n                        color:#FF5722;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1581,7 +1581,7 @@
 });
         
     
-            marker_64b60678005d8fd843e6ca0ca9eda499.bindTooltip(
+            marker_73215ef34e719b2b60139211d541f9a9.bindTooltip(
                 `<div>
                      Voo 7 — sentido de voo
                  </div>`,
@@ -1591,17 +1591,17 @@
             );
         
     
-                marker_64b60678005d8fd843e6ca0ca9eda499.setIcon(div_icon_35c966dad908ea34ae17d421ba8d887d);
+                marker_73215ef34e719b2b60139211d541f9a9.setIcon(div_icon_efd72cc348dd4d500a9325a5ec27380f);
             
     
-            var marker_8de8b7adc008d8d3009139d02b3f91ac = L.marker(
+            var marker_f6f334371e998666dee386ebc8c5a792 = L.marker(
                 [-19.925, -43.93],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_ced4abd36606fc9045432e75b3795dbe = L.divIcon({
+            var div_icon_e7369d2cd2de614ac6f2875ffefd2b76 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(0.0deg);\n                        font-size:16px;\n                        color:#FF5722;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1609,7 +1609,7 @@
 });
         
     
-            marker_8de8b7adc008d8d3009139d02b3f91ac.bindTooltip(
+            marker_f6f334371e998666dee386ebc8c5a792.bindTooltip(
                 `<div>
                      Voo 7 — sentido de voo
                  </div>`,
@@ -1619,17 +1619,17 @@
             );
         
     
-                marker_8de8b7adc008d8d3009139d02b3f91ac.setIcon(div_icon_ced4abd36606fc9045432e75b3795dbe);
+                marker_f6f334371e998666dee386ebc8c5a792.setIcon(div_icon_e7369d2cd2de614ac6f2875ffefd2b76);
             
     
-            var marker_2f97e5ed2d639a28d60b00e387c7bf65 = L.marker(
+            var marker_eacf21bbaddc75366f9a0373909688f7 = L.marker(
                 [-19.921770000000002, -43.93349],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_b57dda7147e4ffe7d1b53591d9571754 = L.divIcon({
+            var div_icon_bf8490a2481a5b72e1a47270549948a5 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        transform:rotate(-47.215695836581176deg);\n                        font-size:16px;\n                        color:#FF5722;\n                        text-shadow:0 0 3px white;\n                        line-height:1;\n                    \"\u003e\u27a4\u003c/div\u003e",
   "iconSize": [20, 20],
   "iconAnchor": [10, 10],
@@ -1637,7 +1637,7 @@
 });
         
     
-            marker_2f97e5ed2d639a28d60b00e387c7bf65.bindTooltip(
+            marker_eacf21bbaddc75366f9a0373909688f7.bindTooltip(
                 `<div>
                      Voo 7 — sentido de voo
                  </div>`,
@@ -1647,17 +1647,17 @@
             );
         
     
-                marker_2f97e5ed2d639a28d60b00e387c7bf65.setIcon(div_icon_b57dda7147e4ffe7d1b53591d9571754);
+                marker_eacf21bbaddc75366f9a0373909688f7.setIcon(div_icon_bf8490a2481a5b72e1a47270549948a5);
             
     
-            var marker_7fe0a31704cbc982ad053ad805a9e85e = L.marker(
+            var marker_a7b4f187d38876361335985ca76812ea = L.marker(
                 [-19.921770000000002, -43.93349],
                 {
 }
-            ).addTo(feature_group_9fb042dcafba48087f08fa4ec1e245de);
+            ).addTo(feature_group_bf495d0b8275c9c494a442842a08d7fc);
         
     
-            var div_icon_6c6f08f9c66881b8c7762757a842948b = L.divIcon({
+            var div_icon_3b2d120fc7a771067a24b7cd40f893a3 = L.divIcon({
   "html": "\n                    \u003cdiv style=\"\n                        background:#FF5722;color:white;\n                        border-radius:10px;padding:2px 7px;\n                        font-size:11px;font-weight:bold;font-family:Arial;\n                        box-shadow:0 1px 4px rgba(0,0,0,0.35);\n                        white-space:nowrap;border:1.5px solid white;\n                    \"\u003e\u2708 Voo 7\u003c/div\u003e",
   "iconSize": [65, 22],
   "iconAnchor": [32, 11],
@@ -1665,7 +1665,7 @@
 });
         
     
-            marker_7fe0a31704cbc982ad053ad805a9e85e.bindTooltip(
+            marker_a7b4f187d38876361335985ca76812ea.bindTooltip(
                 `<div>
                      Voo 7 — 2.05 km | 4.4 min
                  </div>`,
@@ -1675,25 +1675,25 @@
             );
         
     
-                marker_7fe0a31704cbc982ad053ad805a9e85e.setIcon(div_icon_6c6f08f9c66881b8c7762757a842948b);
+                marker_a7b4f187d38876361335985ca76812ea.setIcon(div_icon_3b2d120fc7a771067a24b7cd40f893a3);
             
     
-            feature_group_9fb042dcafba48087f08fa4ec1e245de.addTo(map_d8cde7108be851f938ddf90f61450f01);
+            feature_group_bf495d0b8275c9c494a442842a08d7fc.addTo(map_0cea4177daceeb9b7a7eae9f3aa2e586);
         
     
-            var feature_group_80d09e614086a0e7bfbb1754114b430e = L.featureGroup(
+            var feature_group_c4d0ac0eb69aa6df2ddd1ec853fe4012 = L.featureGroup(
                 {
 }
             );
         
     
-            var circle_ef34243aad8c9057bd783c27a35d177b = L.circle(
+            var circle_161114b23537969ea681dc6f02f41052 = L.circle(
                 [-19.91854, -43.93698],
                 {"bubblingMouseEvents": true, "color": "#1A237E", "dashArray": "8", "dashOffset": null, "fill": true, "fillColor": "#1A237E", "fillOpacity": 0.05, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000.0, "stroke": true, "weight": 1.5}
-            ).addTo(feature_group_80d09e614086a0e7bfbb1754114b430e);
+            ).addTo(feature_group_c4d0ac0eb69aa6df2ddd1ec853fe4012);
         
     
-            circle_ef34243aad8c9057bd783c27a35d177b.bindTooltip(
+            circle_161114b23537969ea681dc6f02f41052.bindTooltip(
                 `<div>
                      Alcance operacional: 5.0 km (raio)
                  </div>`,
@@ -1703,26 +1703,26 @@
             );
         
     
-            var layer_control_3cb7a6f83c2bec7bfe10c4c2fd3c13be_layers = {
+            var layer_control_dad72c2c32cbecde0ab4db1866e0a975_layers = {
                 base_layers : {
-                    "openstreetmap" : tile_layer_fda46825ffeb9229d95a39f56489c8b0,
+                    "openstreetmap" : tile_layer_38dfbb39ff6a9aa30c84ca03f7a46f5d,
                 },
                 overlays :  {
-                    "Dep\u00f3sito" : feature_group_fbaa7182d4d6ec1a709329bcf07fe18e,
-                    "Pontos de Entrega" : feature_group_5e4f2a4100c738a5ac7bd2321948e35d,
-                    "Rotas" : feature_group_9fb042dcafba48087f08fa4ec1e245de,
-                    "Alcance do Drone" : feature_group_80d09e614086a0e7bfbb1754114b430e,
+                    "Dep\u00f3sito" : feature_group_b96912000e341b695e8bff0ed0f7b45f,
+                    "Pontos de Entrega" : feature_group_1ca5a3475ce83cc678bfbc0631c72d5e,
+                    "Rotas" : feature_group_bf495d0b8275c9c494a442842a08d7fc,
+                    "Alcance do Drone" : feature_group_c4d0ac0eb69aa6df2ddd1ec853fe4012,
                 },
             };
-            let layer_control_3cb7a6f83c2bec7bfe10c4c2fd3c13be = L.control.layers(
-                layer_control_3cb7a6f83c2bec7bfe10c4c2fd3c13be_layers.base_layers,
-                layer_control_3cb7a6f83c2bec7bfe10c4c2fd3c13be_layers.overlays,
+            let layer_control_dad72c2c32cbecde0ab4db1866e0a975 = L.control.layers(
+                layer_control_dad72c2c32cbecde0ab4db1866e0a975_layers.base_layers,
+                layer_control_dad72c2c32cbecde0ab4db1866e0a975_layers.overlays,
                 {
   "position": "topright",
   "collapsed": false,
   "autoZIndex": true,
 }
-            ).addTo(map_d8cde7108be851f938ddf90f61450f01);
+            ).addTo(map_0cea4177daceeb9b7a7eae9f3aa2e586);
 
         
 </script>

@@ -2,24 +2,17 @@
 # servidor/app.py
 # Servidor central DronePharm — FastAPI
 #
-# Rodar (SEMPRE a partir da raiz do projeto):
+# Rodar (SEMPRE da raiz do projeto):
 #   cd DronePharm
-#   uvicorn servidor.app:app --reload --host 0.0.0.0 --port 8000
-# Docs:
-#   http://localhost:8000/docs
+#   uvicorn server.app:app --reload --host 0.0.0.0 --port 8000
+# Docs: http://localhost:8000/docs
 # =============================================================================
 
 # ── Garante que a raiz do projeto esteja no sys.path ─────────────────────────
-# Necessário para que imports como "from visualizacao.mapa import ..."
-# funcionem independente de como/onde o uvicorn for invocado.
-import sys
-import os
-
-_RAIZ_PROJETO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _RAIZ_PROJETO not in sys.path:
-    sys.path.insert(0, _RAIZ_PROJETO)
-
-# ─────────────────────────────────────────────────────────────────────────────
+import sys, os
+_RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _RAIZ not in sys.path:
+    sys.path.insert(0, _RAIZ)
 
 from contextlib import asynccontextmanager
 import logging
@@ -36,7 +29,7 @@ log = logging.getLogger(__name__)
 
 
 # =============================================================================
-# LIFESPAN — startup / shutdown
+# LIFESPAN
 # =============================================================================
 
 @asynccontextmanager
@@ -50,8 +43,6 @@ async def lifespan(app: FastAPI):
     await init_db()
     log.info("Banco de dados conectado.")
 
-    # ── Sincroniza depósito do banco → settings em memória ─────────────────
-    # Usa raw SQL direto (sem ORM) para ser resiliente a colunas faltando.
     from bd.database import AsyncSessionLocal
     from config import settings as cfg
 
@@ -59,33 +50,20 @@ async def lifespan(app: FastAPI):
         try:
             result = await session.execute(
                 text(
-                    "SELECT id, nome, latitude, longitude "
-                    "FROM farmacias "
-                    "WHERE deposito = TRUE AND ativa = TRUE "
-                    "ORDER BY id LIMIT 1"
+                    "SELECT nome, latitude, longitude FROM farmacias "
+                    "WHERE deposito = TRUE AND ativa = TRUE ORDER BY id LIMIT 1"
                 )
             )
-            deposito = result.mappings().fetchone()
-
-            if deposito:
-                cfg.DEPOSITO_LATITUDE  = deposito["latitude"]
-                cfg.DEPOSITO_LONGITUDE = deposito["longitude"]
-                cfg.DEPOSITO_NOME      = deposito["nome"]
-                log.info(
-                    f"Depósito: {deposito['nome']} "
-                    f"({deposito['latitude']}, {deposito['longitude']})"
-                )
+            dep = result.mappings().fetchone()
+            if dep:
+                cfg.DEPOSITO_LATITUDE  = dep["latitude"]
+                cfg.DEPOSITO_LONGITUDE = dep["longitude"]
+                cfg.DEPOSITO_NOME      = dep["nome"]
+                log.info(f"Depósito: {dep['nome']} ({dep['latitude']}, {dep['longitude']})")
             else:
-                log.warning(
-                    "Nenhum depósito ativo no banco. "
-                    "Cadastre uma farmácia com deposito=true via POST /api/v1/farmacias"
-                )
-
+                log.warning("Nenhum depósito ativo no banco.")
         except Exception as exc:
-            log.error(
-                f"Falha ao carregar depósito: {exc}\n"
-                "Verifique a conexão com o banco Azure e execute as migrations pendentes."
-            )
+            log.error(f"Erro ao carregar depósito: {exc}")
 
     yield
 
@@ -109,11 +87,12 @@ app = FastAPI(
         "### Fluxo típico\n"
         "1. `POST /api/v1/pedidos` — registra pedidos\n"
         "2. `POST /api/v1/rotas/calcular` — gera rotas otimizadas\n"
-        "3. `POST /api/v1/telemetria` — drone envia posição a cada 2s\n"
+        "3. `POST /api/v1/telemetria` — drone envia posição (broadcast WebSocket)\n"
         "4. `PATCH /api/v1/rotas/{id}/concluir` — finaliza e registra KPIs\n"
-        "5. `GET /api/v1/mapa/rotas` — visualiza mapa interativo\n"
+        "5. `GET /api/v1/mapa/rotas` — mapa interativo\n"
+        "6. `WS /ws/telemetria/{drone_id}` — stream em tempo real\n"
     ),
-    version="1.0.0",
+    version="2.0.0",
     contact={"name": "DronePharm", "email": "contato@dronepharm.dev"},
     license_info={"name": "MIT"},
     lifespan=lifespan,
@@ -123,8 +102,6 @@ app = FastAPI(
 
 # =============================================================================
 # MIDDLEWARES
-# Ordem de execução: ErrorHandler → CORS → Logging → router
-# (add_middleware aplica em ordem reversa à execução)
 # =============================================================================
 
 app.add_middleware(LoggingMiddleware)
@@ -132,10 +109,13 @@ configurar_cors(app, modo_dev=True)
 app.add_middleware(ErrorHandlerMiddleware)
 
 # =============================================================================
-# ROUTERS
+# ROUTERS HTTP
 # =============================================================================
 
-from server.routers import pedidos, rotas, drones, farmacias, clima, telemetria, historico, mapa
+from server.routers import (
+    pedidos, rotas, drones, farmacias,
+    clima, telemetria, historico, mapa, frota, logs
+)
 
 app.include_router(pedidos.router,    prefix="/api/v1/pedidos",    tags=["Pedidos"])
 app.include_router(rotas.router,      prefix="/api/v1/rotas",      tags=["Roteirização"])
@@ -145,20 +125,28 @@ app.include_router(clima.router,      prefix="/api/v1/clima",      tags=["Clima"
 app.include_router(telemetria.router, prefix="/api/v1/telemetria", tags=["Telemetria"])
 app.include_router(historico.router,  prefix="/api/v1/historico",  tags=["Histórico & KPIs"])
 app.include_router(mapa.router,       prefix="/api/v1/mapa",       tags=["Mapa Interativo"])
+app.include_router(frota.router,      prefix="/api/v1/frota",      tags=["Gestão de Frota"])
+app.include_router(logs.router,       prefix="/api/v1/logs",       tags=["Logs & Rastreabilidade"])
 
 # =============================================================================
-# ROTAS RAIZ
+# ROUTERS WebSocket
+# =============================================================================
+
+from server.websocket.router_ws import router as ws_router
+app.include_router(ws_router, prefix="/ws", tags=["WebSocket — Tempo Real"])
+
+# =============================================================================
+# RAIZ
 # =============================================================================
 
 @app.get("/", tags=["Status"])
 async def root():
     return {
         "sistema": "DronePharm",
-        "versao":  "1.0.0",
+        "versao":  "2.0.0",
         "status":  "online",
         "docs":    "/docs",
-        "redoc":   "/redoc",
-        "endpoints": {
+        "endpoints_http": {
             "pedidos":    "/api/v1/pedidos",
             "rotas":      "/api/v1/rotas",
             "drones":     "/api/v1/drones",
@@ -167,20 +155,29 @@ async def root():
             "telemetria": "/api/v1/telemetria",
             "historico":  "/api/v1/historico",
             "mapa":       "/api/v1/mapa/rotas",
+            "frota":      "/api/v1/frota/status",
+            "logs":       "/api/v1/logs",
+        },
+        "endpoints_ws": {
+            "telemetria_global": "ws://localhost:8000/ws/telemetria",
+            "telemetria_drone":  "ws://localhost:8000/ws/telemetria/{drone_id}",
+            "alertas":           "ws://localhost:8000/ws/alertas",
+            "frota":             "ws://localhost:8000/ws/frota",
         },
     }
 
 
 @app.get("/health", tags=["Status"])
 async def health_check():
-    """Health check para monitoramento no Raspberry Pi."""
     from bd.database import check_db_connection
     db_ok = await check_db_connection()
     return JSONResponse(
         status_code=200 if db_ok else 503,
         content={
-            "status":   "healthy" if db_ok else "degraded",
-            "database": "connected" if db_ok else "disconnected",
-            "versao":   "1.0.0",
+            "status":      "healthy" if db_ok else "degraded",
+            "database":    "connected" if db_ok else "disconnected",
+            "versao":      "2.0.0",
+            "ws_conexoes": __import__("servidor.websocket.connection_manager",
+                                      fromlist=["manager"]).manager.total_conexoes(),
         },
     )

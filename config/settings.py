@@ -19,7 +19,7 @@ DRONE_VELOCIDADE_KMH    = DRONE_VELOCIDADE_MS * 3.6
 DRONE_TEMPO_POUSO_S     = 30         # Tempo de pouso/decolagem por waypoint (s)
 DRONE_ALTITUDE_VOO_M    = 50.0       # Altitude padrão de voo (m)
 DRONE_BATERIA_MINIMA    = 0.20       # Limiar de retorno de emergência (20%)
-DRONE_CONSUMO_BASE_WH_KM = 15.0     # Consumo base: 15 Wh por km (sem carga)
+DRONE_CONSUMO_BASE_WH_KM = 15.0      # Consumo base: 15 Wh por km (sem carga)
 DRONE_MARGEM_CARGA      = 0.10       # Margem de segurança de carga (10%)
 
 # -----------------------------------------------------------------------------

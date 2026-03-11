@@ -1,0 +1,72 @@
+# =============================================================================
+# .dockerignore — DronePharm
+# Arquivos excluídos do contexto de build (reduz tamanho e tempo de build)
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Ambientes virtuais Python
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Credenciais (NUNCA incluir no contexto de build)
+.env
+*.env
+!.env.example
+
+# Testes e cobertura
+.pytest_cache
+.coverage
+htmlcov
+coverage.xml
+*.cover
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Outputs gerados
+output/
+*.html
+*.png
+*.jpg
+*.svg
+
+# Documentação
+docs/
+*.md
+*.rst
+*.txt
+!requirements.txt
+
+# Docker (não incluir docker dentro do contexto docker)
+docker/
+Dockerfile
+docker-compose*.yml
+
+# Certificados (não incluir na imagem — montar como volume se necessário)
+banco/certs/*.pem
+banco/certs/*.crt
+
+# Cache e temporários
+*.log
+*.tmp
+tmp/
+temp/
+.cache/
+
+# Dados de exemplo (não obrigatórios para execução)
+data/

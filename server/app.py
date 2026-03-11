@@ -177,7 +177,7 @@ async def health_check():
             "status":      "healthy" if db_ok else "degraded",
             "database":    "connected" if db_ok else "disconnected",
             "versao":      "2.0.0",
-            "ws_conexoes": __import__("servidor.websocket.connection_manager",
+            "ws_conexoes": __import__("server.websocket.connection_manager",
                                       fromlist=["manager"]).manager.total_conexoes(),
         },
     )

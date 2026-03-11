@@ -1,0 +1,128 @@
+# =============================================================================
+# docker-compose.yml — DronePharm v2.0
+#
+# Serviços:
+#   db       → PostgreSQL 16 + PostGIS 3.4 (banco local para desenvolvimento)
+#   api      → FastAPI DronePharm (porta 8000)
+#   pgadmin  → Interface web para administrar o banco (porta 5050) [opcional]
+#
+# Uso rápido:
+#   cp .env.example .env          # preencha as variáveis
+#   docker compose up --build     # sobe tudo
+#   docker compose up -d          # modo daemon
+#   docker compose down -v        # derruba e remove volumes
+#
+# Acesso:
+#   API:     http://localhost:8000
+#   Docs:    http://localhost:8000/docs
+#   pgAdmin: http://localhost:5050  (admin@dronepharm.local / admin)
+# =============================================================================
+
+services:
+
+  # ── Banco de Dados PostgreSQL + PostGIS ──────────────────────────────────────
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: dronepharm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-dronepharm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dronepharm123}
+      POSTGRES_DB:       ${POSTGRES_DB:-dronepharm}
+      PGDATA:            /var/lib/postgresql/data/pgdata
+    volumes:
+      # Dados persistentes entre reinicializações
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"   # 5433 no host para não conflitar com Postgres local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dronepharm} -d ${POSTGRES_DB:-dronepharm}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - dronepharm-net
+
+  # ── API DronePharm ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: runner
+    image: dronepharm-api:2.0.0
+    container_name: dronepharm-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Banco local (Docker) — usa variáveis do .env ou defaults abaixo
+      AZURE_PG_HOST:     db
+      AZURE_PG_PORT:     5432
+      AZURE_PG_USER:     ${POSTGRES_USER:-dronepharm}
+      AZURE_PG_PASSWORD: ${POSTGRES_PASSWORD:-dronepharm123}
+      AZURE_PG_DATABASE: ${POSTGRES_DB:-dronepharm}
+      AZURE_PG_SSL:      disable          # SSL desabilitado em rede Docker interna
+
+      # API Keys externas (defina no .env)
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+
+      # MAVLink (desabilitado por padrão no Docker — sem USB)
+      MAVLINK_PORTA: ${MAVLINK_PORTA:-/dev/null}
+      MAVLINK_BAUD:  ${MAVLINK_BAUD:-57600}
+
+      # Servidor
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8000
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Mapas Folium gerados pela API
+      - ./output:/app/output
+    networks:
+      - dronepharm-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ── pgAdmin (interface web opcional) ─────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dronepharm-pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools           # só sobe com: docker compose --profile tools up
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@dronepharm.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT:      5050
+    ports:
+      - "${PGADMIN_PORT:-5050}:5050"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - dronepharm-net
+
+
+# ── Volumes persistentes ────────────────────────────────────────────────────────
+volumes:
+  pgdata:
+    name: dronepharm-pgdata
+  pgadmin-data:
+    name: dronepharm-pgadmin-data
+
+
+# ── Rede interna ─────────────────────────────────────────────────────────────────
+networks:
+  dronepharm-net:
+    name: dronepharm-network
+    driver: bridge

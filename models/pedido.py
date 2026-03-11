@@ -12,7 +12,6 @@ from config.settings import (
     PRIORIDADE_JANELA_H
 )
 
-
 @dataclass
 class Coordenada:
     """Par de coordenadas geográficas (graus decimais)."""

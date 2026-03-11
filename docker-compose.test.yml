@@ -1,0 +1,38 @@
+# =============================================================================
+# docker-compose.test.yml — DronePharm
+# Executa a suíte de testes dentro de um container isolado (sem banco real)
+#
+# Uso:
+#   docker compose -f docker-compose.test.yml up --build --exit-code-from tests
+# =============================================================================
+
+services:
+
+  tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: runner
+    container_name: dronepharm-tests
+    environment:
+      AZURE_PG_HOST:     localhost   # não há banco — testes usam mocks
+      AZURE_PG_PORT:     5432
+      AZURE_PG_USER:     test
+      AZURE_PG_PASSWORD: test
+      AZURE_PG_DATABASE: dronepharm_test
+      AZURE_PG_SSL:      disable
+      OPENWEATHER_API_KEY: ""
+      MAVLINK_PORTA: /dev/null
+      PYTHONUNBUFFERED: "1"
+    command: >
+      pytest tests/
+        --tb=short
+        -v
+        --no-header
+        -p no:warnings
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge

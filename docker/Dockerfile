@@ -78,7 +78,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 CMD ["sh", "-c", \
-     "wait-for-it ${AZURE_PG_HOST:-db}:${AZURE_PG_PORT:-5432} --timeout=60 --strict -- \
+     "wait-for-it ${AZURE_PG_HOST}:${AZURE_PG_PORT:-5432} --timeout=60 --strict -- \
       uvicorn server.app:app \
         --host ${SERVER_HOST:-0.0.0.0} \
         --port ${SERVER_PORT:-8000} \

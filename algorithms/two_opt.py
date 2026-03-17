@@ -13,10 +13,8 @@ import random
 
 import numpy as np
 
-from algorithms.distancia import distancia_rota
 
-
-def aplicar_2opt(sequencia: List[int], matriz) -> List[int]:
+def aplicar_2opt(sequencia: List[int], matriz: np.ndarray) -> List[int]:
     """
     Aplica a melhoria 2-opt a uma sequência de índices de pedidos.
 
@@ -42,11 +40,9 @@ def aplicar_2opt(sequencia: List[int], matriz) -> List[int]:
 
     melhor      = list(sequencia)
     melhorou    = True
-    iteracoes   = 0
 
     while melhorou:
-        melhorou  = False
-        iteracoes += 1
+        melhorou = False
 
         for i in range(len(melhor) - 1):
             for j in range(i + 2, len(melhor)):
@@ -68,7 +64,7 @@ def aplicar_2opt(sequencia: List[int], matriz) -> List[int]:
     return melhor
 
 
-def _arco(seq: List[int], i: int, j: int, matriz) -> float:
+def _arco(seq: List[int], i: int, j: int, matriz: np.ndarray) -> float:
     """
     Retorna a distância do arco entre seq[i] e seq[j].
     Usa o depósito (índice 0 na matriz) para índices fora dos limites.
@@ -76,14 +72,14 @@ def _arco(seq: List[int], i: int, j: int, matriz) -> float:
     n = len(seq)
     a = seq[i] if 0 <= i < n else 0
     b = seq[j] if 0 <= j < n else 0
-    return matriz[a][b]
+    return float(matriz[a][b])
 
 
 # =============================================================================
 # MUTAÇÃO ALEATÓRIA 2-opt (usada no Algoritmo Genético)
 # =============================================================================
 
-def mutacao_2opt_aleatorio(sequencia: List[int], matriz) -> List[int]:
+def mutacao_2opt_aleatorio(sequencia: List[int], matriz: np.ndarray) -> List[int]:
     """
     Versão estocástica do 2-opt: inverte um segmento aleatório
     somente se isso melhorar a rota.

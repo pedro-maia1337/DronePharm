@@ -10,7 +10,7 @@ from __future__ import annotations
 import random
 import logging
 from copy import deepcopy
-from typing import List, Tuple, Dict
+from typing import List, Optional, Tuple, Dict, cast
 
 import numpy as np
 
@@ -24,7 +24,6 @@ from config.settings import (
     GA_PROB_CROSSOVER,    GA_PROB_MUTACAO,
     GA_TAMANHO_TORNEIO,   GA_ELITE_FRAC,
     GA_JANELA_CONVERGENCIA,
-    GA_PENALIDADE_CAPACIDADE, GA_PENALIDADE_AUTONOMIA,
 )
 
 log = logging.getLogger(__name__)
@@ -54,7 +53,7 @@ def order_crossover(pai1: Cromossomo, pai2: Cromossomo) -> Tuple[Cromossomo, Cro
     a, b = sorted(random.sample(range(n), 2))
 
     def _ox(p1: Cromossomo, p2: Cromossomo) -> Cromossomo:
-        filho = [None] * n
+        filho: List[Optional[int]] = [None] * n
         # Copia segmento de p1
         filho[a:b + 1] = p1[a:b + 1]
         segmento = set(p1[a:b + 1])
@@ -64,7 +63,7 @@ def order_crossover(pai1: Cromossomo, pai2: Cromossomo) -> Tuple[Cromossomo, Cro
             if gene not in segmento:
                 filho[pos] = gene
                 pos = (pos + 1) % n
-        return filho
+        return cast(Cromossomo, filho)
 
     return _ox(pai1, pai2), _ox(pai2, pai1)
 
@@ -106,7 +105,7 @@ class AlgoritmoGenetico:
         sequencia_inicial: Cromossomo,
         verificador:       Verificador,
         pedidos_mapa:      Dict,
-        matriz,
+        matriz:            np.ndarray,
         vento_ms: float = 0.0,
     ):
         self.seq_inicial   = list(sequencia_inicial)
@@ -159,9 +158,13 @@ class AlgoritmoGenetico:
             nova_pop: List[Cromossomo] = []
 
             # Elitismo: copia os melhores diretamente
-            indices_ordenados = sorted(range(len(fitness)), key=lambda i: fitness[i], reverse=True)
-            for i in indices_ordenados[:elite_n]:
-                nova_pop.append(deepcopy(populacao[i]))
+            indices_ordenados = sorted(
+                range(len(fitness)),
+                key=lambda pos: fitness[pos],   # 'pos' evita shadowing do 'i' do for abaixo
+                reverse=True
+            )
+            for elite_idx in indices_ordenados[:elite_n]:
+                nova_pop.append(deepcopy(populacao[elite_idx]))
 
             # Gera o restante da população por seleção + crossover + mutação
             while len(nova_pop) < tam_populacao:
@@ -198,8 +201,11 @@ class AlgoritmoGenetico:
                 break
 
         # Retorna o melhor indivíduo encontrado
-        idx_melhor = max(range(len(fitness)), key=lambda i: fitness[i])
-        melhor     = populacao[idx_melhor]
+        idx_melhor = max(
+            range(len(fitness)),
+            key=lambda pos: fitness[pos]   # 'pos' evita shadowing
+        )
+        melhor = populacao[idx_melhor]
 
         log.info(
             f"GA concluído: {len(self.historico_fitness)} gerações | "
@@ -213,13 +219,13 @@ class AlgoritmoGenetico:
         Função de aptidão: inversamente proporcional ao custo.
         Penalidades são somadas ao custo quando restrições são violadas.
         """
-        carga_kg     = sum(
-            self.pedidos_mapa[i].peso_kg
-            for i in cromossomo
-            if i in self.pedidos_mapa
+        carga_kg   = sum(
+            self.pedidos_mapa[gene].peso_kg
+            for gene in cromossomo
+            if gene in self.pedidos_mapa
         )
-        penalidade   = self.verificador.penalidade(cromossomo, self.vento_ms)
-        custo        = calcular_custo(
+        penalidade = self.verificador.penalidade(cromossomo, self.vento_ms)
+        custo      = calcular_custo(
             cromossomo, self.matriz, self.pedidos_mapa,
             carga_kg=carga_kg, vento_ms=self.vento_ms
         )
@@ -262,7 +268,7 @@ def otimizar_todas_rotas(
     sequencias:    List[Cromossomo],
     verificador:   Verificador,
     pedidos_mapa:  Dict,
-    matriz,
+    matriz:        np.ndarray,
     vento_ms:      float = 0.0,
     geracoes:      int   = GA_NUMERO_GERACOES,
 ) -> List[Cromossomo]:
@@ -284,8 +290,8 @@ def otimizar_todas_rotas(
     """
     rotas_otimizadas = []
 
-    for i, seq in enumerate(sequencias):
-        log.info(f"Otimizando rota {i + 1}/{len(sequencias)} ({len(seq)} pedidos)...")
+    for idx_rota, seq in enumerate(sequencias):
+        log.info(f"Otimizando rota {idx_rota + 1}/{len(sequencias)} ({len(seq)} pedidos)...")
 
         if len(seq) <= 1:
             # Rota com 1 pedido já é ótima

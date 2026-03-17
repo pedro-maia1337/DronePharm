@@ -6,7 +6,7 @@
 
 import math
 import numpy as np
-from typing import List, Union
+from typing import List
 from models.pedido import Coordenada, Pedido
 from config.settings import DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE
 
@@ -14,14 +14,14 @@ from config.settings import DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE
 _RAIO_TERRA_KM = 6371.0
 
 
-def haversine(c1: Coordenada, c2: Coordenada) -> float:
+def haversine(coord1: Coordenada, coord2: Coordenada) -> float:
     """
     Calcula a distância em quilômetros entre dois pontos GPS
     usando a fórmula de Haversine.
 
     Parâmetros
     ----------
-    c1, c2 : Coordenada
+    coord1, coord2 : Coordenada
         Pares (latitude, longitude) em graus decimais.
 
     Retorna
@@ -31,21 +31,21 @@ def haversine(c1: Coordenada, c2: Coordenada) -> float:
 
     Exemplo
     -------
-    >>> c1 = Coordenada(-19.9167, -43.9345)
-    >>> c2 = Coordenada(-19.9300, -43.9500)
-    >>> haversine(c1, c2)
+    >>> p1 = Coordenada(-19.9167, -43.9345)
+    >>> p2 = Coordenada(-19.9300, -43.9500)
+    >>> haversine(p1, p2)
     1.98...
     """
-    lat1, lon1 = math.radians(c1.latitude), math.radians(c1.longitude)
-    lat2, lon2 = math.radians(c2.latitude), math.radians(c2.longitude)
+    lat1, lon1 = math.radians(coord1.latitude), math.radians(coord1.longitude)
+    lat2, lon2 = math.radians(coord2.latitude), math.radians(coord2.longitude)
 
     dlat = lat2 - lat1
     dlon = lon2 - lon1
 
     a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-    c = 2 * math.asin(math.sqrt(a))
+    central_angle = 2 * math.asin(math.sqrt(a))
 
-    return _RAIO_TERRA_KM * c
+    return _RAIO_TERRA_KM * central_angle
 
 
 def distancia_deposito(pedido: Pedido) -> float:

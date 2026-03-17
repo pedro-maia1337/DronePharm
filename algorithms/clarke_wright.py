@@ -7,18 +7,16 @@
 # =============================================================================
 
 from __future__ import annotations
-from typing import List, Dict, Tuple
+from typing import List
 import logging
-
-import numpy as np
 
 from models.pedido import Pedido
 from models.drone import Drone
 from models.rota import Rota, Waypoint
 from algorithms.distancia import (
-    construir_matriz_distancias, calcular_todos_savings, distancia_rota
+    construir_matriz_distancias, calcular_todos_savings
 )
-from algorithms.custo import calcular_custo_detalhado, estimar_tempo_rota_s
+from algorithms.custo import calcular_custo_detalhado
 from constraints.verificador import Verificador
 
 log = logging.getLogger(__name__)
@@ -68,7 +66,6 @@ class ClarkeWright:
         # ------------------------------------------------------------------
         # PASSO 1: Inicializa com uma rota individual por pedido
         # ------------------------------------------------------------------
-        # rotas: lista de listas de índices
         rotas: List[List[int]] = [[i + 1] for i in range(self.n)]
 
         log.debug(f"Rotas iniciais: {len(rotas)} rotas individuais")
@@ -146,15 +143,16 @@ class ClarkeWright:
     # Métodos auxiliares internos
     # ------------------------------------------------------------------
 
-    def _encontrar_rota(self, rotas: List[List[int]], idx: int) -> List[int] | None:
+    @staticmethod
+    def _encontrar_rota(rotas: List[List[int]], idx: int) -> List[int] | None:
         """Encontra qual rota contém o índice idx."""
         for rota in rotas:
             if idx in rota:
                 return rota
         return None
 
+    @staticmethod
     def _podem_combinar(
-        self,
         rota_i: List[int],
         rota_j: List[int],
         i: int, j: int
@@ -170,8 +168,8 @@ class ClarkeWright:
             (rota_i[0]  == i and rota_j[0]  == j)
         )
 
+    @staticmethod
     def _combinar(
-        self,
         rota_i: List[int],
         rota_j: List[int],
         i: int, j: int

@@ -16,17 +16,17 @@ from fastapi.testclient import TestClient
 # Factories de objetos fake
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _farmacia(id=1, deposito=False, ativa=True):
+def _farmacia(farmacia_id=1, deposito=False, ativa=True):
     return SimpleNamespace(
-        id=id, nome=f"Farmácia {id}", latitude=-19.93, longitude=-43.95,
+        id=farmacia_id, nome=f"Farmácia {farmacia_id}", latitude=-19.93, longitude=-43.95,
         endereco="Rua X", cidade="Belo Horizonte", uf="MG",
         deposito=deposito, ativa=ativa, criada_em=datetime(2025, 1, 1),
     )
 
 
-def _pedido(id=1, status="pendente", prioridade=2, peso_kg=0.5, farmacia_id=1):
+def _pedido(pedido_id=1, status="pendente", prioridade=2, peso_kg=0.5, farmacia_id=1):
     return SimpleNamespace(
-        id=id, latitude=-19.93, longitude=-43.95,
+        id=pedido_id, latitude=-19.93, longitude=-43.95,
         peso_kg=peso_kg, prioridade=prioridade,
         descricao="Dipirona 500mg", farmacia_id=farmacia_id,
         rota_id=None, status=status,
@@ -35,9 +35,9 @@ def _pedido(id=1, status="pendente", prioridade=2, peso_kg=0.5, farmacia_id=1):
     )
 
 
-def _drone(id="DP-01", status="aguardando", bateria=1.0):
+def _drone(drone_id="DP-01", status="aguardando", bateria=1.0):
     return SimpleNamespace(
-        id=id, nome=f"DronePharm-{id}",
+        id=drone_id, nome=f"DronePharm-{drone_id}",
         capacidade_max_kg=2.0, autonomia_max_km=10.0, velocidade_ms=10.0,
         bateria_pct=bateria, status=status,
         latitude_atual=None, longitude_atual=None, missoes_realizadas=5,
@@ -45,9 +45,9 @@ def _drone(id="DP-01", status="aguardando", bateria=1.0):
     )
 
 
-def _rota(id=1, drone_id="DP-01", status="calculada"):
+def _rota(rota_id=1, drone_id="DP-01", status="calculada"):
     return SimpleNamespace(
-        id=id, drone_id=drone_id, pedido_ids=[1, 2],
+        id=rota_id, drone_id=drone_id, pedido_ids=[1, 2],
         waypoints_json=[{"seq": 0, "lat": -19.9167, "lon": -43.9345, "label": "depósito"}],
         distancia_km=3.2, tempo_min=8.5, energia_wh=48.0,
         carga_kg=1.3, custo=0.42, viavel=True, geracoes_ga=87,
@@ -55,9 +55,9 @@ def _rota(id=1, drone_id="DP-01", status="calculada"):
     )
 
 
-def _telem(id=1, drone_id="DP-01", bateria=0.75, vento=3.5):
+def _telem(telem_id=1, drone_id="DP-01", bateria=0.75, vento=3.5):
     return SimpleNamespace(
-        id=id, drone_id=drone_id,
+        id=telem_id, drone_id=drone_id,
         latitude=-19.93, longitude=-43.95, altitude_m=50.0,
         velocidade_ms=10.2, bateria_pct=bateria,
         vento_ms=vento, direcao_vento=180.0, status="em_voo",
@@ -65,18 +65,18 @@ def _telem(id=1, drone_id="DP-01", bateria=0.75, vento=3.5):
     )
 
 
-def _log_orm(id=1, nivel="INFO", categoria="SISTEMA"):
+def _log_orm(log_id=1, nivel="INFO", categoria="SISTEMA"):
     return SimpleNamespace(
-        id=id, nivel=nivel, categoria=categoria,
+        id=log_id, nivel=nivel, categoria=categoria,
         mensagem="Evento de teste",
         drone_id=None, pedido_id=None, rota_id=None,
         dados_json={}, criado_em=datetime(2025, 6, 1, 12, 0),
     )
 
 
-def _rastr(id=1, pedido_id=1, status_de="pendente", status_para="em_rota"):
+def _rastr(rastr_id=1, pedido_id=1, status_de="pendente", status_para="em_rota"):
     return SimpleNamespace(
-        id=id, pedido_id=pedido_id, status_de=status_de, status_para=status_para,
+        id=rastr_id, pedido_id=pedido_id, status_de=status_de, status_para=status_para,
         drone_id="DP-01", rota_id=1,
         latitude=-19.93, longitude=-43.95, observacao="Teste",
         criado_em=datetime(2025, 6, 1, 12, 0),
@@ -109,8 +109,7 @@ def _make_engine_mock(db_ok: bool = True):
             __aexit__=AsyncMock(return_value=False),
         ))
     else:
-        import asyncio
-        async def _fail(*a, **kw):
+        async def _fail(*_args, **_kwargs):
             raise Exception("Banco indisponível (mock offline)")
         cm = MagicMock()
         cm.__aenter__ = _fail
@@ -233,7 +232,8 @@ class TestStatusSistema:
 
 class TestRotasCalculo:
 
-    def _payload_rotas(self, drone_id="DP-01", pedido_ids=None):
+    @staticmethod
+    def _payload_rotas(drone_id="DP-01", pedido_ids=None):
         return {"drone_id": drone_id, "pedido_ids": pedido_ids or [1, 2]}
 
     # CORREÇÃO: router verifica PEDIDOS primeiro (buscar_por_ids), depois DRONE.
@@ -272,7 +272,7 @@ class TestRotasCalculo:
 
     def test_buscar_rota_por_id_retorna_200(self, client):
         with patch("server.routers.rotas.RotaRepository") as RR:
-            RR.return_value.buscar_por_id = AsyncMock(return_value=_rota(id=7))
+            RR.return_value.buscar_por_id = AsyncMock(return_value=_rota(rota_id=7))
             r = client.get("/api/v1/rotas/7")
         assert r.status_code == 200
         assert r.json()["id"] == 7
@@ -306,7 +306,8 @@ class TestRotasCalculo:
 
 class TestTelemetria:
 
-    def _payload_telem(self, **overrides):
+    @staticmethod
+    def _payload_telem(**overrides):
         base = {
             "drone_id":      "DP-01",
             "latitude":      -19.93,
@@ -372,7 +373,7 @@ class TestTelemetria:
 
     def test_buscar_historico_telemetria_retorna_200(self, client):
         with patch("server.routers.telemetria.TelemetriaRepository") as TR:
-            TR.return_value.historico = AsyncMock(return_value=[_telem(), _telem(id=2)])
+            TR.return_value.historico = AsyncMock(return_value=[_telem(), _telem(telem_id=2)])
             r = client.get("/api/v1/telemetria/DP-01/historico")
         assert r.status_code == 200
 
@@ -436,11 +437,35 @@ class TestFrota:
         assert r.status_code == 200
 
     def test_resumo_drone_retorna_200(self, client):
+        # O endpoint resumo_drone faz `await db.execute(text(...))` diretamente
+        # na sessão injetada. O fixture define mock_session.execute = AsyncMock()
+        # sem return_value, então await retorna um novo AsyncMock cujo
+        # _execute_mock_call interno nunca é consumido → RuntimeWarning.
+        # Solução: configurar execute para retornar um MagicMock síncrono com
+        # a cadeia result.mappings().fetchone() já resolvida, antes da requisição.
+        from bd.database import get_db
+
+        row = MagicMock()
+        row.__getitem__ = lambda _obj, key: 12.5 if key == "dist_total" else 3
+        mock_result = MagicMock()
+        mock_result.mappings.return_value.fetchone.return_value = row
+
+        async def _fake_db_com_execute():
+            sess = AsyncMock()
+            sess.commit   = AsyncMock()
+            sess.rollback = AsyncMock()
+            sess.close    = AsyncMock()
+            sess.execute  = AsyncMock(return_value=mock_result)
+            yield sess
+
         with patch("server.routers.frota.DroneRepository") as DR, \
              patch("server.routers.frota.TelemetriaRepository") as TR:
             DR.return_value.buscar_por_id = AsyncMock(return_value=_drone("DP-01"))
             TR.return_value.historico     = AsyncMock(return_value=[_telem()])
+            client.app.dependency_overrides[get_db] = _fake_db_com_execute
             r = client.get("/api/v1/frota/DP-01/resumo")
+            client.app.dependency_overrides.pop(get_db, None)
+
         assert r.status_code == 200
 
     def test_resumo_drone_inexistente_retorna_404(self, client):
@@ -582,9 +607,9 @@ class TestLogs:
 # BLOCO F — HISTÓRICO E KPIs
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _historico_orm(id=1, drone_id="DP-01", farmacia_id=1, entregue_no_prazo=True):
+def _historico_orm(historico_id=1, drone_id="DP-01", farmacia_id=1, entregue_no_prazo=True):
     return SimpleNamespace(
-        id=id, pedido_id=id, rota_id=id, drone_id=drone_id,
+        id=historico_id, pedido_id=historico_id, rota_id=historico_id, drone_id=drone_id,
         farmacia_id=farmacia_id, prioridade=2, peso_kg=0.5,
         distancia_km=3.2, tempo_real_min=8.5,
         entregue_no_prazo=entregue_no_prazo,

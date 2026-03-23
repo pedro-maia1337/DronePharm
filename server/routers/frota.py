@@ -1,14 +1,6 @@
 # =============================================================================
-# servidor/routers/frota.py
+# server/routers/frota.py
 # Gestão de frota e monitoramento de bateria/carga — /api/v1/frota
-#
-# GET  /api/v1/frota/status          → snapshot completo da frota
-# GET  /api/v1/frota/bateria         → ranking de bateria de todos os drones
-# GET  /api/v1/frota/alerta-bateria  → drones com bateria abaixo do limiar
-# GET  /api/v1/frota/{id}/resumo     → métricas consolidadas de um drone
-# POST /api/v1/frota/{id}/retornar   → aciona retorno de emergência
-# POST /api/v1/frota/{id}/manutencao → coloca drone em manutenção
-# POST /api/v1/frota/{id}/reativar   → reativa drone após manutenção/carga
 # =============================================================================
 
 import logging
@@ -44,33 +36,48 @@ router = APIRouter()
 )
 async def status_frota(db: AsyncSession = Depends(get_db)):
     drone_repo = DroneRepository(db)
-    telem_repo = TelemetriaRepository(db)
+    drones     = await drone_repo.listar()
 
-    drones = await drone_repo.listar()
+    if not drones:
+        return {"resumo": {}, "drones": []}
+
+    # Busca a última telemetria de todos os drones em uma única query,
+    # evitando o problema N+1 que ocorria com um SELECT por drone.
+    ids_param = ", ".join(f"'{d.id}'" for d in drones)
+    result = await db.execute(text(
+        f"""
+        SELECT DISTINCT ON (drone_id)
+               drone_id, latitude, longitude, criado_em
+        FROM   telemetria
+        WHERE  drone_id IN ({ids_param})
+        ORDER  BY drone_id, criado_em DESC
+        """
+    ))
+    ultimas = {row["drone_id"]: row for row in result.mappings().all()}
 
     frota = []
     for d in drones:
-        ultima = await telem_repo.buscar_ultima(d.id)
+        ultima = ultimas.get(d.id)
         frota.append({
-            "id":                d.id,
-            "nome":              d.nome,
-            "status":            d.status,
-            "bateria_pct":       round(d.bateria_pct * 100, 1),
-            "capacidade_max_kg": d.capacidade_max_kg,
-            "autonomia_max_km":  d.autonomia_max_km,
+            "id":                 d.id,
+            "nome":               d.nome,
+            "status":             d.status,
+            "bateria_pct":        round(d.bateria_pct * 100, 1),
+            "capacidade_max_kg":  d.capacidade_max_kg,
+            "autonomia_max_km":   d.autonomia_max_km,
             "missoes_realizadas": d.missoes_realizadas,
-            "latitude_atual":    d.latitude_atual,
-            "longitude_atual":   d.longitude_atual,
-            "alerta_bateria":    d.bateria_pct <= DRONE_BATERIA_MINIMA,
-            "ultima_telem_em":   ultima.criado_em.isoformat() if ultima else None,
+            "latitude_atual":     d.latitude_atual,
+            "longitude_atual":    d.longitude_atual,
+            "alerta_bateria":     d.bateria_pct <= DRONE_BATERIA_MINIMA,
+            "ultima_telem_em":    ultima["criado_em"].isoformat() if ultima else None,
         })
 
     resumo = {
-        "total":         len(drones),
-        "aguardando":    sum(1 for d in drones if d.status == "aguardando"),
-        "em_voo":        sum(1 for d in drones if d.status == "em_voo"),
-        "carregando":    sum(1 for d in drones if d.status == "carregando"),
-        "manutencao":    sum(1 for d in drones if d.status == "manutencao"),
+        "total":          len(drones),
+        "aguardando":     sum(1 for d in drones if d.status == "aguardando"),
+        "em_voo":         sum(1 for d in drones if d.status == "em_voo"),
+        "carregando":     sum(1 for d in drones if d.status == "carregando"),
+        "manutencao":     sum(1 for d in drones if d.status == "manutencao"),
         "alerta_bateria": sum(1 for d in drones if d.bateria_pct <= DRONE_BATERIA_MINIMA),
     }
 
@@ -87,20 +94,20 @@ async def status_frota(db: AsyncSession = Depends(get_db)):
     description="Lista todos os drones ordenados pelo nível de bateria (maior primeiro).",
 )
 async def ranking_bateria(db: AsyncSession = Depends(get_db)):
-    drone_repo = DroneRepository(db)
-    drones = await drone_repo.listar()
+    drone_repo   = DroneRepository(db)
+    drones       = await drone_repo.listar()
     drones_sorted = sorted(drones, key=lambda d: d.bateria_pct, reverse=True)
 
     return {
         "total": len(drones_sorted),
         "drones": [
             {
-                "id":          d.id,
-                "nome":        d.nome,
-                "status":      d.status,
-                "bateria_pct": round(d.bateria_pct * 100, 1),
+                "id":                    d.id,
+                "nome":                  d.nome,
+                "status":                d.status,
+                "bateria_pct":           round(d.bateria_pct * 100, 1),
                 "autonomia_restante_km": round(d.autonomia_max_km * d.bateria_pct, 2),
-                "alerta":      d.bateria_pct <= DRONE_BATERIA_MINIMA,
+                "alerta":                d.bateria_pct <= DRONE_BATERIA_MINIMA,
             }
             for d in drones_sorted
         ],
@@ -114,13 +121,13 @@ async def ranking_bateria(db: AsyncSession = Depends(get_db)):
 @router.get(
     "/alerta-bateria",
     summary="Drones com bateria crítica",
-    description=f"Retorna drones com bateria abaixo ou igual ao limiar mínimo operacional.",
+    description="Retorna drones com bateria abaixo ou igual ao limiar mínimo operacional.",
 )
 async def alerta_bateria(
     limiar: float = Query(
         None,
         ge=0.0, le=1.0,
-        description="Limiar customizado (0.0–1.0). Padrão: configuração do sistema."
+        description="Limiar customizado (0.0–1.0). Padrão: configuração do sistema.",
     ),
     db: AsyncSession = Depends(get_db),
 ):
@@ -128,7 +135,7 @@ async def alerta_bateria(
     telem_repo = TelemetriaRepository(db)
     threshold  = limiar if limiar is not None else DRONE_BATERIA_MINIMA
 
-    drones = await drone_repo.listar()
+    drones  = await drone_repo.listar()
     criticos = [d for d in drones if d.bateria_pct <= threshold]
 
     resultado = []
@@ -146,9 +153,9 @@ async def alerta_bateria(
         })
 
     return {
-        "limiar_pct": round(threshold * 100, 1),
+        "limiar_pct":     round(threshold * 100, 1),
         "total_criticos": len(resultado),
-        "drones": resultado,
+        "drones":         resultado,
     }
 
 
@@ -174,7 +181,6 @@ async def resumo_drone(drone_id: str, db: AsyncSession = Depends(get_db)):
 
     ultimas_telem = await telem_repo.historico(drone_id, limite=5)
 
-    # Consumo acumulado estimado via histórico
     try:
         result = await db.execute(
             text(
@@ -184,9 +190,9 @@ async def resumo_drone(drone_id: str, db: AsyncSession = Depends(get_db)):
             ),
             {"did": drone_id},
         )
-        row = result.mappings().fetchone()
-        dist_total   = float(row["dist_total"])   if row else 0.0
-        total_missoes = int(row["total_missoes"]) if row else 0
+        row           = result.mappings().fetchone()
+        dist_total    = float(row["dist_total"])   if row else 0.0
+        total_missoes = int(row["total_missoes"])   if row else 0
     except Exception:
         dist_total    = 0.0
         total_missoes = drone.missoes_realizadas
@@ -202,10 +208,10 @@ async def resumo_drone(drone_id: str, db: AsyncSession = Depends(get_db)):
             "velocidade_ms":     drone.velocidade_ms,
         },
         "historico": {
-            "missoes_realizadas":    drone.missoes_realizadas,
-            "total_no_historico":    total_missoes,
-            "distancia_total_km":    round(dist_total, 2),
-            "consumo_estimado_wh":   round(dist_total * 15.0, 1),  # 15 Wh/km
+            "missoes_realizadas":  drone.missoes_realizadas,
+            "total_no_historico":  total_missoes,
+            "distancia_total_km":  round(dist_total, 2),
+            "consumo_estimado_wh": round(dist_total * 15.0, 1),
         },
         "ultimas_telemetrias": [
             {
@@ -230,10 +236,6 @@ async def resumo_drone(drone_id: str, db: AsyncSession = Depends(get_db)):
 @router.post(
     "/{drone_id}/retornar",
     summary="Acionar retorno de emergência",
-    description=(
-        "Sinaliza retorno de emergência: atualiza status para 'retornando' "
-        "e emite alerta via WebSocket para todos os painéis conectados."
-    ),
 )
 async def acionar_retorno(drone_id: str, db: AsyncSession = Depends(get_db)):
     drone_repo = DroneRepository(db)
@@ -242,7 +244,6 @@ async def acionar_retorno(drone_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Drone '{drone_id}' não encontrado.")
 
     await drone_repo.atualizar(drone_id, status="retornando")
-
     await manager.broadcast_alerta(
         tipo="RETORNO_ACIONADO",
         drone_id=drone_id,
@@ -274,11 +275,10 @@ async def colocar_em_manutencao(
     if drone.status == "em_voo":
         raise HTTPException(
             status_code=409,
-            detail="Não é possível colocar em manutenção um drone em voo. Acione retorno primeiro."
+            detail="Não é possível colocar em manutenção um drone em voo. Acione retorno primeiro.",
         )
 
     await drone_repo.atualizar(drone_id, status="manutencao")
-
     log.warning(f"Drone {drone_id} em manutenção. Motivo: {motivo}")
     return {
         "drone_id": drone_id,
@@ -304,11 +304,10 @@ async def reativar_drone(
         raise HTTPException(status_code=404, detail=f"Drone '{drone_id}' não encontrado.")
 
     await drone_repo.atualizar(drone_id, status="aguardando", bateria_pct=bateria_pct)
-
     log.info(f"Drone {drone_id} reativado. Bateria: {bateria_pct*100:.0f}%")
     return {
-        "drone_id":   drone_id,
-        "status":     "aguardando",
+        "drone_id":    drone_id,
+        "status":      "aguardando",
         "bateria_pct": round(bateria_pct * 100, 1),
-        "mensagem":   f"{drone.nome} reativado e disponível para voo.",
+        "mensagem":    f"{drone.nome} reativado e disponível para voo.",
     }

@@ -1,5 +1,5 @@
 # =============================================================================
-# servidor/app.py
+# server/app.py
 # Servidor central DronePharm — FastAPI
 #
 # Rodar (SEMPRE da raiz do projeto):
@@ -8,7 +8,6 @@
 # Docs: http://localhost:8000/docs
 # =============================================================================
 
-# ── Garante que a raiz do projeto esteja no sys.path ─────────────────────────
 import sys, os
 _RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _RAIZ not in sys.path:
@@ -43,6 +42,9 @@ async def lifespan(app: FastAPI):
     await init_db()
     log.info("Banco de dados conectado.")
 
+    # Carrega coordenadas do depósito do banco e armazena no settings
+    # como fallback para módulos que ainda leem DEPOSITO_* diretamente.
+    # O router de rotas usa o depósito como parâmetro explícito (sem mutação).
     from bd.database import AsyncSessionLocal
     from config import settings as cfg
 
@@ -92,7 +94,7 @@ app = FastAPI(
         "5. `GET /api/v1/mapa/rotas` — mapa interativo\n"
         "6. `WS /ws/telemetria/{drone_id}` — stream em tempo real\n"
     ),
-    version="2.0.0",
+    version="2.1.0",
     contact={"name": "DronePharm", "email": "contato@dronepharm.dev"},
     license_info={"name": "MIT"},
     lifespan=lifespan,
@@ -105,7 +107,7 @@ app = FastAPI(
 # =============================================================================
 
 app.add_middleware(LoggingMiddleware)
-configurar_cors(app, modo_dev=True)
+configurar_cors(app)          # modo lido de CORS_MODE no .env (sem argumento hardcoded)
 app.add_middleware(ErrorHandlerMiddleware)
 
 # =============================================================================
@@ -143,7 +145,7 @@ app.include_router(ws_router, prefix="/ws", tags=["WebSocket — Tempo Real"])
 async def root():
     return {
         "sistema": "DronePharm",
-        "versao":  "2.0.0",
+        "versao":  "2.1.0",
         "status":  "online",
         "docs":    "/docs",
         "endpoints_http": {
@@ -176,8 +178,9 @@ async def health_check():
         content={
             "status":      "healthy" if db_ok else "degraded",
             "database":    "connected" if db_ok else "disconnected",
-            "versao":      "2.0.0",
-            "ws_conexoes": __import__("server.websocket.connection_manager",
-                                      fromlist=["manager"]).manager.total_conexoes(),
+            "versao":      "2.1.0",
+            "ws_conexoes": __import__(
+                "server.websocket.connection_manager", fromlist=["manager"]
+            ).manager.total_conexoes(),
         },
     )

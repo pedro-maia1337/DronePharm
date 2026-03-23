@@ -1,5 +1,5 @@
 # =============================================================================
-# servidor/routers/rotas.py
+# server/routers/rotas.py
 # Roteirização e gestão de rotas — /api/v1/rotas
 # =============================================================================
 
@@ -115,16 +115,15 @@ async def calcular_rotas(
             detail=f"Drone '{body.drone_id}' está '{drone_orm.status}'. Use forcar_recalc=true para forçar.",
         )
 
-    # ── 3. Carrega depósito (base de origem) ──────────────────────────────────
+    # ── 3. Carrega depósito ───────────────────────────────────────────────────
     deposito = await farmacia_repo.buscar_deposito_principal()
     if not deposito:
         raise HTTPException(status_code=404, detail="Nenhum depósito cadastrado no banco.")
 
-    # Injeta coordenadas do depósito dinâmico nas configurações em memória
-    from config import settings as cfg
-    cfg.DEPOSITO_LATITUDE  = deposito.latitude
-    cfg.DEPOSITO_LONGITUDE = deposito.longitude
-    cfg.DEPOSITO_NOME      = deposito.nome
+    # As coordenadas do depósito são passadas diretamente como parâmetros,
+    # evitando mutação de estado global que causaria race condition em
+    # requisições concorrentes.
+    deposito_coord = Coordenada(deposito.latitude, deposito.longitude)
 
     # ── 4. Converte ORM → modelos de domínio ──────────────────────────────────
     pedidos: List[PedidoModel] = [
@@ -169,16 +168,20 @@ async def calcular_rotas(
     log.info(f"Altitude de voo: {altitude_voo:.1f}m | Vento: {vento_ms:.1f} m/s | Pedidos: {len(pedidos)}")
 
     # ── 6. Algoritmo de roteirização ──────────────────────────────────────────
-    matriz       = construir_matriz_distancias(pedidos, incluir_deposito=True)
+    # O depósito é passado explicitamente para ClarkeWright, que o repassa
+    # internamente para construir_matriz_distancias — sem tocar em settings.
+    matriz       = construir_matriz_distancias(
+        pedidos, incluir_deposito=True, deposito=deposito_coord
+    )
     pedidos_mapa = {i + 1: p for i, p in enumerate(pedidos)}
     verificador  = Verificador(drone, pedidos, matriz)
 
     # Fase 1 — Clarke-Wright
-    cw       = ClarkeWright(drone, pedidos, vento_ms=vento_ms)
-    seqs_cw  = cw.resolver()
+    cw      = ClarkeWright(drone, pedidos, vento_ms=vento_ms, deposito=deposito_coord)
+    seqs_cw = cw.resolver()
 
     # Fase 2 — Algoritmo Genético
-    seqs_ga  = otimizar_todas_rotas(seqs_cw, verificador, pedidos_mapa, matriz, vento_ms)
+    seqs_ga   = otimizar_todas_rotas(seqs_cw, verificador, pedidos_mapa, matriz, vento_ms)
     rotas_obj = cw.para_objetos_rota(seqs_ga)
 
     # ── 7. Persiste e monta resposta ──────────────────────────────────────────
@@ -203,6 +206,7 @@ async def calcular_rotas(
             waypoints=[w.model_dump() for w in waypoints],
             metricas=metricas,
             viavel=rota.viavel,
+            geracoes_ga=rota.geracoes_ga,
         )
 
         await pedido_repo.atualizar_status_lote(
@@ -227,7 +231,6 @@ async def calcular_rotas(
             status="calculada",
         ))
 
-    # Atualiza status do drone
     await drone_repo.atualizar(body.drone_id, status="em_voo")
 
     return RoteirizarResponse(
@@ -304,9 +307,9 @@ async def buscar_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
     ),
 )
 async def concluir_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
-    rota_repo     = RotaRepository(db)
-    pedido_repo   = PedidoRepository(db)
-    drone_repo    = DroneRepository(db)
+    rota_repo      = RotaRepository(db)
+    pedido_repo    = PedidoRepository(db)
+    drone_repo     = DroneRepository(db)
     historico_repo = HistoricoRepository(db)
 
     rota = await rota_repo.buscar_por_id(rota_id)
@@ -319,11 +322,9 @@ async def concluir_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
 
     await rota_repo.atualizar_status(rota_id, "concluida")
 
-    # Marca pedidos como entregues
     pedido_ids = rota.pedido_ids or []
     await pedido_repo.atualizar_status_lote(ids=pedido_ids, status="entregue")
 
-    # Registra histórico para cada pedido
     pedidos = await pedido_repo.buscar_por_ids(pedido_ids)
     dist_por_pedido = rota.distancia_km / max(len(pedidos), 1)
     for pedido in pedidos:
@@ -342,7 +343,6 @@ async def concluir_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
             entregue_no_prazo=janela_ok,
         )
 
-    # Atualiza drone
     await drone_repo.incrementar_missoes(rota.drone_id)
 
     return {
@@ -378,11 +378,8 @@ async def abortar_rota(
 
     await rota_repo.atualizar_status(rota_id, "abortada")
 
-    # Devolve pedidos para pendente
     pedido_ids = rota.pedido_ids or []
     await pedido_repo.atualizar_status_lote(ids=pedido_ids, status="pendente", rota_id=None)
-
-    # Retorna drone para aguardando
     await drone_repo.atualizar(rota.drone_id, status="aguardando")
 
     motivo = body.motivo or "Não informado"

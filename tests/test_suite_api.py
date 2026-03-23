@@ -85,8 +85,50 @@ def _rastr(id=1, pedido_id=1, status_de="pendente", status_para="em_rota"):
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fixture: TestClient com banco mockado
-# Também mocka init_db (startup) e close_db (shutdown) para evitar conexão real.
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Helpers de mock do engine — evitam conexões reais com o Azure durante testes
+# e eliminam o RuntimeWarning "Connection._cancel was never awaited" do asyncpg.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _make_engine_mock(db_ok: bool = True):
+    engine_mock = MagicMock()
+
+    if db_ok:
+        result_mock = MagicMock()
+        result_mock.scalar.return_value = "PostgreSQL 16 (mock)"
+        conn_mock = AsyncMock()
+        conn_mock.execute = AsyncMock(return_value=result_mock)
+        engine_mock.connect = MagicMock(return_value=AsyncMock(
+            __aenter__=AsyncMock(return_value=conn_mock),
+            __aexit__=AsyncMock(return_value=False),
+        ))
+    else:
+        async def _fail(*_args, **_kwargs):
+            raise Exception("Banco indisponível (mock offline)")
+        cm = MagicMock()
+        cm.__aenter__ = _fail
+        cm.__aexit__  = AsyncMock(return_value=False)
+        engine_mock.connect = MagicMock(return_value=cm)
+
+    engine_mock.dispose = AsyncMock()
+    return engine_mock
+
+
+def _make_session_factory_mock():
+    result_mock = MagicMock()
+    result_mock.mappings.return_value.fetchone.return_value = None
+
+    session_mock = AsyncMock()
+    session_mock.execute = AsyncMock(return_value=result_mock)
+
+    factory = MagicMock(return_value=AsyncMock(
+        __aenter__=AsyncMock(return_value=session_mock),
+        __aexit__=AsyncMock(return_value=False),
+    ))
+    return factory
 
 @pytest.fixture
 def client():
@@ -105,7 +147,9 @@ def client():
     app.dependency_overrides[get_db] = _fake_db
 
     # Mocka init_db e close_db para que o lifespan não tente conectar ao banco real
-    with patch("bd.database.init_db",           AsyncMock()), \
+    with patch("bd.database.engine",             _make_engine_mock(db_ok=True)), \
+         patch("bd.database.AsyncSessionLocal", _make_session_factory_mock()), \
+         patch("bd.database.init_db",           AsyncMock()), \
          patch("bd.database.close_db",          AsyncMock()), \
          patch("bd.database.check_db_connection", AsyncMock(return_value=True)):
         with TestClient(app) as c:
@@ -133,7 +177,9 @@ def client_db_offline():
 
     app.dependency_overrides[get_db] = _fake_db
 
-    with patch("bd.database.init_db",           AsyncMock()), \
+    with patch("bd.database.engine",             _make_engine_mock(db_ok=False)), \
+         patch("bd.database.AsyncSessionLocal", _make_session_factory_mock()), \
+         patch("bd.database.init_db",           AsyncMock()), \
          patch("bd.database.close_db",          AsyncMock()), \
          patch("bd.database.check_db_connection", AsyncMock(return_value=False)):
         with TestClient(app) as c:
@@ -346,19 +392,52 @@ class TestTelemetria:
 class TestFrota:
 
     def test_status_frota_retorna_200(self, client):
+        # status_frota faz db.execute(DISTINCT ON ...) direto na sessão → configura MagicMock síncrono.
+        from bd.database import get_db
+
+        mock_result = MagicMock()
+        mock_result.mappings.return_value.all.return_value = []
+
+        async def _fake_db_com_execute():
+            sess = AsyncMock()
+            sess.commit   = AsyncMock()
+            sess.rollback = AsyncMock()
+            sess.close    = AsyncMock()
+            sess.execute  = AsyncMock(return_value=mock_result)
+            yield sess
+
         with patch("server.routers.frota.DroneRepository") as DR, \
              patch("server.routers.frota.TelemetriaRepository") as TR:
             DR.return_value.listar        = AsyncMock(return_value=[_drone("DP-01"), _drone("DP-02", "em_voo", 0.65)])
             TR.return_value.buscar_ultima = AsyncMock(return_value=None)
+            client.app.dependency_overrides[get_db] = _fake_db_com_execute
             r = client.get("/api/v1/frota/status")
+            client.app.dependency_overrides.pop(get_db, None)
+
         assert r.status_code == 200
 
     def test_status_frota_retorna_lista(self, client):
+        from bd.database import get_db
+
+        mock_result = MagicMock()
+        mock_result.mappings.return_value.all.return_value = []
+
+        async def _fake_db_com_execute():
+            sess = AsyncMock()
+            sess.commit   = AsyncMock()
+            sess.rollback = AsyncMock()
+            sess.close    = AsyncMock()
+            sess.execute  = AsyncMock(return_value=mock_result)
+            yield sess
+
         with patch("server.routers.frota.DroneRepository") as DR, \
              patch("server.routers.frota.TelemetriaRepository") as TR:
             DR.return_value.listar        = AsyncMock(return_value=[_drone("DP-01")])
             TR.return_value.buscar_ultima = AsyncMock(return_value=None)
+            client.app.dependency_overrides[get_db] = _fake_db_com_execute
             data = client.get("/api/v1/frota/status").json()
+            client.app.dependency_overrides.pop(get_db, None)
+
         assert isinstance(data, list) or "drones" in data
 
     def test_ranking_bateria_retorna_200(self, client):
@@ -378,11 +457,30 @@ class TestFrota:
         assert r.status_code == 200
 
     def test_resumo_drone_retorna_200(self, client):
+        # resumo_drone faz db.execute(text(...)) para buscar dist_total e total_missoes.
+        from bd.database import get_db
+
+        row = MagicMock()
+        row.__getitem__ = lambda _obj, key: 12.5 if key == "dist_total" else 3
+        mock_result = MagicMock()
+        mock_result.mappings.return_value.fetchone.return_value = row
+
+        async def _fake_db_com_execute():
+            sess = AsyncMock()
+            sess.commit   = AsyncMock()
+            sess.rollback = AsyncMock()
+            sess.close    = AsyncMock()
+            sess.execute  = AsyncMock(return_value=mock_result)
+            yield sess
+
         with patch("server.routers.frota.DroneRepository") as DR, \
              patch("server.routers.frota.TelemetriaRepository") as TR:
             DR.return_value.buscar_por_id = AsyncMock(return_value=_drone("DP-01"))
             TR.return_value.historico     = AsyncMock(return_value=[_telem()])
+            client.app.dependency_overrides[get_db] = _fake_db_com_execute
             r = client.get("/api/v1/frota/DP-01/resumo")
+            client.app.dependency_overrides.pop(get_db, None)
+
         assert r.status_code == 200
 
     def test_resumo_drone_inexistente_retorna_404(self, client):
@@ -475,6 +573,18 @@ class TestLogs:
     # CORREÇÃO: trilha_pedido chama PedidoRepository.buscar_por_id ANTES de RastreabilidadeRepository.
     # O mock de PedidoRepository é obrigatório para que o endpoint não retorne 404.
     def test_trilha_pedido_retorna_200(self, client):
+        # O router acessa pedido.criado_em.isoformat() e pedido.entregue_em.
+        # Usar SimpleNamespace garante atributos síncronos sem coroutines pendentes.
+        from bd.database import get_db
+
+        async def _fake_db_simples():
+            sess = AsyncMock()
+            sess.commit   = AsyncMock()
+            sess.rollback = AsyncMock()
+            sess.close    = AsyncMock()
+            sess.execute  = AsyncMock(return_value=MagicMock())
+            yield sess
+
         with patch("server.routers.logs.PedidoRepository") as PR, \
              patch("server.routers.logs.RastreabilidadeRepository") as RR:
             PR.return_value.buscar_por_id = AsyncMock(return_value=_pedido(1))
@@ -482,7 +592,10 @@ class TestLogs:
                 _rastr(pedido_id=1, status_de="pendente",  status_para="em_rota"),
                 _rastr(pedido_id=1, status_de="em_rota",   status_para="entregue"),
             ])
+            client.app.dependency_overrides[get_db] = _fake_db_simples
             r = client.get("/api/v1/logs/pedidos/1/trilha")
+            client.app.dependency_overrides.pop(get_db, None)
+
         assert r.status_code == 200
 
     # CORREÇÃO: mesma correção — PedidoRepository.buscar_por_id mockado com pedido existente

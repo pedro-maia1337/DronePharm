@@ -1,5 +1,5 @@
 # =============================================================================
-# banco/repositories/farmacia_repo.py
+# bd/repositories/farmacia_repo.py
 # =============================================================================
 
 import logging
@@ -9,6 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bd.models import Farmacia
 
 log = logging.getLogger(__name__)
+
+# SQL de correção do schema — execute no banco para eliminar o fallback:
+# ALTER TABLE farmacias ADD COLUMN IF NOT EXISTS criada_em TIMESTAMP DEFAULT NOW();
+_SQL_MIGRATION_HINT = (
+    "Execute no banco: "
+    "ALTER TABLE farmacias ADD COLUMN IF NOT EXISTS criada_em TIMESTAMP DEFAULT NOW();"
+)
+
 
 class FarmaciaRepository:
     def __init__(self, db: AsyncSession):
@@ -27,7 +35,9 @@ class FarmaciaRepository:
         )
         return result.scalar_one_or_none()
 
-    async def listar(self, deposito: Optional[bool] = None, so_ativas: bool = True) -> List[Farmacia]:
+    async def listar(
+        self, deposito: Optional[bool] = None, so_ativas: bool = True
+    ) -> List[Farmacia]:
         query = select(Farmacia)
         if so_ativas:
             query = query.where(Farmacia.ativa == True)
@@ -39,11 +49,16 @@ class FarmaciaRepository:
     async def buscar_deposito_principal(self) -> Optional[Farmacia]:
         """
         Busca a farmácia-polo principal (depósito).
-        Usa raw SQL para evitar erro caso a coluna criada_em ainda não exista
-        no banco (antes de executar 003_add_farmacias_criada_em.sql).
+
+        Tenta via ORM primeiro. Se falhar por coluna ausente no banco
+        (schema desatualizado), usa raw SQL como fallback e loga o hint
+        da migration necessária para corrigir definitivamente.
+
+        Para eliminar o fallback execute no banco:
+          ALTER TABLE farmacias
+            ADD COLUMN IF NOT EXISTS criada_em TIMESTAMP DEFAULT NOW();
         """
         try:
-            # Tenta via ORM (funciona após a migração 003)
             result = await self.db.execute(
                 select(Farmacia)
                 .where(Farmacia.deposito == True, Farmacia.ativa == True)
@@ -53,11 +68,9 @@ class FarmaciaRepository:
             return result.scalar_one_or_none()
 
         except Exception as orm_exc:
-            # Fallback: raw SQL sem colunas que podem estar faltando
             log.warning(
                 f"ORM falhou ao buscar depósito ({orm_exc}). "
-                "Usando raw SQL — execute banco/migrations/003_add_farmacias_criada_em.sql "
-                "para corrigir a estrutura do banco."
+                f"Usando raw SQL — schema desatualizado. {_SQL_MIGRATION_HINT}"
             )
             try:
                 result = await self.db.execute(
@@ -73,19 +86,17 @@ class FarmaciaRepository:
                 if not row:
                     return None
 
-                # Monta objeto Farmacia sem criada_em
-                f = Farmacia()
-                f.id        = row["id"]
-                f.nome      = row["nome"]
-                f.latitude  = row["latitude"]
-                f.longitude = row["longitude"]
-                f.endereco  = row["endereco"] or ""
-                f.cidade    = row["cidade"] or ""
-                f.uf        = row["uf"] or ""
-                f.deposito  = row["deposito"]
-                f.ativa     = row["ativa"]
-                # criada_em fica None — não causa problemas no código
-                f.criada_em = None
+                f            = Farmacia()
+                f.id         = row["id"]
+                f.nome       = row["nome"]
+                f.latitude   = row["latitude"]
+                f.longitude  = row["longitude"]
+                f.endereco   = row.get("endereco") or ""
+                f.cidade     = row.get("cidade") or ""
+                f.uf         = row.get("uf") or ""
+                f.deposito   = row["deposito"]
+                f.ativa      = row["ativa"]
+                f.criada_em  = None   # ausente no schema antigo — não causa problemas
                 return f
 
             except Exception as raw_exc:

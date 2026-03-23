@@ -1,5 +1,5 @@
 # =============================================================================
-# banco/repositories/rota_repo.py
+# bd/repositories/rota_repo.py
 # =============================================================================
 
 from datetime import datetime
@@ -15,12 +15,22 @@ class RotaRepository:
 
     async def criar(
         self,
-        drone_id:   str,
-        pedido_ids: List[int],
-        waypoints:  list,
-        metricas:   dict,
-        viavel:     bool,
+        drone_id:    str,
+        pedido_ids:  List[int],
+        waypoints:   list,
+        metricas:    dict,
+        viavel:      bool,
+        geracoes_ga: int = 0,
     ) -> int:
+        """
+        Persiste uma nova rota calculada.
+
+        Parâmetros
+        ----------
+        geracoes_ga : número de gerações do GA utilizadas na otimização.
+                      Exposto na resposta da API para fins de auditoria e
+                      análise de desempenho do algoritmo.
+        """
         rota = Rota(
             drone_id=drone_id,
             pedido_ids=pedido_ids,
@@ -31,6 +41,7 @@ class RotaRepository:
             carga_kg=metricas.get("carga_kg", 0.0),
             custo=metricas.get("custo_total", 0.0),
             viavel=viavel,
+            geracoes_ga=geracoes_ga,
         )
         self.db.add(rota)
         await self.db.flush()
@@ -41,7 +52,9 @@ class RotaRepository:
         result = await self.db.execute(select(Rota).where(Rota.id == rota_id))
         return result.scalar_one_or_none()
 
-    async def listar_recentes(self, limite: int = 50, drone_id: Optional[str] = None) -> List[Rota]:
+    async def listar_recentes(
+        self, limite: int = 50, drone_id: Optional[str] = None
+    ) -> List[Rota]:
         query = select(Rota).order_by(Rota.criada_em.desc())
         if drone_id:
             query = query.where(Rota.drone_id == drone_id)

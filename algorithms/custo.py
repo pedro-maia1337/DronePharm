@@ -9,6 +9,7 @@ from datetime import datetime
 
 from config.settings import (
     CUSTO_PESO_TEMPO, CUSTO_PESO_ENERGIA, CUSTO_PESO_DISTANCIA, CUSTO_PESO_PRIORIDADE,
+    CUSTO_REF_TEMPO_S, CUSTO_REF_ENERGIA_WH, CUSTO_REF_DISTANCIA_KM, CUSTO_REF_PENALIDADE_S,
     DRONE_VELOCIDADE_MS, DRONE_TEMPO_POUSO_S,
     DRONE_CONSUMO_BASE_WH_KM, DRONE_CAPACIDADE_MAX_KG,
     VENTO_FATOR_POR_MS, PRIORIDADE_PESO_CUSTO,
@@ -44,15 +45,15 @@ def estimar_tempo_rota_s(
     distancia_km = distancia_rota(sequencia, matriz)
     distancia_m  = distancia_km * 1000.0
     tempo_voo_s  = distancia_m / velocidade_ms
-    n_pousos     = len(sequencia)                  # Um pouso por entrega
+    n_pousos     = len(sequencia)   # Um pouso por entrega
     return tempo_voo_s + (n_pousos * tempo_pouso_s)
 
 
 def estimar_energia_wh(
     sequencia: List[int],
     matriz,
-    carga_kg:    float = 0.0,
-    vento_ms:    float = 0.0,
+    carga_kg:  float = 0.0,
+    vento_ms:  float = 0.0,
 ) -> float:
     """
     Estima o consumo de energia para uma rota (Wh).
@@ -82,31 +83,19 @@ def penalidade_prioridade(
 
     Pedidos urgentes (P1) recebem peso 3×; normais (P2) peso 1×;
     reabastecimento (P3) peso 0.5×.
-
-    Parâmetros
-    ----------
-    sequencia        : índices dos pedidos
-    pedidos_mapa     : dict {idx_matriz -> Pedido}
-    tempo_estimado_s : tempo total estimado da rota
-
-    Retorna
-    -------
-    float : penalidade total (0 = sem atrasos)
     """
     penalidade = 0.0
     agora = datetime.now()
 
     for idx in sequencia:
         pedido = pedidos_mapa.get(idx)
-        if pedido is None:
-            continue
-        if pedido.janela_fim is None:
+        if pedido is None or pedido.janela_fim is None:
             continue
 
         tempo_restante = (pedido.janela_fim - agora).total_seconds()
         if tempo_estimado_s > tempo_restante:
-            atraso_s = tempo_estimado_s - tempo_restante
-            peso     = PRIORIDADE_PESO_CUSTO.get(pedido.prioridade, 1.0)
+            atraso_s   = tempo_estimado_s - tempo_restante
+            peso       = PRIORIDADE_PESO_CUSTO.get(pedido.prioridade, 1.0)
             penalidade += atraso_s * peso
 
     return penalidade
@@ -114,13 +103,9 @@ def penalidade_prioridade(
 
 # =============================================================================
 # NORMALIZAÇÃO
+# As referências vêm de settings.py para que alterações nos parâmetros
+# do drone (ex: autonomia, velocidade) recalibrem automaticamente a função.
 # =============================================================================
-
-_ref_tempo_s   = 3600.0    # 1 hora como referência de normalização
-_ref_energia   = 150.0     # 150 Wh como referência
-_ref_distancia = 20.0      # 20 km como referência
-_ref_penalidade = 3600.0   # 1 hora de atraso como referência
-
 
 def _normaliza(valor: float, referencia: float) -> float:
     """Normaliza um valor para [0, ∞) com referência como ponto unitário."""
@@ -172,19 +157,17 @@ def calcular_custo(
             "prioridade": CUSTO_PESO_PRIORIDADE,
         }
 
-    distancia_km      = distancia_rota(sequencia, matriz)
-    tempo_s           = estimar_tempo_rota_s(sequencia, matriz)
-    energia_wh        = estimar_energia_wh(sequencia, matriz, carga_kg, vento_ms)
-    pen_prioridade    = penalidade_prioridade(sequencia, pedidos_mapa, tempo_s)
+    distancia_km   = distancia_rota(sequencia, matriz)
+    tempo_s        = estimar_tempo_rota_s(sequencia, matriz)
+    energia_wh     = estimar_energia_wh(sequencia, matriz, carga_kg, vento_ms)
+    pen_prioridade = penalidade_prioridade(sequencia, pedidos_mapa, tempo_s)
 
-    custo = (
-        pesos["tempo"]      * _normaliza(tempo_s,       _ref_tempo_s)    +
-        pesos["energia"]    * _normaliza(energia_wh,    _ref_energia)     +
-        pesos["distancia"]  * _normaliza(distancia_km,  _ref_distancia)   +
-        pesos["prioridade"] * _normaliza(pen_prioridade, _ref_penalidade)
+    return (
+        pesos["tempo"]      * _normaliza(tempo_s,        CUSTO_REF_TEMPO_S)      +
+        pesos["energia"]    * _normaliza(energia_wh,     CUSTO_REF_ENERGIA_WH)   +
+        pesos["distancia"]  * _normaliza(distancia_km,   CUSTO_REF_DISTANCIA_KM) +
+        pesos["prioridade"] * _normaliza(pen_prioridade, CUSTO_REF_PENALIDADE_S)
     )
-
-    return custo
 
 
 def calcular_custo_detalhado(
@@ -205,11 +188,11 @@ def calcular_custo_detalhado(
     custo_total    = calcular_custo(sequencia, matriz, pedidos_mapa, carga_kg, vento_ms)
 
     return {
-        "custo_total":     custo_total,
-        "distancia_km":    round(distancia_km, 4),
-        "tempo_min":       round(tempo_s / 60, 2),
-        "energia_wh":      round(energia_wh, 2),
-        "pen_prioridade":  round(pen_prioridade, 2),
-        "n_entregas":      len(sequencia),
-        "carga_kg":        round(carga_kg, 3),
+        "custo_total":    custo_total,
+        "distancia_km":   round(distancia_km, 4),
+        "tempo_min":      round(tempo_s / 60, 2),
+        "energia_wh":     round(energia_wh, 2),
+        "pen_prioridade": round(pen_prioridade, 2),
+        "n_entregas":     len(sequencia),
+        "carga_kg":       round(carga_kg, 3),
     }

@@ -1,10 +1,10 @@
 # =============================================================================
-# simulacao/simulador.py
+# simulation/simulador.py
 # Simulação de voo sem hardware físico — para testes e desenvolvimento
 # =============================================================================
 
 from __future__ import annotations
-import time
+import asyncio
 import logging
 import random
 from datetime import datetime
@@ -35,15 +35,15 @@ class SimuladorVoo:
     Uso
     ---
     sim = SimuladorVoo(drone, rota)
-    sim.executar()
+    historico = await sim.executar()
     """
 
     def __init__(
         self,
-        drone:       Drone,
-        rota:        Rota,
-        vento_ms:    float = 0.0,
-        verbose:     bool  = True,
+        drone:    Drone,
+        rota:     Rota,
+        vento_ms: float = 0.0,
+        verbose:  bool  = True,
     ):
         self.drone    = drone
         self.rota     = rota
@@ -54,9 +54,12 @@ class SimuladorVoo:
         self._log_telemetria: List[Telemetria] = []
 
     # ------------------------------------------------------------------
-    def executar(self) -> List[Telemetria]:
+    async def executar(self) -> List[Telemetria]:
         """
         Executa a simulação do voo completo seguindo os waypoints da rota.
+
+        Método assíncrono: usa asyncio.sleep em vez de time.sleep para não
+        bloquear o event loop do FastAPI durante chamadas de teste ou integração.
 
         Retorna
         -------
@@ -65,9 +68,9 @@ class SimuladorVoo:
         self.drone.status = StatusDrone.EM_VOO
         log.info(f"[SIM] Iniciando simulação: {self.rota.num_entregas} entregas")
 
-        for i, wp in enumerate(self.rota.waypoints):
-            destino = wp.coordenada
-            dist_km = haversine(self._pos_atual, destino)
+        for wp in self.rota.waypoints:
+            destino     = wp.coordenada
+            dist_km     = haversine(self._pos_atual, destino)
             tempo_voo_s = (dist_km * 1000.0) / DRONE_VELOCIDADE_MS
 
             if self.verbose:
@@ -76,8 +79,7 @@ class SimuladorVoo:
                     f"{dist_km:.2f} km | {tempo_voo_s/60:.1f} min"
                 )
 
-            # Simula o voo em passos
-            self._simular_segmento(
+            await self._simular_segmento(
                 origem=self._pos_atual,
                 destino=destino,
                 dist_km=dist_km,
@@ -85,7 +87,6 @@ class SimuladorVoo:
             )
             self._pos_atual = destino
 
-            # Simula pouso e entrega
             if not wp.eh_deposito and wp.pedido:
                 wp.pedido.marcar_entregue()
                 log.info(f"[SIM] ✓ Pedido #{wp.pedido.id} entregue")
@@ -118,15 +119,20 @@ class SimuladorVoo:
         )
 
     # ------------------------------------------------------------------
-    def _simular_segmento(
+    async def _simular_segmento(
         self,
-        origem:   Coordenada,
-        destino:  Coordenada,
-        dist_km:  float,
-        tempo_s:  float,
+        origem:  Coordenada,
+        destino: Coordenada,
+        dist_km: float,
+        tempo_s: float,
     ):
-        """Interpola a posição do drone ao longo de um segmento de rota."""
-        passos = max(5, int(tempo_s / 10))   # Um passo a cada ~10 segundos
+        """
+        Interpola a posição do drone ao longo de um segmento de rota.
+
+        Usa asyncio.sleep (não bloqueante) para que o event loop do FastAPI
+        continue processando outras requisições durante a simulação.
+        """
+        passos = max(5, int(tempo_s / 10))  # Um passo a cada ~10 s
 
         for step in range(passos + 1):
             frac = step / passos
@@ -134,7 +140,6 @@ class SimuladorVoo:
             lon  = origem.longitude + frac * (destino.longitude - origem.longitude)
             self._pos_atual = Coordenada(lat, lon)
 
-            # Consome bateria proporcionalmente
             consumo_step = (dist_km / passos) / self.drone.autonomia_max_km
             self.drone.bateria_pct = max(0.0, self.drone.bateria_pct - consumo_step)
 
@@ -142,5 +147,5 @@ class SimuladorVoo:
             self._log_telemetria.append(tel)
             self.drone.atualizar_telemetria(tel)
 
-            # Pausa simulada (ajustada pela velocidade de simulação)
-            time.sleep(max(0.01, (tempo_s / passos) / VELOCIDADE_SIMULACAO))
+            # Pausa não bloqueante — libera o event loop entre os passos
+            await asyncio.sleep(max(0.001, (tempo_s / passos) / VELOCIDADE_SIMULACAO))

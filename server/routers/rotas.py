@@ -36,6 +36,8 @@ log = logging.getLogger(__name__)
 
 router = APIRouter()
 
+_STATUS_BLOQUEADOS_REPLANEJAMENTO = {"em_voo", "retornando"}
+
 
 # =============================================================================
 # HELPER — converte ORM Rota → RotaResponse
@@ -135,6 +137,14 @@ async def calcular_rotas(
     drone_orm = await drone_repo.buscar_por_id(body.drone_id)
     if not drone_orm:
         raise HTTPException(status_code=404, detail=f"Drone '{body.drone_id}' não encontrado.")
+    if drone_orm.status in _STATUS_BLOQUEADOS_REPLANEJAMENTO:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Drone '{body.drone_id}' está '{drone_orm.status}' e não pode "
+                "receber recálculo enquanto houver missão ativa."
+            ),
+        )
     if drone_orm.status not in ("aguardando",) and not body.forcar_recalc:
         raise HTTPException(
             status_code=409,

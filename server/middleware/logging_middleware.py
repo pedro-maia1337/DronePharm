@@ -7,11 +7,31 @@
 import time
 import uuid
 import logging
+from urllib.parse import urlencode
+
 from fastapi import Request
 from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from config.settings import (
+    ACCESS_LOG_INCLUDE_QUERY_STRING,
+    ACCESS_LOG_SENSITIVE_QUERY_PARAMS,
+)
+
 log = logging.getLogger("server.acesso")
+
+
+def _query_string_sanitizada(request: Request) -> str:
+    if not ACCESS_LOG_INCLUDE_QUERY_STRING or not request.url.query:
+        return ""
+
+    itens = []
+    for chave, valor in request.query_params.multi_items():
+        chave_normalizada = chave.lower()
+        valor_log = "***" if chave_normalizada in ACCESS_LOG_SENSITIVE_QUERY_PARAMS else valor
+        itens.append((chave, valor_log))
+
+    return f"?{urlencode(itens, doseq=True)}" if itens else ""
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -48,7 +68,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         elif response.status_code >= 400:
             nivel = logging.WARNING
 
-        qs = f"?{request.url.query}" if request.url.query else ""
+        qs = _query_string_sanitizada(request)
         log.log(
             nivel,
             f"[{req_id}] {request.method} {request.url.path}{qs} "

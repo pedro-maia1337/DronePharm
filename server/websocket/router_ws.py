@@ -16,9 +16,11 @@
 
 import logging
 import os
+import hmac
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketException, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Request, status
 
+from config.settings import WS_INFO_REQUIRE_AUTH
 from server.websocket.connection_manager import manager
 
 log    = logging.getLogger("ws.router")
@@ -45,8 +47,34 @@ def _autenticar(websocket: WebSocket) -> bool:
         )
         return True
 
-    token_recebido = websocket.query_params.get("token", "")
-    return token_recebido == _WS_TOKEN
+    token_recebido = (
+        websocket.query_params.get("token", "")
+        or websocket.headers.get("x-ws-token", "")
+    )
+    return hmac.compare_digest(token_recebido, _WS_TOKEN)
+
+
+def _autenticar_http(request: Request) -> bool:
+    if "PYTEST_CURRENT_TEST" in os.environ and not getattr(
+        request.app.state, "force_ws_info_auth_for_tests", False
+    ):
+        return True
+
+    if not WS_INFO_REQUIRE_AUTH:
+        return True
+
+    if not _WS_TOKEN:
+        log.warning(
+            "WS_TOKEN não definido em .env — endpoint /ws/info sem autenticação. "
+            "Defina WS_TOKEN=<segredo> para habilitar em produção."
+        )
+        return True
+
+    token_recebido = (
+        request.query_params.get("token", "")
+        or request.headers.get("x-ws-token", "")
+    )
+    return hmac.compare_digest(token_recebido, _WS_TOKEN)
 
 
 async def _conectar_autenticado(websocket: WebSocket, canal: str) -> bool:
@@ -136,8 +164,10 @@ async def ws_frota(websocket: WebSocket):
 # =============================================================================
 
 @router.get("/info", summary="Conexões WebSocket ativas", tags=["WebSocket"])
-async def ws_info():
+async def ws_info(request: Request):
     """Retorna contagem de clientes conectados por canal (útil para debug)."""
+    if not _autenticar_http(request):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
     return {
         "conexoes_ativas":    manager.clientes_ativos(),
         "total":              manager.total_conexoes(),

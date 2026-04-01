@@ -72,12 +72,24 @@ async def listar_pedidos(
     offset:      int           = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    repo    = PedidoRepository(db)
+    repo = PedidoRepository(db)
+    total_count = await repo.contar(
+        status=status,
+        prioridade=prioridade,
+        farmacia_id=farmacia_id,
+    )
     pedidos = await repo.listar(
         status=status, prioridade=prioridade,
         farmacia_id=farmacia_id, limite=limite, offset=offset,
     )
-    return {"total": len(pedidos), "pedidos": pedidos}
+    return {
+        "total": len(pedidos),
+        "pedidos": pedidos,
+        "total_count": total_count,
+        "limit": limite,
+        "offset": offset,
+        "has_more": offset + len(pedidos) < total_count,
+    }
 
 
 @router.get(
@@ -89,7 +101,14 @@ async def listar_pedidos(
 async def listar_pendentes(db: AsyncSession = Depends(get_db)):
     repo    = PedidoRepository(db)
     pedidos = await repo.listar_pendentes()
-    return {"total": len(pedidos), "pedidos": pedidos}
+    return {
+        "total": len(pedidos),
+        "pedidos": pedidos,
+        "total_count": len(pedidos),
+        "limit": len(pedidos),
+        "offset": 0,
+        "has_more": False,
+    }
 
 
 @router.get(
@@ -124,13 +143,7 @@ async def atualizar_pedido(
         raise HTTPException(status_code=409, detail="Pedidos entregues não podem ser modificados.")
 
     campos = body.model_dump(exclude_none=True)
-    if campos:
-        from sqlalchemy import update as sql_update
-        from bd.models import Pedido as PedidoORM
-        await db.execute(
-            sql_update(PedidoORM).where(PedidoORM.id == pedido_id).values(**campos)
-        )
-    return await repo.buscar_por_id(pedido_id)
+    return await repo.atualizar(pedido_id, **campos)
 
 
 @router.patch(

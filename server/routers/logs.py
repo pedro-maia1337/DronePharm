@@ -10,12 +10,15 @@
 
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Depends
-from pydantic import BaseModel
+import json
+
+from pydantic import BaseModel, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bd.database import get_db
 from bd.repositories.log_repo import LogRepository, RastreabilidadeRepository
 from bd.repositories.pedido_repo import PedidoRepository
+from config.settings import LOG_DADOS_JSON_MAX_BYTES
 
 router = APIRouter()
 
@@ -32,6 +35,18 @@ class LogCreateBody(BaseModel):
     pedido_id:  Optional[int] = None
     rota_id:    Optional[int] = None
     dados_json: Optional[dict] = None
+
+    @field_validator("dados_json")
+    @classmethod
+    def validar_tamanho_dados_json(cls, value):
+        if value is None:
+            return value
+        tamanho = len(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+        if tamanho > LOG_DADOS_JSON_MAX_BYTES:
+            raise ValueError(
+                f"dados_json excede o limite de {LOG_DADOS_JSON_MAX_BYTES} bytes."
+            )
+        return value
 
 
 # =============================================================================

@@ -22,6 +22,7 @@ from sqlalchemy import text
 
 from server.middleware.logging_middleware import LoggingMiddleware
 from server.middleware.error_handler import ErrorHandlerMiddleware
+from server.middleware.rate_limit_middleware import RateLimitMiddleware
 from server.middleware.cors_config import configurar_cors
 
 log = logging.getLogger(__name__)
@@ -113,6 +114,7 @@ app = FastAPI(
 
 app.add_middleware(LoggingMiddleware)
 configurar_cors(app)          # modo lido de CORS_MODE no .env (sem argumento hardcoded)
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(ErrorHandlerMiddleware)
 
 # =============================================================================

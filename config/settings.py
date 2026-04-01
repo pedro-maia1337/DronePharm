@@ -120,3 +120,53 @@ DEPOSITO_NOME      = "Farmácia Popular Central - BH"
 # -----------------------------------------------------------------------------
 
 CORS_MODE = os.getenv("CORS_MODE", "development")  # "development" | "production"
+
+# Exibe detalhes internos de excecao para o cliente apenas em desenvolvimento,
+# a menos que seja sobrescrito explicitamente via .env.
+EXPOSE_INTERNAL_ERROR_DETAIL = (
+    os.getenv(
+        "EXPOSE_INTERNAL_ERROR_DETAIL",
+        "true" if CORS_MODE != "production" else "false",
+    ).lower() == "true"
+)
+
+# Logs de acesso nunca devem expor segredos em query string.
+ACCESS_LOG_INCLUDE_QUERY_STRING = (
+    os.getenv("ACCESS_LOG_INCLUDE_QUERY_STRING", "true").lower() == "true"
+)
+ACCESS_LOG_SENSITIVE_QUERY_PARAMS = {
+    "token",
+    "password",
+    "secret",
+    "api_key",
+    "key",
+    "authorization",
+    "access_token",
+    "refresh_token",
+}
+
+# Endpoints caros ou sensiveis recebem limitacao adicional em memoria.
+RATE_LIMIT_ROTAS_CALCULAR_PER_MINUTE = int(
+    os.getenv("RATE_LIMIT_ROTAS_CALCULAR_PER_MINUTE", "5")
+)
+RATE_LIMIT_LOGS_POST_PER_MINUTE = int(
+    os.getenv("RATE_LIMIT_LOGS_POST_PER_MINUTE", "30")
+)
+RATE_LIMIT_ENABLED = (
+    os.getenv(
+        "RATE_LIMIT_ENABLED",
+        "true" if CORS_MODE == "production" else "false",
+    ).lower() == "true"
+)
+
+# Limite defensivo para evitar abuso de armazenamento em JSON de logs.
+LOG_DADOS_JSON_MAX_BYTES = int(os.getenv("LOG_DADOS_JSON_MAX_BYTES", "16384"))
+
+# Endpoint HTTP de observabilidade WebSocket pode permanecer aberto em
+# desenvolvimento, mas deve ser protegido em produção.
+WS_INFO_REQUIRE_AUTH = (
+    os.getenv(
+        "WS_INFO_REQUIRE_AUTH",
+        "true" if CORS_MODE == "production" else "false",
+    ).lower() == "true"
+)

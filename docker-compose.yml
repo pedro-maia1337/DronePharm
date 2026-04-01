@@ -72,8 +72,8 @@ services:
     profiles:
       - tools           # só sobe com: docker compose --profile tools up
     environment:
-      PGADMIN_DEFAULT_EMAIL:    admin@dronepharm.local
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_DEFAULT_EMAIL:-admin@dronepharm.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?defina PGADMIN_DEFAULT_PASSWORD no .env para usar o pgAdmin}
       PGADMIN_LISTEN_PORT:      5050
     ports:
       - "${PGADMIN_PORT:-5050}:5050"

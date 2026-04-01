@@ -6,7 +6,7 @@
 import logging
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from bd.models import Pedido, RastreabilidadePedido
 
@@ -60,6 +60,44 @@ class PedidoRepository:
         query = query.order_by(Pedido.criado_em.desc()).offset(offset).limit(limite)
         result = await self.db.execute(query)
         return list(result.scalars().all())
+
+    async def contar(
+        self,
+        status:      Optional[str] = None,
+        prioridade:  Optional[int] = None,
+        farmacia_id: Optional[int] = None,
+    ) -> int:
+        query = select(func.count()).select_from(Pedido)
+        if status:
+            query = query.where(Pedido.status == status)
+        if prioridade:
+            query = query.where(Pedido.prioridade == prioridade)
+        if farmacia_id:
+            query = query.where(Pedido.farmacia_id == farmacia_id)
+        result = await self.db.execute(query)
+        return int(result.scalar_one() or 0)
+
+    async def atualizar(self, pedido_id: int, **campos) -> Optional[Pedido]:
+        campos_validos = {k: v for k, v in campos.items() if v is not None}
+        pedido = await self.buscar_por_id(pedido_id)
+        if not pedido:
+            return None
+        if not campos_validos:
+            return pedido
+
+        status_anterior = pedido.status
+        novo_status = campos_validos.get("status")
+        if novo_status == "entregue":
+            campos_validos["entregue_em"] = datetime.now()
+
+        await self.db.execute(
+            update(Pedido).where(Pedido.id == pedido_id).values(**campos_validos)
+        )
+
+        if novo_status and novo_status != status_anterior:
+            await self._rastrear(pedido_id, status_anterior, novo_status)
+
+        return await self.buscar_por_id(pedido_id)
 
     async def atualizar_status(self, pedido_id: int, status: str,
                                 drone_id: Optional[str] = None,

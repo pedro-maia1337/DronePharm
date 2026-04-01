@@ -6,7 +6,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from pydantic import BaseModel, Field, field_validator, computed_field
 
@@ -19,6 +19,15 @@ class PrioridadeEnum(IntEnum):
     URGENTE   = 1
     NORMAL    = 2
     REABASTEC = 3
+
+
+class StatusDroneEnum(str, Enum):
+    AGUARDANDO = "aguardando"
+    EM_VOO = "em_voo"
+    RETORNANDO = "retornando"
+    CARREGANDO = "carregando"
+    MANUTENCAO = "manutencao"
+    EMERGENCIA = "emergencia"
 
 
 # =============================================================================
@@ -80,7 +89,7 @@ class FarmaciaResponse(BaseModel):
     uf:        str
     deposito:  bool
     ativa:     bool
-    criada_em: datetime
+    criada_em: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
@@ -107,7 +116,7 @@ class DroneCreate(BaseModel):
 
 
 class DroneUpdate(BaseModel):
-    status:          Optional[str]   = None
+    status:          Optional[StatusDroneEnum]   = None
     bateria_pct:     Optional[float] = Field(None, ge=0.0, le=1.0)
     latitude_atual:  Optional[float] = None
     longitude_atual: Optional[float] = None
@@ -186,8 +195,12 @@ class PedidoResponse(BaseModel):
 
 
 class PedidoListResponse(BaseModel):
-    total:   int
-    pedidos: List[PedidoResponse]
+    total:       int
+    pedidos:     List[PedidoResponse]
+    total_count: int = 0
+    limit:       int = 0
+    offset:      int = 0
+    has_more:    bool = False
 
 
 # =============================================================================

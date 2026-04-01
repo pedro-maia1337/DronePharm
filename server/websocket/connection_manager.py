@@ -8,16 +8,77 @@
 #   - Canal de alertas: /ws/alertas
 # =============================================================================
 
-import asyncio
-import json
 import logging
+import os
+import sys
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Set
+from typing import Dict, List, Mapping, Optional
 
 from fastapi import WebSocket
 
 log = logging.getLogger("ws.manager")
+
+
+def _parse_worker_count(raw_value: Optional[str]) -> Optional[int]:
+    try:
+        if raw_value is None or str(raw_value).strip() == "":
+            return None
+        workers = int(raw_value)
+        return workers if workers > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def detectar_workers_configurados(
+    argv: Optional[List[str]] = None,
+    environ: Optional[Mapping[str, str]] = None,
+) -> int:
+    """
+    Detecta a quantidade de workers configurada para o processo atual.
+
+    Prioriza variaveis de ambiente comuns em deploy e faz fallback para
+    `--workers` na linha de comando do Uvicorn.
+    """
+    env = environ or os.environ
+    for chave in ("UVICORN_WORKERS", "WEB_CONCURRENCY", "SERVER_WORKERS"):
+        workers = _parse_worker_count(env.get(chave))
+        if workers is not None:
+            return workers
+
+    argumentos = argv if argv is not None else sys.argv[1:]
+    for idx, arg in enumerate(argumentos):
+        if arg == "--workers" and idx + 1 < len(argumentos):
+            workers = _parse_worker_count(argumentos[idx + 1])
+            if workers is not None:
+                return workers
+        if arg.startswith("--workers="):
+            workers = _parse_worker_count(arg.split("=", 1)[1])
+            if workers is not None:
+                return workers
+
+    return 1
+
+
+def validar_topologia_websocket_multiworker(
+    argv: Optional[List[str]] = None,
+    environ: Optional[Mapping[str, str]] = None,
+) -> int:
+    """
+    Garante que o backend atual de WebSocket rode com worker unico.
+
+    O `ConnectionManager` e em memoria de processo; com multiplos workers os
+    broadcasts ficam particionados. Ate existir um backend compartilhado,
+    o deploy deve permanecer com um unico worker.
+    """
+    workers = detectar_workers_configurados(argv=argv, environ=environ)
+    if workers > 1:
+        raise RuntimeError(
+            "Configuracao WebSocket nao suportada: ConnectionManager em memoria "
+            f"nao sincroniza eventos entre {workers} workers. Rode com "
+            "`uvicorn --workers 1` ou adicione um backend compartilhado."
+        )
+    return workers
 
 
 class ConnectionManager:

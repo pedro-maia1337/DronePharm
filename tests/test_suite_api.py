@@ -287,6 +287,46 @@ class TestRotasCalculo:
         r = client.post("/api/v1/rotas/calcular", json={"pedido_ids": [1, 2]})
         assert r.status_code == 422
 
+    def test_calcular_rotas_usa_altitude_padrao_quando_cliente_elevacao_indisponivel(self, client):
+        rota_fake = SimpleNamespace(
+            pedidos=[SimpleNamespace(id=1)],
+            waypoints=[],
+            carga_total_kg=0.5,
+            viavel=True,
+            geracoes_ga=0,
+        )
+
+        with patch("server.routers.rotas.PedidoRepository") as PR, \
+             patch("server.routers.rotas.DroneRepository") as DR, \
+             patch("server.routers.rotas.RotaRepository") as RR, \
+             patch("server.routers.rotas.FarmaciaRepository") as FR, \
+             patch("server.routers.rotas.cliente_clima", None), \
+             patch("server.routers.rotas.cliente_elevacao", None), \
+             patch("server.routers.rotas.construir_matriz_distancias", return_value=[[0.0, 1.0], [1.0, 0.0]]), \
+             patch("server.routers.rotas.Verificador"), \
+             patch("server.routers.rotas.otimizar_todas_rotas", return_value=[[1]]), \
+             patch("server.routers.rotas.calcular_custo_detalhado", return_value={
+                 "distancia_km": 1.0,
+                 "tempo_min": 2.0,
+                 "energia_wh": 3.0,
+                 "carga_kg": 0.5,
+                 "custo_total": 4.0,
+             }), \
+             patch("server.routers.rotas.ClarkeWright") as CW:
+            PR.return_value.buscar_por_ids = AsyncMock(return_value=[_pedido(1)])
+            PR.return_value.atualizar_status_lote = AsyncMock()
+            DR.return_value.buscar_por_id = AsyncMock(return_value=_drone())
+            DR.return_value.atualizar = AsyncMock()
+            RR.return_value.criar = AsyncMock(return_value=123)
+            FR.return_value.buscar_deposito_principal = AsyncMock(return_value=_farmacia(deposito=True))
+            CW.return_value.resolver.return_value = [[1]]
+            CW.return_value.para_objetos_rota.return_value = [rota_fake]
+
+            r = client.post("/api/v1/rotas/calcular", json=self._payload_rotas(pedido_ids=[1]))
+
+        assert r.status_code == 200
+        assert r.json()["rotas"][0]["waypoints"] == []
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BLOCO C — TELEMETRIA
@@ -778,6 +818,25 @@ class TestConnectionManager:
 
     def test_ws_info_retorna_json(self, client):
         assert isinstance(client.get("/ws/info").json(), dict)
+
+    def test_detectar_workers_configurados_por_argumento(self):
+        from server.websocket.connection_manager import detectar_workers_configurados
+
+        workers = detectar_workers_configurados(
+            argv=["server.app:app", "--host", "0.0.0.0", "--workers", "4"],
+            environ={},
+        )
+
+        assert workers == 4
+
+    def test_validar_topologia_websocket_rejeita_multiworker(self):
+        from server.websocket.connection_manager import validar_topologia_websocket_multiworker
+
+        with pytest.raises(RuntimeError):
+            validar_topologia_websocket_multiworker(
+                argv=["server.app:app", "--workers=4"],
+                environ={},
+            )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

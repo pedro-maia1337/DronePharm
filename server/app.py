@@ -33,9 +33,14 @@ log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from server.websocket.connection_manager import validar_topologia_websocket_multiworker
+
+    workers_ws = validar_topologia_websocket_multiworker()
+
     log.info("=" * 55)
     log.info("  DronePharm Server iniciando...")
     log.info("  Docs: http://localhost:8000/docs")
+    log.info(f"  WebSocket em memoria validado para {workers_ws} worker(s)")
     log.info("=" * 55)
 
     from bd.database import init_db

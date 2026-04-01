@@ -29,6 +29,7 @@ from algorithms.custo import calcular_custo_detalhado
 from constraints.verificador import Verificador
 from apis.clima import cliente_clima
 from apis.elevacao import cliente_elevacao
+from config.settings import DRONE_ALTITUDE_VOO_M
 
 import logging
 log = logging.getLogger(__name__)
@@ -66,6 +67,31 @@ def _rota_orm_para_response(rota) -> RotaResponse:
         criada_em=rota.criada_em,
         concluida_em=rota.concluida_em,
     )
+
+
+def _calcular_altitude_voo_segura(coords_todos: List[Coordenada]) -> float:
+    """
+    Resolve a altitude de voo da rota com fallback local.
+
+    `cliente_elevacao` pode ficar indisponivel quando a inicializacao defensiva
+    falha. Nessa situacao, o endpoint continua operando com a altitude padrao.
+    """
+    if cliente_elevacao is None:
+        log.warning(
+            "Cliente de elevacao indisponivel; usando altitude padrao de %.1fm.",
+            DRONE_ALTITUDE_VOO_M,
+        )
+        return DRONE_ALTITUDE_VOO_M
+
+    try:
+        return cliente_elevacao.altitude_voo_rota(coords_todos)
+    except Exception as exc:
+        log.warning(
+            "Falha ao calcular altitude via OpenTopoData (%s); usando altitude padrao de %.1fm.",
+            exc,
+            DRONE_ALTITUDE_VOO_M,
+        )
+        return DRONE_ALTITUDE_VOO_M
 
 
 # =============================================================================
@@ -164,7 +190,7 @@ async def calcular_rotas(
                     )
 
     coords_todos = [p.coordenada for p in pedidos]
-    altitude_voo = cliente_elevacao.altitude_voo_rota(coords_todos)
+    altitude_voo = _calcular_altitude_voo_segura(coords_todos)
     log.info(f"Altitude de voo: {altitude_voo:.1f}m | Vento: {vento_ms:.1f} m/s | Pedidos: {len(pedidos)}")
 
     # ── 6. Algoritmo de roteirização ──────────────────────────────────────────

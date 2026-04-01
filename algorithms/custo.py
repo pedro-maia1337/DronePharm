@@ -14,7 +14,7 @@ from config.settings import (
     DRONE_CONSUMO_BASE_WH_KM, DRONE_CAPACIDADE_MAX_KG,
     VENTO_FATOR_POR_MS, PRIORIDADE_PESO_CUSTO,
 )
-from algorithms.distancia import distancia_rota
+from algorithms.distancia import distancia_rota, distancia_parcial_rota
 
 
 # =============================================================================
@@ -49,6 +49,35 @@ def estimar_tempo_rota_s(
     return tempo_voo_s + (n_pousos * tempo_pouso_s)
 
 
+def estimar_tempo_parcial_s(
+    sequencia: List[int],
+    matriz,
+    ate_indice: int,
+    velocidade_ms: float = DRONE_VELOCIDADE_MS,
+    tempo_pouso_s: int   = DRONE_TEMPO_POUSO_S,
+) -> float:
+    """
+    Estima o tempo de chegada ao pedido na posição `ate_indice` da sequência,
+    considerando a rota parcial depósito → seq[0] → ... → seq[ate_indice].
+
+    Inclui pousos intermediários em cada entrega anterior.
+
+    Parâmetros
+    ----------
+    sequencia   : sequência completa da rota (1-based, sem depósito)
+    matriz      : matriz de distâncias
+    ate_indice  : posição 0-based do pedido alvo na sequência
+
+    Retorna
+    -------
+    float : tempo estimado em segundos até a entrega do pedido alvo
+    """
+    dist_km  = distancia_parcial_rota(sequencia, matriz, ate_indice)
+    dist_m   = dist_km * 1000.0
+    n_pousos = ate_indice + 1   # Inclui o pouso no próprio pedido alvo
+    return dist_m / velocidade_ms + n_pousos * tempo_pouso_s
+
+
 def estimar_energia_wh(
     sequencia: List[int],
     matriz,
@@ -70,31 +99,54 @@ def estimar_energia_wh(
 
 
 # =============================================================================
-# PENALIDADE DE PRIORIDADE
+# PENALIDADE DE PRIORIDADE (corrigida — tempo por prefixo)
 # =============================================================================
 
 def penalidade_prioridade(
     sequencia: List[int],
     pedidos_mapa: dict,
-    tempo_estimado_s: float,
+    tempo_estimado_s: float,  # mantido por compatibilidade, não usado internamente
+    matriz=None,
 ) -> float:
     """
-    Calcula a penalidade acumulada por pedidos com risco de atraso.
+    Calcula a penalidade acumulada por pedidos urgentes com risco de atraso.
 
-    Pedidos urgentes (P1) recebem peso 3×; normais (P2) peso 1×;
-    reabastecimento (P3) peso 0.5×.
+    Correção (B6): cada pedido é comparado com o tempo estimado de chegada
+    **até ele especificamente** (tempo prefixo da rota), não com o tempo
+    total do voo. Isso evita superpenalizar pedidos no início da sequência.
+
+    Se `matriz` não for fornecida (compatibilidade retroativa), usa o
+    tempo total da rota — comportamento legado e menos preciso.
+
+    Parâmetros
+    ----------
+    sequencia        : índices dos pedidos (1-based, sem depósito)
+    pedidos_mapa     : dict {idx_matriz -> Pedido}
+    tempo_estimado_s : tempo total da rota (usado só como fallback sem matriz)
+    matriz           : matriz de distâncias (recomendado — habilita tempo parcial)
+
+    Retorna
+    -------
+    float : penalidade total (0 = sem atrasos)
     """
     penalidade = 0.0
-    agora = datetime.now()
+    agora      = datetime.now()
 
-    for idx in sequencia:
+    for pos, idx in enumerate(sequencia):
         pedido = pedidos_mapa.get(idx)
         if pedido is None or pedido.janela_fim is None:
             continue
 
+        # Tempo até chegar a ESTE pedido especificamente (prefixo da rota)
+        if matriz is not None:
+            tempo_ate_pedido = estimar_tempo_parcial_s(sequencia, matriz, pos)
+        else:
+            # Fallback legado: usa tempo total (menos preciso)
+            tempo_ate_pedido = tempo_estimado_s
+
         tempo_restante = (pedido.janela_fim - agora).total_seconds()
-        if tempo_estimado_s > tempo_restante:
-            atraso_s   = tempo_estimado_s - tempo_restante
+        if tempo_ate_pedido > tempo_restante:
+            atraso_s   = tempo_ate_pedido - tempo_restante
             peso       = PRIORIDADE_PESO_CUSTO.get(pedido.prioridade, 1.0)
             penalidade += atraso_s * peso
 
@@ -103,8 +155,6 @@ def penalidade_prioridade(
 
 # =============================================================================
 # NORMALIZAÇÃO
-# As referências vêm de settings.py para que alterações nos parâmetros
-# do drone (ex: autonomia, velocidade) recalibrem automaticamente a função.
 # =============================================================================
 
 def _normaliza(valor: float, referencia: float) -> float:
@@ -148,7 +198,6 @@ def calcular_custo(
     if not sequencia:
         return float("inf")
 
-    # Permite sobrescrever pesos em runtime (ex: modo emergência prioriza tempo)
     if pesos is None:
         pesos = {
             "tempo":      CUSTO_PESO_TEMPO,
@@ -160,7 +209,8 @@ def calcular_custo(
     distancia_km   = distancia_rota(sequencia, matriz)
     tempo_s        = estimar_tempo_rota_s(sequencia, matriz)
     energia_wh     = estimar_energia_wh(sequencia, matriz, carga_kg, vento_ms)
-    pen_prioridade = penalidade_prioridade(sequencia, pedidos_mapa, tempo_s)
+    # Passa a matriz para usar tempo por prefixo (correção B6)
+    pen_prioridade = penalidade_prioridade(sequencia, pedidos_mapa, tempo_s, matriz)
 
     return (
         pesos["tempo"]      * _normaliza(tempo_s,        CUSTO_REF_TEMPO_S)      +
@@ -184,7 +234,7 @@ def calcular_custo_detalhado(
     distancia_km   = distancia_rota(sequencia, matriz)
     tempo_s        = estimar_tempo_rota_s(sequencia, matriz)
     energia_wh     = estimar_energia_wh(sequencia, matriz, carga_kg, vento_ms)
-    pen_prioridade = penalidade_prioridade(sequencia, pedidos_mapa, tempo_s)
+    pen_prioridade = penalidade_prioridade(sequencia, pedidos_mapa, tempo_s, matriz)
     custo_total    = calcular_custo(sequencia, matriz, pedidos_mapa, carga_kg, vento_ms)
 
     return {

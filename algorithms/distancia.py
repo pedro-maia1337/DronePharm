@@ -6,7 +6,7 @@
 
 import math
 import numpy as np
-from typing import List
+from typing import List, Optional
 from models.pedido import Coordenada, Pedido
 from config.settings import DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE
 
@@ -48,6 +48,38 @@ def haversine(coord1: Coordenada, coord2: Coordenada) -> float:
     return _RAIO_TERRA_KM * central_angle
 
 
+def haversine_vetorizado(
+    lats1: np.ndarray,
+    lons1: np.ndarray,
+    lats2: np.ndarray,
+    lons2: np.ndarray,
+) -> np.ndarray:
+    """
+    Haversine vetorizado usando broadcasting NumPy.
+
+    Aceita arrays de qualquer forma compatível (broadcasting).
+    Usado internamente por construir_matriz_distancias para eliminar
+    o loop duplo O(n²) e ganhar 10-100× de velocidade para n > 20 pontos.
+
+    Parâmetros
+    ----------
+    lats1, lons1 : np.ndarray  — coordenadas de origem (radianos)
+    lats2, lons2 : np.ndarray  — coordenadas de destino (radianos)
+
+    Retorna
+    -------
+    np.ndarray : distâncias em km, mesma forma do broadcasting entre as entradas
+    """
+    dlat = lats2 - lats1
+    dlon = lons2 - lons1
+
+    a = (
+        np.sin(dlat / 2) ** 2
+        + np.cos(lats1) * np.cos(lats2) * np.sin(dlon / 2) ** 2
+    )
+    return _RAIO_TERRA_KM * 2 * np.arcsin(np.sqrt(np.clip(a, 0, 1)))
+
+
 def distancia_deposito(pedido: Pedido) -> float:
     """Distância do depósito central até o ponto de entrega do pedido (km)."""
     deposito = Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE)
@@ -60,15 +92,19 @@ def distancia_entre_pedidos(p1: Pedido, p2: Pedido) -> float:
 
 
 # =============================================================================
-# MATRIZ DE DISTÂNCIAS
+# MATRIZ DE DISTÂNCIAS (vetorizada)
 # =============================================================================
 
 def construir_matriz_distancias(
     pedidos: List[Pedido],
-    incluir_deposito: bool = True
+    incluir_deposito: bool = True,
+    deposito: Optional[Coordenada] = None,
 ) -> np.ndarray:
     """
     Constrói a matriz completa de distâncias entre todos os pontos.
+
+    Implementação vetorizada com NumPy broadcasting — ~10-100× mais rápida
+    que o loop duplo escalar para n > 20 pontos.
 
     Quando incluir_deposito=True, o índice 0 representa o depósito
     e os índices 1..N representam os pedidos na ordem da lista.
@@ -77,6 +113,9 @@ def construir_matriz_distancias(
     ----------
     pedidos          : lista de Pedido
     incluir_deposito : se True, índice 0 = depósito
+    deposito         : Coordenada do depósito. Se None, lê de settings.
+                       Passar explicitamente evita dependência de estado global
+                       e elimina race condition em requisições concorrentes.
 
     Retorna
     -------
@@ -89,22 +128,30 @@ def construir_matriz_distancias(
     >>> mat[0][1]   # distância depósito → pedido 0
     >>> mat[1][2]   # distância pedido 0 → pedido 1
     """
-    deposito = Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE)
+    dep = deposito or Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE)
 
     if incluir_deposito:
-        coords = [deposito] + [p.coordenada for p in pedidos]
+        coords = [dep] + [p.coordenada for p in pedidos]
     else:
         coords = [p.coordenada for p in pedidos]
 
     n = len(coords)
-    matriz = np.zeros((n, n), dtype=np.float64)
+    if n == 0:
+        return np.zeros((0, 0), dtype=np.float64)
 
-    for i in range(n):
-        for j in range(i + 1, n):
-            d = haversine(coords[i], coords[j])
-            matriz[i][j] = d
-            matriz[j][i] = d   # Matriz simétrica
+    # Converte para arrays NumPy em radianos — uma alocação, sem loop Python
+    lats = np.radians([c.latitude  for c in coords])
+    lons = np.radians([c.longitude for c in coords])
 
+    # Broadcasting: lats[:, None] tem shape (n,1), lats[None, :] tem shape (1,n)
+    # O resultado é uma matriz (n,n) computada inteiramente em C via NumPy
+    matriz = haversine_vetorizado(
+        lats[:, None], lons[:, None],
+        lats[None, :], lons[None, :],
+    )
+
+    # Garante simetria exata (elimina erros de ponto flutuante na diagonal)
+    np.fill_diagonal(matriz, 0.0)
     return matriz
 
 
@@ -130,14 +177,40 @@ def distancia_rota(
     if not sequencia:
         return 0.0
 
-    # Índices com depósito (0) no início e fim
-    rota_completa = [0] + sequencia + [0]
-    total = 0.0
+    # Usa indexação NumPy direta em vez de loop Python
+    rota_completa = np.array([0] + list(sequencia) + [0], dtype=np.intp)
+    return float(matriz[rota_completa[:-1], rota_completa[1:]].sum())
 
-    for i in range(len(rota_completa) - 1):
-        total += matriz[rota_completa[i]][rota_completa[i + 1]]
 
-    return total
+def distancia_parcial_rota(
+    sequencia: List[int],
+    matriz: np.ndarray,
+    ate_indice: int,
+) -> float:
+    """
+    Calcula a distância acumulada da rota até o pedido na posição `ate_indice`
+    (inclusive), partindo do depósito.
+
+    Usado por penalidade_prioridade para calcular o tempo estimado de chegada
+    a cada pedido individualmente (tempo prefixo), em vez do tempo total da rota.
+
+    Parâmetros
+    ----------
+    sequencia   : sequência completa da rota (índices 1-based, sem depósito)
+    matriz      : matriz de distâncias
+    ate_indice  : posição na sequência (0-based) até onde somar
+
+    Retorna
+    -------
+    float : distância parcial em km (depósito → seq[0] → ... → seq[ate_indice])
+    """
+    if not sequencia or ate_indice < 0:
+        return 0.0
+
+    ate_indice = min(ate_indice, len(sequencia) - 1)
+    prefixo = [0] + list(sequencia[: ate_indice + 1])
+    idxs = np.array(prefixo, dtype=np.intp)
+    return float(matriz[idxs[:-1], idxs[1:]].sum())
 
 
 def saving(
@@ -160,7 +233,7 @@ def saving(
     -------
     float : saving em km (positivo = economiza distância)
     """
-    return matriz[0][i] + matriz[0][j] - matriz[i][j]
+    return float(matriz[0, i] + matriz[0, j] - matriz[i, j])
 
 
 def calcular_todos_savings(
@@ -170,17 +243,35 @@ def calcular_todos_savings(
     """
     Calcula todos os savings possíveis entre pares de pedidos.
 
+    Implementação vetorizada: computa toda a matriz de savings de uma vez
+    e filtra/ordena com NumPy, evitando o loop duplo Python.
+
     Retorna
     -------
     List[tuple] : lista de (saving, i, j) ordenada do maior para o menor.
                   Índices são 1-based (0 = depósito).
     """
-    savings = []
-    for i in range(1, n_pedidos + 1):
-        for j in range(i + 1, n_pedidos + 1):
-            s = saving(i, j, matriz)
-            if s > 0:                          # Só inclui savings positivos
-                savings.append((s, i, j))
+    if n_pedidos == 0:
+        return []
 
-    savings.sort(key=lambda x: x[0], reverse=True)
-    return savings
+    # Índices 1-based dos pedidos
+    idxs = np.arange(1, n_pedidos + 1)
+
+    # Matriz de savings: s[i,j] = d(0,i) + d(0,j) - d(i,j)  para i < j
+    # dist_dep[i] = distância do depósito ao pedido i
+    dist_dep = matriz[0, idxs]                                    # shape (n,)
+    sub = matriz[np.ix_(idxs, idxs)]                             # shape (n,n)
+    s_mat = dist_dep[:, None] + dist_dep[None, :] - sub          # shape (n,n)
+
+    # Só triângulo superior (i < j) e savings positivos
+    ii, jj = np.triu_indices(n_pedidos, k=1)
+    s_vals  = s_mat[ii, jj]
+    mask    = s_vals > 0
+    ii, jj, s_vals = ii[mask], jj[mask], s_vals[mask]
+
+    # Ordena do maior para o menor
+    ordem = np.argsort(-s_vals)
+    ii, jj, s_vals = ii[ordem], jj[ordem], s_vals[ordem]
+
+    # Converte de volta para índices 1-based
+    return [(float(s), int(i + 1), int(j + 1)) for s, i, j in zip(s_vals, ii, jj)]

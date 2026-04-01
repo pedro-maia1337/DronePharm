@@ -23,10 +23,14 @@ from models.pedido import Coordenada
 log = logging.getLogger(__name__)
 
 # URL base da API OpenTopoData com dataset SRTM 30m
-_BASE_URL   = "https://api.opentopodata.org/v1/srtm30m"
-_TIMEOUT_S  = 10
-_CACHE_TTL  = 3600 * 24   # Elevação não muda — cache de 24h
-_BATCH_MAX  = 100         # Máximo de pontos por requisição
+_BASE_URL  = "https://api.opentopodata.org/v1/srtm30m"
+_TIMEOUT_S = 10
+_CACHE_TTL = 3600 * 24   # Elevação não muda — cache de 24h
+_BATCH_MAX = 100          # Máximo de pontos por requisição
+
+# Altitude de fallback usada quando a API está indisponível.
+# Valor conservador para BH (≈ 850m de altitude média do terreno + 50m de margem).
+_ALTITUDE_FALLBACK_M = 50.0
 
 
 # =============================================================================
@@ -60,9 +64,9 @@ class ClienteElevacao:
 
     Uso individual
     --------------
-    cliente  = ClienteElevacao()
-    elev     = cliente.consultar(lat=-19.9167, lon=-43.9345)
-    print(elev.altitude_m)
+    cliente = ClienteElevacao()
+    elev    = cliente.consultar(lat=-19.9167, lon=-43.9345)
+    print(elev.altitude_m if elev else "indisponível")
 
     Uso em lote (recomendado para múltiplos pontos)
     -----------------------------------------------
@@ -78,6 +82,8 @@ class ClienteElevacao:
         """
         Consulta a altitude de um único ponto.
         Usa cache para evitar requisições repetidas.
+        Retorna None se a API estiver indisponível — use altitude_voo_rota
+        para obter um valor seguro mesmo nesse caso.
         """
         chave = f"{lat:.5f},{lon:.5f}"
         if chave in self._cache:
@@ -110,9 +116,8 @@ class ClienteElevacao:
             return []
 
         resultados: List[Optional[DadosElevacao]] = [None] * len(coordenadas)
-        pendentes:  List[tuple[int, Coordenada]]  = []
+        pendentes:  List[tuple]                   = []
 
-        # Separa os que já estão em cache dos que precisam de requisição
         for i, coord in enumerate(coordenadas):
             chave = f"{coord.latitude:.5f},{coord.longitude:.5f}"
             if chave in self._cache:
@@ -123,7 +128,6 @@ class ClienteElevacao:
         if not pendentes:
             return resultados
 
-        # Divide em batches
         for inicio in range(0, len(pendentes), _BATCH_MAX):
             batch = pendentes[inicio: inicio + _BATCH_MAX]
             self._consultar_batch(batch, resultados)
@@ -140,10 +144,11 @@ class ClienteElevacao:
         """
         Retorna a altitude máxima do terreno ao longo de uma rota.
         Usado para definir a altitude de voo mínima segura do trecho.
+        Retorna _ALTITUDE_FALLBACK_M se a API estiver indisponível.
         """
-        dados = self.consultar_lote(coordenadas)
+        dados     = self.consultar_lote(coordenadas)
         altitudes = [d.altitude_m for d in dados if d is not None]
-        return max(altitudes, default=0.0)
+        return max(altitudes, default=_ALTITUDE_FALLBACK_M)
 
     def altitude_voo_rota(
         self,
@@ -153,6 +158,7 @@ class ClienteElevacao:
         """
         Altitude de voo segura para a rota completa.
         Considera o ponto mais alto do terreno + margem.
+        Nunca retorna None — usa fallback se a API estiver indisponível.
         """
         from config.settings import DRONE_ALTITUDE_VOO_M
         alt_terreno = self.altitude_maxima_rota(coordenadas)
@@ -161,11 +167,10 @@ class ClienteElevacao:
     # ------------------------------------------------------------------
     def _consultar_batch(
         self,
-        batch: List[tuple[int, Coordenada]],
+        batch: List[tuple],
         resultados: List,
     ):
         """Faz a requisição HTTP para um batch de coordenadas."""
-        # Monta string "lat,lon|lat,lon|..."
         locations = "|".join(
             f"{coord.latitude},{coord.longitude}"
             for _, coord in batch
@@ -207,9 +212,33 @@ class ClienteElevacao:
 
 
 # =============================================================================
-# INSTÂNCIA GLOBAL
+# INSTÂNCIA GLOBAL — padrão defensivo (igual ao cliente_clima)
 # =============================================================================
+# A6: usa _criar_cliente() com try/except para que falhas de import ou de
+# inicialização não impeçam a aplicação de subir. Em caso de falha,
+# cliente_elevacao é None e os chamadores usam o fallback de altitude padrão.
+#
 # Uso: from apis.elevacao import cliente_elevacao
-#      dados = cliente_elevacao.consultar(lat, lon)
+#      if cliente_elevacao:
+#          alt = cliente_elevacao.altitude_voo_rota(coords)
+#      else:
+#          alt = DRONE_ALTITUDE_VOO_M  # fallback
 
-cliente_elevacao = ClienteElevacao()
+def _criar_cliente_elevacao() -> Optional[ClienteElevacao]:
+    """
+    Cria o ClienteElevacao de forma defensiva.
+    Retorna None se a inicialização falhar por qualquer motivo.
+    """
+    try:
+        cliente = ClienteElevacao()
+        log.debug("ClienteElevacao inicializado (OpenTopoData / SRTM30m)")
+        return cliente
+    except Exception as exc:
+        log.warning(
+            f"ClienteElevacao não pôde ser inicializado: {exc}\n"
+            "Altitude de voo padrão será usada (DRONE_ALTITUDE_VOO_M)."
+        )
+        return None
+
+
+cliente_elevacao: Optional[ClienteElevacao] = _criar_cliente_elevacao()

@@ -13,19 +13,34 @@ import random
 
 import numpy as np
 
+# Limite padrão de passagens do 2-opt completo.
+# Para n pedidos por rota, cada passagem é O(n²) e o pior caso sem limite é O(n³).
+# Com max_iter=20 o custo é O(20 × n²) = O(n²), viável para n até ~100.
+# Instâncias típicas do DronePharm (n ≤ 8 por rota) convergem em 2-4 passagens.
+_2OPT_MAX_ITER_DEFAULT = 20
 
-def aplicar_2opt(sequencia: List[int], matriz: np.ndarray) -> List[int]:
+
+def aplicar_2opt(
+    sequencia: List[int],
+    matriz: np.ndarray,
+    max_iter: int = _2OPT_MAX_ITER_DEFAULT,
+) -> List[int]:
     """
     Aplica a melhoria 2-opt a uma sequência de índices de pedidos.
 
     Itera sobre todos os pares de arcos e inverte o segmento entre eles
-    sempre que a inversão reduzir a distância total. Repete até que
-    nenhuma melhoria seja possível (ótimo local 2-opt).
+    sempre que a inversão reduzir a distância total. Para quando nenhuma
+    melhoria é encontrada (ótimo local 2-opt) ou ao atingir `max_iter`
+    passagens — o que ocorrer primeiro.
 
     Parâmetros
     ----------
     sequencia : lista de índices 1-based dos pedidos (sem o depósito)
     matriz    : matriz de distâncias numpy
+    max_iter  : número máximo de passagens completas (padrão: 20).
+                Limita o custo a O(max_iter × n²) em instâncias grandes.
+                Defina como None para comportamento irrestrito (não recomendado
+                para n > 50, pois pode resultar em O(n³)).
 
     Retorna
     -------
@@ -33,31 +48,34 @@ def aplicar_2opt(sequencia: List[int], matriz: np.ndarray) -> List[int]:
 
     Complexidade
     ------------
-    O(n²) por passagem, O(n³) no pior caso (n = número de pedidos na rota)
+    O(max_iter × n²) com limite; O(n³) no pior caso sem limite
     """
     if len(sequencia) < 3:
-        return list(sequencia)   # Não há melhoria possível com menos de 3 pontos
+        return list(sequencia)
 
-    melhor      = list(sequencia)
-    melhorou    = True
+    melhor    = list(sequencia)
+    melhorou  = True
+    iteracoes = 0
 
     while melhorou:
-        melhorou = False
+        if max_iter is not None and iteracoes >= max_iter:
+            break
+
+        melhorou   = False
+        iteracoes += 1
 
         for i in range(len(melhor) - 1):
             for j in range(i + 2, len(melhor)):
-                # Distância da rota atual nos arcos (i→i+1) e (j→j+1)
                 d_atual = (
                     _arco(melhor, i,     i + 1, matriz) +
                     _arco(melhor, j,     (j + 1) % len(melhor), matriz)
                 )
-                # Distância se invertermos o segmento [i+1 .. j]
                 d_nova = (
                     _arco(melhor, i,     j,     matriz) +
                     _arco(melhor, i + 1, (j + 1) % len(melhor), matriz)
                 )
 
-                if d_nova < d_atual - 1e-9:    # Melhoria significativa
+                if d_nova < d_atual - 1e-9:
                     melhor[i + 1: j + 1] = melhor[i + 1: j + 1][::-1]
                     melhorou = True
 
@@ -86,6 +104,7 @@ def mutacao_2opt_aleatorio(sequencia: List[int], matriz: np.ndarray) -> List[int
 
     Mais rápida que o 2-opt completo para uso como operador de mutação,
     aplicando uma única perturbação por chamada.
+    Sem limite de iterações pois executa apenas uma tentativa por chamada.
     """
     if len(sequencia) < 3:
         return list(sequencia)
@@ -93,7 +112,6 @@ def mutacao_2opt_aleatorio(sequencia: List[int], matriz: np.ndarray) -> List[int
     seq = list(sequencia)
     n   = len(seq)
 
-    # Escolhe dois índices aleatórios distintos
     i = random.randint(0, n - 2)
     j = random.randint(i + 1, n - 1)
 

@@ -1,12 +1,23 @@
 # =============================================================================
-# replanejamento/monitor.py
+# replanning/monitor.py
 # Loop de monitoramento em tempo real e replanejamento dinâmico
 #
-# Monitora o estado do drone durante o voo e aciona replanejamento
-# automático em caso de bateria crítica, vento excessivo ou atrasos.
+# Dois modos de operação (A3):
+#
+#   1. Monitor (bloqueante) — usado no Raspberry Pi como processo standalone.
+#      Roda em thread separada, lê telemetria do MAVLink via serial.
+#      Inicie com monitor.iniciar() em um threading.Thread.
+#
+#   2. MonitorTask (async) — usado no backend FastAPI via BackgroundTask.
+#      Monitora simulações e coordena estado do dashboard sem bloquear o
+#      event loop. Use await monitor_task.executar() ou asyncio.create_task().
+#
+# Ambos emitem os mesmos EventoMonitor e compartilham a mesma lógica de
+# verificação (bateria, vento, ETAs, entregas confirmadas).
 # =============================================================================
 
 from __future__ import annotations
+import asyncio
 import time
 import logging
 from datetime import datetime
@@ -23,6 +34,8 @@ from config.settings import (
 
 log = logging.getLogger(__name__)
 
+_RAIO_CONFIRMACAO_M = 15.0
+
 
 class EventoMonitor:
     """Tipos de eventos gerados pelo monitor durante o voo."""
@@ -35,86 +48,35 @@ class EventoMonitor:
     FALHA_COMUNICACAO  = "FALHA_COMUNICACAO"
 
 
-class Monitor:
+# =============================================================================
+# LÓGICA COMPARTILHADA
+# =============================================================================
+
+class _MonitorBase:
     """
-    Monitora o voo do drone em tempo real e aciona ações corretivas.
-
-    O loop principal é executado a cada MAVLINK_CICLO_TELEM_S segundos,
-    verificando o estado da telemetria recebida do drone Arduino.
-
-    Parâmetros
-    ----------
-    drone           : instância do Drone com estado atual
-    rota            : rota sendo executada
-    callback_alerta : função opcional chamada a cada evento (tipo, mensagem)
-    callback_telem  : função que retorna nova Telemetria (simulada ou real)
-
-    Uso
-    ---
-    monitor = Monitor(drone, rota, callback_alerta=notificar_operador)
-    monitor.iniciar()
+    Lógica de verificação comum aos dois modos de operação.
+    Não use diretamente — use Monitor ou MonitorTask.
     """
 
     def __init__(
         self,
-        drone:            Drone,
-        rota:             Rota,
-        callback_alerta:  Optional[Callable] = None,
-        callback_telem:   Optional[Callable] = None,
+        drone:           Drone,
+        rota:            Rota,
+        callback_alerta: Optional[Callable] = None,
     ):
         self.drone           = drone
         self.rota            = rota
-        self.callback_alerta = callback_alerta or (lambda tipo, msg: log.warning(f"[{tipo}] {msg}"))
-        self.callback_telem  = callback_telem   # Injetável para testes/simulação
-        self._ativo          = False
+        self.callback_alerta = callback_alerta or (
+            lambda tipo, msg: log.warning(f"[{tipo}] {msg}")
+        )
+        self._ativo              = False
         self._pedidos_pendentes: List[Pedido] = list(rota.pedidos)
-
-    # ------------------------------------------------------------------
-    def iniciar(self):
-        """Inicia o loop de monitoramento (bloqueante)."""
-        self._ativo = True
-        self.drone.status = StatusDrone.EM_VOO
-        log.info(f"Monitor iniciado para rota com {len(self._pedidos_pendentes)} entregas")
-
-        while self._ativo and self.drone.em_voo:
-            telemetria = self._obter_telemetria()
-
-            if telemetria is None:
-                self._tratar_falha_comunicacao()
-                time.sleep(MAVLINK_CICLO_TELEM_S)
-                continue
-
-            self.drone.atualizar_telemetria(telemetria)
-            self._verificar_bateria(telemetria)
-            self._verificar_vento(telemetria)
-            self._atualizar_etas(telemetria)
-            self._verificar_entregas_concluidas(telemetria)
-
-            time.sleep(MAVLINK_CICLO_TELEM_S)
-
-        self._finalizar()
 
     def parar(self):
         """Para o loop de monitoramento externamente."""
         self._ativo = False
 
-    # ------------------------------------------------------------------
-    def _obter_telemetria(self) -> Optional[Telemetria]:
-        """
-        Obtém telemetria real do drone (via MAVLink) ou simulada (testes).
-        Retorna None em caso de falha de comunicação.
-        """
-        if self.callback_telem:
-            try:
-                return self.callback_telem()
-            except Exception as e:
-                log.error(f"Erro ao obter telemetria: {e}")
-                return None
-        return None
-
-    # ------------------------------------------------------------------
     def _verificar_bateria(self, tel: Telemetria):
-        """Aciona retorno de emergência se bateria estiver crítica."""
         if tel.bateria_critica:
             msg = (
                 f"Bateria crítica: {tel.bateria_pct * 100:.1f}% "
@@ -125,7 +87,6 @@ class Monitor:
             self._iniciar_retorno_emergencia()
 
     def _verificar_vento(self, tel: Telemetria):
-        """Aciona replaneamento se vento estiver acima do limite."""
         if not tel.vento_aceitavel:
             msg = (
                 f"Vento excessivo: {tel.vento_ms:.1f} m/s "
@@ -136,38 +97,33 @@ class Monitor:
             self._iniciar_retorno_emergencia()
 
     def _atualizar_etas(self, tel: Telemetria):
-        """Atualiza ETA de cada pedido pendente com base na posição atual."""
         from datetime import timedelta
-        from algorithms.distancia import haversine
-
         for pedido in self._pedidos_pendentes:
-            dist_km  = haversine(tel.posicao, pedido.coordenada)
-            dist_m   = dist_km * 1000.0
-            eta_s    = dist_m / max(tel.velocidade_ms, 0.1)
+            dist_km = haversine(tel.posicao, pedido.coordenada)
+            eta_s   = (dist_km * 1000.0) / max(tel.velocidade_ms, 0.1)
             pedido.eta = datetime.now() + timedelta(seconds=eta_s)
 
             if pedido.urgente and pedido.janela_fim:
                 tempo_restante = (pedido.janela_fim - datetime.now()).total_seconds()
                 if eta_s > tempo_restante:
                     msg = (
-                        f"Pedido urgente #{pedido.id} em risco de atraso: "
+                        f"Pedido urgente #{pedido.id} em risco: "
                         f"ETA={eta_s:.0f}s, restante={tempo_restante:.0f}s"
                     )
                     self.callback_alerta(EventoMonitor.ATRASO_URGENTE, msg)
 
     def _verificar_entregas_concluidas(self, tel: Telemetria):
-        """Marca pedidos como entregues quando o drone está próximo do destino."""
-        RAIO_CONFIRMACAO_M = 15.0   # metros de raio para confirmar entrega
-
         concluidos = []
         for pedido in self._pedidos_pendentes:
             dist_m = haversine(tel.posicao, pedido.coordenada) * 1000.0
-            if dist_m <= RAIO_CONFIRMACAO_M:
+            if dist_m <= _RAIO_CONFIRMACAO_M:
                 pedido.marcar_entregue()
                 concluidos.append(pedido)
-                msg = f"Pedido #{pedido.id} entregue em {pedido.eta}"
-                self.callback_alerta(EventoMonitor.ENTREGA_CONFIRMADA, msg)
-                log.info(msg)
+                self.callback_alerta(
+                    EventoMonitor.ENTREGA_CONFIRMADA,
+                    f"Pedido #{pedido.id} entregue"
+                )
+                log.info(f"Pedido #{pedido.id} entregue")
 
         for p in concluidos:
             self._pedidos_pendentes.remove(p)
@@ -176,24 +132,20 @@ class Monitor:
             log.info("Todos os pedidos entregues — aguardando retorno ao depósito.")
 
     def _tratar_falha_comunicacao(self):
-        """Registra falha de comunicação sem interromper o monitor."""
         msg = "Falha de comunicação com o drone — aguardando próximo ciclo"
         self.callback_alerta(EventoMonitor.FALHA_COMUNICACAO, msg)
         log.error(msg)
 
     def _iniciar_retorno_emergencia(self):
-        """Sinaliza retorno imediato ao depósito."""
         self.drone.status = StatusDrone.RETORNANDO
-        msg = "RETORNO DE EMERGÊNCIA iniciado"
-        self.callback_alerta(EventoMonitor.RETORNO_INICIADO, msg)
-        log.critical(msg)
+        self.callback_alerta(EventoMonitor.RETORNO_INICIADO, "RETORNO DE EMERGÊNCIA iniciado")
+        log.critical("RETORNO DE EMERGÊNCIA iniciado")
         self._ativo = False
 
     def _finalizar(self):
-        """Encerra o monitor e atualiza estado do drone."""
         deposito = Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE)
-        self.drone.posicao_atual = deposito
-        self.drone.status        = StatusDrone.AGUARDANDO
+        self.drone.posicao_atual      = deposito
+        self.drone.status             = StatusDrone.AGUARDANDO
         self.drone.descarregar()
         self.drone.missoes_realizadas += 1
 
@@ -205,3 +157,156 @@ class Monitor:
         )
         self.callback_alerta(EventoMonitor.MISSAO_CONCLUIDA, msg)
         log.info(msg)
+
+    def _processar_telemetria(self, tel: Telemetria):
+        """Executa todas as verificações para um snapshot de telemetria."""
+        self.drone.atualizar_telemetria(tel)
+        self._verificar_bateria(tel)
+        self._verificar_vento(tel)
+        self._atualizar_etas(tel)
+        self._verificar_entregas_concluidas(tel)
+
+
+# =============================================================================
+# MODO 1 — Monitor bloqueante (Raspberry Pi / processo standalone)
+# =============================================================================
+
+class Monitor(_MonitorBase):
+    """
+    Monitor bloqueante para uso no Raspberry Pi como processo standalone.
+
+    Deve ser executado em uma thread separada para não bloquear o servidor:
+
+        import threading
+        t = threading.Thread(target=monitor.iniciar, daemon=True)
+        t.start()
+
+    Parâmetros
+    ----------
+    drone           : instância do Drone com estado atual
+    rota            : rota sendo executada
+    callback_alerta : função síncrona (tipo: str, msg: str) → None
+    callback_telem  : função que retorna Telemetria (MAVLink ou simulada)
+    """
+
+    def __init__(
+        self,
+        drone:           Drone,
+        rota:            Rota,
+        callback_alerta: Optional[Callable] = None,
+        callback_telem:  Optional[Callable] = None,
+    ):
+        super().__init__(drone, rota, callback_alerta)
+        self.callback_telem = callback_telem
+
+    def iniciar(self):
+        """Inicia o loop de monitoramento (bloqueante)."""
+        self._ativo       = True
+        self.drone.status = StatusDrone.EM_VOO
+        log.info(f"Monitor (Pi) iniciado — {len(self._pedidos_pendentes)} entregas")
+
+        while self._ativo and self.drone.em_voo:
+            tel = self._obter_telemetria()
+
+            if tel is None:
+                self._tratar_falha_comunicacao()
+                time.sleep(MAVLINK_CICLO_TELEM_S)
+                continue
+
+            self._processar_telemetria(tel)
+            time.sleep(MAVLINK_CICLO_TELEM_S)
+
+        self._finalizar()
+
+    def _obter_telemetria(self) -> Optional[Telemetria]:
+        if self.callback_telem:
+            try:
+                return self.callback_telem()
+            except Exception as exc:
+                log.error(f"Erro ao obter telemetria: {exc}")
+        return None
+
+
+# =============================================================================
+# MODO 2 — MonitorTask assíncrono (FastAPI BackgroundTask / simulações)
+# =============================================================================
+
+class MonitorTask(_MonitorBase):
+    """
+    Monitor assíncrono para uso no backend FastAPI via BackgroundTask
+    ou asyncio.create_task().
+
+    Não bloqueia o event loop — usa asyncio.sleep entre ciclos.
+    Ideal para monitorar simulações e coordenar estado do dashboard.
+
+    Parâmetros
+    ----------
+    drone           : instância do Drone com estado atual
+    rota            : rota sendo executada
+    callback_alerta : função síncrona (tipo: str, msg: str) → None
+    callback_telem  : função síncrona ou coroutine que retorna Telemetria
+    intervalo_s     : segundos entre ciclos (padrão: MAVLINK_CICLO_TELEM_S)
+
+    Uso via BackgroundTask (FastAPI)
+    --------------------------------
+    from fastapi import BackgroundTasks
+
+    @router.post("/rotas/{rota_id}/simular")
+    async def simular(rota_id: int, background_tasks: BackgroundTasks):
+        monitor = MonitorTask(drone, rota, callback_telem=sim.gerar_telemetria_atual)
+        background_tasks.add_task(monitor.executar)
+        return {"mensagem": "Simulação iniciada em background"}
+
+    Uso direto com asyncio
+    ----------------------
+    task = asyncio.create_task(monitor_task.executar())
+    # Para parar: monitor_task.parar(); await task
+    """
+
+    def __init__(
+        self,
+        drone:           Drone,
+        rota:            Rota,
+        callback_alerta: Optional[Callable] = None,
+        callback_telem:  Optional[Callable] = None,
+        intervalo_s:     float = MAVLINK_CICLO_TELEM_S,
+    ):
+        super().__init__(drone, rota, callback_alerta)
+        self.callback_telem = callback_telem
+        self.intervalo_s    = intervalo_s
+
+    async def executar(self):
+        """
+        Executa o loop de monitoramento de forma assíncrona.
+        Compatível com FastAPI BackgroundTask e asyncio.create_task().
+        """
+        self._ativo       = True
+        self.drone.status = StatusDrone.EM_VOO
+        log.info(f"MonitorTask (async) iniciado — {len(self._pedidos_pendentes)} entregas")
+
+        while self._ativo and self.drone.em_voo:
+            tel = await self._obter_telemetria_async()
+
+            if tel is None:
+                self._tratar_falha_comunicacao()
+                await asyncio.sleep(self.intervalo_s)
+                continue
+
+            self._processar_telemetria(tel)
+            await asyncio.sleep(self.intervalo_s)
+
+        self._finalizar()
+
+    async def _obter_telemetria_async(self) -> Optional[Telemetria]:
+        """Obtém telemetria suportando callbacks sync e async."""
+        if self.callback_telem is None:
+            return None
+        try:
+            if asyncio.iscoroutinefunction(self.callback_telem):
+                return await self.callback_telem()
+            # Callback síncrono: executa em thread pool para não bloquear
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, self.callback_telem)
+        except Exception as exc:
+            log.error(f"Erro ao obter telemetria async: {exc}")
+            return None

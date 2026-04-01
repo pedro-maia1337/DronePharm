@@ -1,326 +1,408 @@
 # =============================================================================
-# servidor/routers/mapa.py
-# Mapa Folium com dados 100% dinâmicos do banco
+# server/routers/mapa.py
+# Endpoints de mapa — GeoJSON para renderização no frontend (Leaflet/MapLibre)
 #
-# GET /api/v1/mapa/rotas          → HTML mapa das últimas rotas
-# GET /api/v1/mapa/rotas/{id}     → HTML mapa de uma rota específica
-# GET /api/v1/mapa/pedidos        → HTML mapa dos pedidos pendentes
+# Migração A5: em vez de gerar HTML Folium no servidor (dependência de estado
+# global, arquivo em disco, impossível de atualizar em tempo real), o backend
+# expõe dados geoespaciais como GeoJSON puro. O frontend renderiza com Leaflet
+# ou MapLibre e atualiza via WebSocket.
+#
+# Endpoints:
+#   GET /api/v1/mapa/deposito          → GeoJSON do depósito ativo
+#   GET /api/v1/mapa/pedidos           → GeoJSON de todos os pedidos ativos
+#   GET /api/v1/mapa/rotas             → GeoJSON das rotas (LineString + pontos)
+#   GET /api/v1/mapa/rotas/{rota_id}   → GeoJSON de uma rota específica
+#   GET /api/v1/mapa/frota             → GeoJSON da posição atual da frota
+#   GET /api/v1/mapa/snapshot          → GeoJSON completo (deposito+pedidos+rotas+frota)
 # =============================================================================
 
-import os
-import logging
-from typing import Optional
-
-from fastapi import APIRouter, HTTPException, Query, Depends
-from fastapi.responses import HTMLResponse
+from typing import Optional, List
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bd.database import get_db
-from bd.repositories.rota_repo import RotaRepository
-from bd.repositories.pedido_repo import PedidoRepository
-from bd.repositories.drone_repo import DroneRepository
 from bd.repositories.farmacia_repo import FarmaciaRepository
-from models.pedido import Pedido as PedidoModel, Coordenada
-from models.drone import Drone as DroneModel
-from models.rota import Rota as RotaModel, Waypoint
+from bd.repositories.pedido_repo import PedidoRepository
+from bd.repositories.rota_repo import RotaRepository
+from bd.repositories.drone_repo import DroneRepository
 
-log = logging.getLogger(__name__)
 router = APIRouter()
 
-
-# =============================================================================
-# HELPERS — ORM → modelos de domínio
-# =============================================================================
-
-def _pedido_orm_para_modelo(p) -> PedidoModel:
-    return PedidoModel(
-        id=p.id,
-        coordenada=Coordenada(p.latitude, p.longitude),
-        peso_kg=p.peso_kg,
-        prioridade=p.prioridade,
-        descricao=p.descricao or "",
-        janela_fim=p.janela_fim,
-    )
-
-
-def _rota_orm_para_modelo(rota_orm, pedidos_map: dict) -> RotaModel:
-    """
-    Reconstrói Rota (modelo de domínio) a partir do ORM.
-    Os waypoints são reconstruídos na ordem dos pedido_ids persistidos.
-    O depósito (primeiro e último wp) é identificado pelo label.
-    """
-    from config.settings import DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE
-
-    rota = RotaModel(
-        distancia_total_km=rota_orm.distancia_km,
-        tempo_total_s=rota_orm.tempo_min * 60.0,
-        energia_wh=rota_orm.energia_wh,
-        custo=rota_orm.custo,
-        viavel=rota_orm.viavel,
-        geracoes_ga=rota_orm.geracoes_ga,
-    )
-
-    pedido_ids   = rota_orm.pedido_ids or []
-    wps_raw      = rota_orm.waypoints_json or []
-
-    # Fallback: se não há waypoints salvos, reconstrói só com os pedidos em ordem
-    if not wps_raw and pedido_ids:
-        # Depósito inicial
-        rota.adicionar_waypoint(Waypoint(
-            coordenada=Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE),
-            pedido=None,
-        ))
-        for pid in pedido_ids:
-            if pid in pedidos_map:
-                p = pedidos_map[pid]
-                rota.adicionar_waypoint(Waypoint(
-                    coordenada=p.coordenada,
-                    pedido=p,
-                ))
-        # Depósito final
-        rota.adicionar_waypoint(Waypoint(
-            coordenada=Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE),
-            pedido=None,
-        ))
-        return rota
-
-    # Reconstrói a partir dos waypoints serializados
-    # Ordem dos pedidos para associar: depósito tem pedido=None
-    pedido_iter = iter([pedidos_map[pid] for pid in pedido_ids if pid in pedidos_map])
-
-    for wp_raw in wps_raw:
-        label = wp_raw.get("label", "")
-        coord = Coordenada(
-            latitude=wp_raw.get("latitude", 0.0),
-            longitude=wp_raw.get("longitude", 0.0),
-        )
-        # É depósito se o label não contém "Pedido #" ou é o primeiro/último wp
-        if "Pedido #" in label or "pedido" in label.lower():
-            pedido_obj = next(pedido_iter, None)
-        else:
-            pedido_obj = None
-
-        rota.adicionar_waypoint(Waypoint(
-            coordenada=coord,
-            pedido=pedido_obj,
-            altitude_m=wp_raw.get("altitude", 50.0),
-        ))
-
-    return rota
+# Cores por prioridade de pedido
+_COR_PRIORIDADE = {1: "#B71C1C", 2: "#1565C0", 3: "#2E7D32"}
+_COR_STATUS     = {
+    "pendente":  "#FF9800",
+    "em_rota":   "#2196F3",
+    "entregue":  "#4CAF50",
+    "cancelado": "#9E9E9E",
+}
+# Cores para rotas (até 10 voos)
+_CORES_ROTAS = [
+    "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336",
+    "#00BCD4", "#FF5722", "#8BC34A", "#E91E63", "#607D8B",
+]
 
 
-async def _drone_default() -> DroneModel:
-    from config.settings import DRONE_CAPACIDADE_MAX_KG, DRONE_AUTONOMIA_MAX_KM, DRONE_VELOCIDADE_MS
-    return DroneModel(
-        id="DP-00",
-        nome="DronePharm",
-        capacidade_max_kg=DRONE_CAPACIDADE_MAX_KG,
-        autonomia_max_km=DRONE_AUTONOMIA_MAX_KM,
-        velocidade_ms=DRONE_VELOCIDADE_MS,
-    )
+def _feature(geometry: dict, properties: dict) -> dict:
+    """Cria um GeoJSON Feature."""
+    return {"type": "Feature", "geometry": geometry, "properties": properties}
 
 
-async def _gerar_html(
-    rotas_orm:  list,
-    deposito,
-    db:         AsyncSession,
-    titulo:     str = "DronePharm — Rotas de Entrega",
-) -> str:
-    """
-    Monta os objetos de domínio a partir do banco e gera o HTML Folium.
-    O arquivo é gerado em /tmp e lido em memória — nenhum arquivo permanente.
-    """
-    try:
-        from visualizacao.mapa import VisualizadorRotas
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Folium não instalado. Execute: pip install folium  ({exc})",
-        )
+def _point(lon: float, lat: float) -> dict:
+    return {"type": "Point", "coordinates": [lon, lat]}
 
-    # Atualiza depósito dinâmico nos settings globais
-    from config import settings as cfg
-    cfg.DEPOSITO_LATITUDE  = deposito.latitude
-    cfg.DEPOSITO_LONGITUDE = deposito.longitude
-    cfg.DEPOSITO_NOME      = deposito.nome
 
-    # Carrega todos os pedidos referenciados pelas rotas
-    todos_ids   = {pid for r in rotas_orm for pid in (r.pedido_ids or [])}
-    pedidos_orm = await PedidoRepository(db).buscar_por_ids(list(todos_ids)) if todos_ids else []
-    pedidos_map = {p.id: _pedido_orm_para_modelo(p) for p in pedidos_orm}
+def _linestring(coords: List[List[float]]) -> dict:
+    return {"type": "LineString", "coordinates": coords}
 
-    # Drone da primeira rota (ou default)
-    drone = None
-    if rotas_orm:
-        drone_orm = await DroneRepository(db).buscar_por_id(rotas_orm[0].drone_id)
-        if drone_orm:
-            drone = DroneModel(
-                id=drone_orm.id,
-                nome=drone_orm.nome,
-                capacidade_max_kg=drone_orm.capacidade_max_kg,
-                autonomia_max_km=drone_orm.autonomia_max_km,
-                velocidade_ms=drone_orm.velocidade_ms,
-                bateria_pct=drone_orm.bateria_pct,
-            )
-    if drone is None:
-        drone = await _drone_default()
 
-    # Reconstrói modelos de domínio
-    rotas_dominio = [_rota_orm_para_modelo(r, pedidos_map) for r in rotas_orm]
-    rotas_validas = [r for r in rotas_dominio if not r.esta_vazia()]
-
-    # Gera HTML em /tmp
-    caminho_tmp = f"/tmp/dronepharm_{os.getpid()}.html"
-    viz = VisualizadorRotas(drone, list(pedidos_map.values()), rotas_validas, titulo=titulo)
-    viz.gerar_mapa(caminho_tmp)
-
-    with open(caminho_tmp, encoding="utf-8") as f:
-        html = f.read()
-    try:
-        os.remove(caminho_tmp)
-    except OSError:
-        pass
-
-    return html
+def _collection(features: List[dict]) -> dict:
+    return {"type": "FeatureCollection", "features": features}
 
 
 # =============================================================================
-# ENDPOINTS
+# DEPÓSITO
+# =============================================================================
+
+@router.get(
+    "/deposito",
+    summary="GeoJSON do depósito ativo",
+    description="Retorna a localização da farmácia-polo principal como GeoJSON Point.",
+)
+async def geojson_deposito(db: AsyncSession = Depends(get_db)):
+    repo     = FarmaciaRepository(db)
+    deposito = await repo.buscar_deposito_principal()
+    if not deposito:
+        raise HTTPException(status_code=404, detail="Nenhum depósito cadastrado.")
+
+    feature = _feature(
+        geometry=_point(deposito.longitude, deposito.latitude),
+        properties={
+            "id":        deposito.id,
+            "nome":      deposito.nome,
+            "tipo":      "deposito",
+            "endereco":  deposito.endereco,
+            "cidade":    deposito.cidade,
+            "uf":        deposito.uf,
+            "cor":       "#1A237E",
+            "icone":     "deposito",
+        },
+    )
+    return _collection([feature])
+
+
+# =============================================================================
+# PEDIDOS
+# =============================================================================
+
+@router.get(
+    "/pedidos",
+    summary="GeoJSON dos pedidos ativos",
+    description=(
+        "Retorna pedidos como GeoJSON FeatureCollection. "
+        "Filtre por status: pendente | em_rota | entregue | cancelado."
+    ),
+)
+async def geojson_pedidos(
+    status:      Optional[str] = Query(None, description="pendente | em_rota | entregue"),
+    farmacia_id: Optional[int] = Query(None),
+    limite:      int           = Query(500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    repo    = PedidoRepository(db)
+    pedidos = await repo.listar(status=status, farmacia_id=farmacia_id, limite=limite)
+
+    features = []
+    for p in pedidos:
+        prioridade_label = {1: "Urgente", 2: "Normal", 3: "Reabastecimento"}.get(p.prioridade, "—")
+        features.append(_feature(
+            geometry=_point(p.longitude, p.latitude),
+            properties={
+                "id":          p.id,
+                "tipo":        "pedido",
+                "status":      p.status,
+                "prioridade":  p.prioridade,
+                "prioridade_label": prioridade_label,
+                "peso_kg":     p.peso_kg,
+                "descricao":   p.descricao or "",
+                "farmacia_id": p.farmacia_id,
+                "rota_id":     p.rota_id,
+                "janela_fim":  p.janela_fim.isoformat() if p.janela_fim else None,
+                "cor":         _COR_PRIORIDADE.get(p.prioridade, "#888"),
+                "cor_status":  _COR_STATUS.get(p.status, "#888"),
+            },
+        ))
+
+    return _collection(features)
+
+
+# =============================================================================
+# ROTAS
 # =============================================================================
 
 @router.get(
     "/rotas",
-    response_class=HTMLResponse,
-    summary="Mapa interativo das últimas rotas",
+    summary="GeoJSON de todas as rotas recentes",
     description=(
-        "Retorna HTML Folium com as rotas mais recentes do banco. "
-        "Abrir diretamente no navegador. "
-        "`limite` controla quantas rotas exibir. "
-        "`status` filtra por: calculada | em_execucao | concluida | abortada."
+        "Retorna rotas como GeoJSON FeatureCollection. "
+        "Cada rota gera uma LineString (trajetória) e Points (waypoints). "
+        "Filtre por status: calculada | em_execucao | concluida | abortada."
     ),
 )
-async def mapa_rotas(
-    limite: int           = Query(10, ge=1, le=50),
-    status: Optional[str] = Query(None),
+async def geojson_rotas(
+    status:   Optional[str] = Query(None, description="calculada | em_execucao | concluida | abortada"),
+    drone_id: Optional[str] = Query(None),
+    limite:   int           = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):
-    deposito = await FarmaciaRepository(db).buscar_deposito_principal()
-    if not deposito:
-        raise HTTPException(status_code=404, detail="Nenhum depósito cadastrado.")
+    repo  = RotaRepository(db)
+    rotas = await repo.listar_recentes(limite=limite, drone_id=drone_id)
 
-    repo = RotaRepository(db)
     if status:
-        rotas_orm = (await repo.listar_por_status(status))[:limite]
-    else:
-        rotas_orm = await repo.listar_recentes(limite=limite)
+        rotas = [r for r in rotas if r.status == status]
 
-    if not rotas_orm:
-        return HTMLResponse(content=_html_sem_rotas(deposito))
+    features = []
+    for idx, rota in enumerate(rotas):
+        cor      = _CORES_ROTAS[idx % len(_CORES_ROTAS)]
+        waypoints = rota.waypoints_json or []
 
-    html = await _gerar_html(rotas_orm, deposito, db, f"DronePharm — {len(rotas_orm)} rota(s)")
-    return HTMLResponse(content=html)
+        # LineString da rota completa
+        coords_linha = [
+            [wp.get("longitude", 0.0), wp.get("latitude", 0.0)]
+            for wp in waypoints
+        ]
+        if len(coords_linha) >= 2:
+            features.append(_feature(
+                geometry=_linestring(coords_linha),
+                properties={
+                    "id":           rota.id,
+                    "tipo":         "rota_linha",
+                    "drone_id":     rota.drone_id,
+                    "status":       rota.status,
+                    "distancia_km": rota.distancia_km,
+                    "tempo_min":    rota.tempo_min,
+                    "carga_kg":     rota.carga_kg,
+                    "viavel":       rota.viavel,
+                    "geracoes_ga":  rota.geracoes_ga,
+                    "pedido_ids":   rota.pedido_ids or [],
+                    "cor":          cor,
+                    "peso_linha":   3.5,
+                    "opacidade":    0.85,
+                    "criada_em":    rota.criada_em.isoformat() if rota.criada_em else None,
+                },
+            ))
+
+        # Waypoints individuais como Points
+        for seq_idx, wp in enumerate(waypoints):
+            lat = wp.get("latitude", 0.0)
+            lon = wp.get("longitude", 0.0)
+            label = wp.get("label", f"Waypoint {seq_idx}")
+            features.append(_feature(
+                geometry=_point(lon, lat),
+                properties={
+                    "id":       f"rota_{rota.id}_wp_{seq_idx}",
+                    "tipo":     "waypoint",
+                    "rota_id":  rota.id,
+                    "seq":      seq_idx,
+                    "label":    label,
+                    "eh_deposito": seq_idx == 0 or seq_idx == len(waypoints) - 1,
+                    "altitude": wp.get("altitude", 50.0),
+                    "cor":      cor,
+                },
+            ))
+
+    return _collection(features)
 
 
 @router.get(
     "/rotas/{rota_id}",
-    response_class=HTMLResponse,
-    summary="Mapa de uma rota específica",
-    description="Retorna HTML Folium para uma única rota pelo ID.",
+    summary="GeoJSON de uma rota específica",
 )
-async def mapa_rota_por_id(rota_id: int, db: AsyncSession = Depends(get_db)):
-    deposito = await FarmaciaRepository(db).buscar_deposito_principal()
-    if not deposito:
-        raise HTTPException(status_code=404, detail="Nenhum depósito cadastrado.")
-
-    rota = await RotaRepository(db).buscar_por_id(rota_id)
+async def geojson_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
+    repo = RotaRepository(db)
+    rota = await repo.buscar_por_id(rota_id)
     if not rota:
         raise HTTPException(status_code=404, detail=f"Rota {rota_id} não encontrada.")
 
-    html = await _gerar_html([rota], deposito, db, f"DronePharm — Rota #{rota_id} | {rota.drone_id}")
-    return HTMLResponse(content=html)
+    cor       = _CORES_ROTAS[rota_id % len(_CORES_ROTAS)]
+    waypoints = rota.waypoints_json or []
+    features  = []
 
+    coords_linha = [
+        [wp.get("longitude", 0.0), wp.get("latitude", 0.0)]
+        for wp in waypoints
+    ]
+    if len(coords_linha) >= 2:
+        features.append(_feature(
+            geometry=_linestring(coords_linha),
+            properties={
+                "id":           rota.id,
+                "tipo":         "rota_linha",
+                "drone_id":     rota.drone_id,
+                "status":       rota.status,
+                "distancia_km": rota.distancia_km,
+                "tempo_min":    rota.tempo_min,
+                "energia_wh":   rota.energia_wh,
+                "carga_kg":     rota.carga_kg,
+                "custo":        rota.custo,
+                "viavel":       rota.viavel,
+                "geracoes_ga":  rota.geracoes_ga,
+                "pedido_ids":   rota.pedido_ids or [],
+                "cor":          cor,
+            },
+        ))
+
+    for seq_idx, wp in enumerate(waypoints):
+        features.append(_feature(
+            geometry=_point(wp.get("longitude", 0.0), wp.get("latitude", 0.0)),
+            properties={
+                "id":          f"rota_{rota.id}_wp_{seq_idx}",
+                "tipo":        "waypoint",
+                "rota_id":     rota.id,
+                "seq":         seq_idx,
+                "label":       wp.get("label", f"WP {seq_idx}"),
+                "eh_deposito": seq_idx == 0 or seq_idx == len(waypoints) - 1,
+                "altitude":    wp.get("altitude", 50.0),
+                "cor":         cor,
+            },
+        ))
+
+    return _collection(features)
+
+
+# =============================================================================
+# FROTA (posição atual dos drones)
+# =============================================================================
 
 @router.get(
-    "/pedidos",
-    response_class=HTMLResponse,
-    summary="Mapa dos pedidos pendentes",
+    "/frota",
+    summary="GeoJSON da posição atual da frota",
     description=(
-        "Retorna HTML Folium mostrando todos os pedidos pendentes "
-        "ainda sem rota atribuída. Útil antes de calcular rotas."
+        "Retorna a posição GPS atual de cada drone como GeoJSON Points. "
+        "Drones sem posição registrada são omitidos. "
+        "Atualize via WebSocket /ws/telemetria para posição em tempo real."
     ),
 )
-async def mapa_pedidos_pendentes(db: AsyncSession = Depends(get_db)):
-    try:
-        from visualizacao.mapa import VisualizadorRotas
-    except ImportError as exc:
-        raise HTTPException(status_code=503, detail=f"Folium não instalado: {exc}")
+async def geojson_frota(db: AsyncSession = Depends(get_db)):
+    repo   = DroneRepository(db)
+    drones = await repo.listar()
 
-    deposito = await FarmaciaRepository(db).buscar_deposito_principal()
-    if not deposito:
-        raise HTTPException(status_code=404, detail="Nenhum depósito cadastrado.")
+    features = []
+    for drone in drones:
+        if drone.latitude_atual is None or drone.longitude_atual is None:
+            continue
 
-    from config import settings as cfg
-    cfg.DEPOSITO_LATITUDE  = deposito.latitude
-    cfg.DEPOSITO_LONGITUDE = deposito.longitude
-    cfg.DEPOSITO_NOME      = deposito.nome
+        cor_status = {
+            "aguardando": "#4CAF50",
+            "em_voo":     "#2196F3",
+            "retornando": "#FF9800",
+            "carregando": "#9C27B0",
+            "manutencao": "#9E9E9E",
+            "emergencia": "#F44336",
+        }.get(drone.status, "#888")
 
-    pedidos_orm   = await PedidoRepository(db).listar_pendentes()
-    pedidos_lista = [_pedido_orm_para_modelo(p) for p in pedidos_orm]
-    drone         = await _drone_default()
+        features.append(_feature(
+            geometry=_point(drone.longitude_atual, drone.latitude_atual),
+            properties={
+                "id":                 drone.id,
+                "nome":               drone.nome,
+                "tipo":               "drone",
+                "status":             drone.status,
+                "bateria_pct":        round(drone.bateria_pct * 100, 1),
+                "missoes_realizadas": drone.missoes_realizadas,
+                "alerta_bateria":     drone.bateria_pct <= 0.20,
+                "cor":                cor_status,
+                "icone":              "drone",
+            },
+        ))
 
-    titulo = f"DronePharm — {len(pedidos_lista)} pedido(s) pendente(s) | {deposito.nome}"
-    viz    = VisualizadorRotas(drone, pedidos_lista, [], titulo=titulo)
-
-    caminho_tmp = f"/tmp/dronepharm_pedidos_{os.getpid()}.html"
-    viz.gerar_mapa(caminho_tmp)
-
-    with open(caminho_tmp, encoding="utf-8") as f:
-        html = f.read()
-    try:
-        os.remove(caminho_tmp)
-    except OSError:
-        pass
-
-    return HTMLResponse(content=html)
+    return _collection(features)
 
 
 # =============================================================================
-# FALLBACK HTML — quando não há rotas
+# SNAPSHOT COMPLETO
 # =============================================================================
 
-def _html_sem_rotas(deposito) -> str:
-    return f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>DronePharm — Mapa</title>
-  <style>
-    body {{font-family:Arial,sans-serif;display:flex;align-items:center;
-           justify-content:center;height:100vh;margin:0;background:#F0F4FA}}
-    .card {{background:white;border-radius:12px;padding:40px 60px;
-            box-shadow:0 4px 20px rgba(0,0,0,.12);text-align:center;max-width:480px}}
-    .icon {{font-size:60px;margin-bottom:16px}}
-    h2 {{color:#1B3A6B;margin:0 0 12px 0}}
-    p  {{color:#666;margin:0 0 8px 0;font-size:14px}}
-    .dep {{color:#2563A8;font-size:13px;margin-top:16px;
-           background:#EEF5FC;padding:8px 16px;border-radius:6px}}
-    a {{color:#2563A8;text-decoration:none;font-weight:bold}}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">🗺️</div>
-    <h2>Nenhuma rota calculada</h2>
-    <p>Crie pedidos e calcule rotas primeiro:</p>
-    <p>
-      <a href="/docs#/Pedidos/criar_pedido_api_v1_pedidos__post">POST /api/v1/pedidos</a>
-      &nbsp;→&nbsp;
-      <a href="/docs#/Roteirização/calcular_rotas_api_v1_rotas_calcular_post">POST /api/v1/rotas/calcular</a>
-    </p>
-    <div class="dep">
-      🏭 <b>Depósito:</b> {deposito.nome}<br>
-      ({deposito.latitude:.5f}, {deposito.longitude:.5f})
-    </div>
-  </div>
-</body>
-</html>"""
+@router.get(
+    "/snapshot",
+    summary="GeoJSON completo do estado atual",
+    description=(
+        "Retorna em uma única chamada: depósito, pedidos ativos, rotas recentes "
+        "e posição da frota. Ideal para o carregamento inicial do mapa no dashboard."
+    ),
+)
+async def geojson_snapshot(db: AsyncSession = Depends(get_db)):
+    """
+    Consolida depósito + pedidos + rotas + frota em um único GeoJSON.
+    Reduz o número de requisições necessárias para o carregamento inicial do mapa.
+    """
+    farmacia_repo = FarmaciaRepository(db)
+    pedido_repo   = PedidoRepository(db)
+    rota_repo     = RotaRepository(db)
+    drone_repo    = DroneRepository(db)
+
+    deposito     = await farmacia_repo.buscar_deposito_principal()
+    pedidos      = await pedido_repo.listar(status="pendente", limite=500)
+    pedidos     += await pedido_repo.listar(status="em_rota",  limite=200)
+    rotas        = await rota_repo.listar_por_status("em_execucao")
+    rotas       += await rota_repo.listar_recentes(limite=10)
+    drones       = await drone_repo.listar()
+
+    features: List[dict] = []
+
+    # Depósito
+    if deposito:
+        features.append(_feature(
+            geometry=_point(deposito.longitude, deposito.latitude),
+            properties={
+                "id": deposito.id, "nome": deposito.nome,
+                "tipo": "deposito", "cor": "#1A237E", "icone": "deposito",
+            },
+        ))
+
+    # Pedidos
+    for p in pedidos:
+        features.append(_feature(
+            geometry=_point(p.longitude, p.latitude),
+            properties={
+                "id": p.id, "tipo": "pedido", "status": p.status,
+                "prioridade": p.prioridade, "peso_kg": p.peso_kg,
+                "descricao": p.descricao or "", "rota_id": p.rota_id,
+                "cor": _COR_PRIORIDADE.get(p.prioridade, "#888"),
+            },
+        ))
+
+    # Rotas — linhas
+    vistas = set()
+    for idx, rota in enumerate(rotas):
+        if rota.id in vistas:
+            continue
+        vistas.add(rota.id)
+
+        cor       = _CORES_ROTAS[idx % len(_CORES_ROTAS)]
+        waypoints = rota.waypoints_json or []
+        coords    = [[wp.get("longitude", 0.0), wp.get("latitude", 0.0)] for wp in waypoints]
+        if len(coords) >= 2:
+            features.append(_feature(
+                geometry=_linestring(coords),
+                properties={
+                    "id": rota.id, "tipo": "rota_linha",
+                    "drone_id": rota.drone_id, "status": rota.status,
+                    "distancia_km": rota.distancia_km, "cor": cor,
+                },
+            ))
+
+    # Frota
+    for drone in drones:
+        if drone.latitude_atual is None or drone.longitude_atual is None:
+            continue
+        features.append(_feature(
+            geometry=_point(drone.longitude_atual, drone.latitude_atual),
+            properties={
+                "id": drone.id, "nome": drone.nome, "tipo": "drone",
+                "status": drone.status,
+                "bateria_pct": round(drone.bateria_pct * 100, 1),
+            },
+        ))
+
+    return _collection(features)

@@ -14,6 +14,7 @@ from server.schemas.schemas import (
     DroneResponse,
     StatusDroneEnum,
 )
+from server.security.rest_auth import require_rest_admin
 from bd.database import get_db
 from bd.repositories.drone_repo import DroneRepository
 
@@ -27,7 +28,11 @@ router = APIRouter()
     summary="Cadastrar drone",
     description="Registra um novo VANT na frota.",
 )
-async def cadastrar_drone(body: DroneCreate, db: AsyncSession = Depends(get_db)):
+async def cadastrar_drone(
+    body: DroneCreate,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
+):
     repo = DroneRepository(db)
     if await repo.buscar_por_id(body.id):
         raise HTTPException(status_code=409, detail=f"Drone '{body.id}' ja cadastrado.")
@@ -85,6 +90,7 @@ async def atualizar_drone(
     drone_id: str,
     body: DroneUpdate,
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     repo = DroneRepository(db)
     drone = await repo.buscar_por_id(drone_id)
@@ -102,6 +108,7 @@ async def atualizar_bateria(
     drone_id: str,
     bateria_pct: float = Query(..., ge=0.0, le=1.0, description="Nivel de bateria (0.0 a 1.0)"),
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     repo = DroneRepository(db)
     drone = await repo.buscar_por_id(drone_id)
@@ -123,6 +130,7 @@ async def atualizar_status(
         description="aguardando | em_voo | retornando | carregando | manutencao | emergencia",
     ),
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     repo = DroneRepository(db)
     drone = await repo.buscar_por_id(drone_id)

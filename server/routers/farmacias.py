@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.schemas.schemas import FarmaciaCreate, FarmaciaUpdate, FarmaciaResponse
 from bd.database import get_db
 from bd.repositories.farmacia_repo import FarmaciaRepository
+from server.security.rest_auth import require_rest_admin
 
 router = APIRouter()
 
@@ -21,7 +22,11 @@ router = APIRouter()
     summary="Cadastrar farmácia",
     description="Registra uma nova unidade. Use `deposito=true` para definir a farmácia-polo.",
 )
-async def cadastrar_farmacia(body: FarmaciaCreate, db: AsyncSession = Depends(get_db)):
+async def cadastrar_farmacia(
+    body: FarmaciaCreate,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
+):
     repo = FarmaciaRepository(db)
     return await repo.criar(**body.model_dump())
 
@@ -77,6 +82,7 @@ async def atualizar_farmacia(
     farmacia_id: int,
     body: FarmaciaUpdate,
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     repo     = FarmaciaRepository(db)
     farmacia = await repo.buscar_por_id(farmacia_id)
@@ -92,7 +98,11 @@ async def atualizar_farmacia(
     summary="Desativar farmácia",
     description="Marca a farmácia como inativa (soft delete). Não remove do banco.",
 )
-async def desativar_farmacia(farmacia_id: int, db: AsyncSession = Depends(get_db)):
+async def desativar_farmacia(
+    farmacia_id: int,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
+):
     repo     = FarmaciaRepository(db)
     farmacia = await repo.buscar_por_id(farmacia_id)
     if not farmacia:

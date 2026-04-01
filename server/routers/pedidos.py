@@ -15,6 +15,7 @@ from bd.database import get_db
 from bd.repositories.pedido_repo import PedidoRepository
 from bd.repositories.farmacia_repo import FarmaciaRepository
 from config.settings import PRIORIDADE_JANELA_H
+from server.security.rest_auth import require_rest_admin, require_rest_write
 
 router = APIRouter()
 
@@ -30,7 +31,11 @@ router = APIRouter()
         "P1=1h, P2=4h, P3=24h."
     ),
 )
-async def criar_pedido(body: PedidoCreate, db: AsyncSession = Depends(get_db)):
+async def criar_pedido(
+    body: PedidoCreate,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
+):
     # Valida farmácia
     farmacia_repo = FarmaciaRepository(db)
     farmacia      = await farmacia_repo.buscar_por_id(body.farmacia_id)
@@ -134,6 +139,7 @@ async def atualizar_pedido(
     pedido_id: int,
     body: PedidoUpdate,
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
 ):
     repo   = PedidoRepository(db)
     pedido = await repo.buscar_por_id(pedido_id)
@@ -151,7 +157,11 @@ async def atualizar_pedido(
     summary="Cancelar pedido",
     description="Cancela um pedido pendente. Pedidos em rota não podem ser cancelados.",
 )
-async def cancelar_pedido(pedido_id: int, db: AsyncSession = Depends(get_db)):
+async def cancelar_pedido(
+    pedido_id: int,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
+):
     repo   = PedidoRepository(db)
     pedido = await repo.buscar_por_id(pedido_id)
     if not pedido:
@@ -169,7 +179,11 @@ async def cancelar_pedido(pedido_id: int, db: AsyncSession = Depends(get_db)):
     summary="Marcar pedido como entregue",
     description="Confirma a entrega manual de um pedido (para testes ou ajuste operacional).",
 )
-async def entregar_pedido(pedido_id: int, db: AsyncSession = Depends(get_db)):
+async def entregar_pedido(
+    pedido_id: int,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
+):
     repo   = PedidoRepository(db)
     pedido = await repo.buscar_por_id(pedido_id)
     if not pedido:

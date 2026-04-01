@@ -19,6 +19,7 @@ from bd.database import get_db
 from bd.repositories.log_repo import LogRepository, RastreabilidadeRepository
 from bd.repositories.pedido_repo import PedidoRepository
 from config.settings import LOG_DADOS_JSON_MAX_BYTES
+from server.security.rest_auth import require_rest_ingest
 
 router = APIRouter()
 
@@ -103,7 +104,11 @@ async def listar_logs(
     summary="Registrar log manualmente",
     description="Permite que integrações externas (Arduino, Raspberry Pi) gravem logs no banco.",
 )
-async def registrar_log(body: LogCreateBody, db: AsyncSession = Depends(get_db)):
+async def registrar_log(
+    body: LogCreateBody,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_ingest),
+):
     repo = LogRepository(db)
     log  = await repo.registrar(
         nivel=body.nivel.upper(),

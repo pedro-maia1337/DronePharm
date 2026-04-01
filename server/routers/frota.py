@@ -9,14 +9,16 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import select, text
 
 from bd.database import get_db
+from bd.models import Telemetria
 from bd.repositories.drone_repo import DroneRepository
 from bd.repositories.telemetria_repo import TelemetriaRepository
 from bd.repositories.historico_repo import HistoricoRepository
 from config.settings import DRONE_BATERIA_MINIMA
 from server.websocket.connection_manager import manager
+from server.security.rest_auth import require_rest_admin
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -43,16 +45,18 @@ async def status_frota(db: AsyncSession = Depends(get_db)):
 
     # Busca a última telemetria de todos os drones em uma única query,
     # evitando o problema N+1 que ocorria com um SELECT por drone.
-    ids_param = ", ".join(f"'{d.id}'" for d in drones)
-    result = await db.execute(text(
-        f"""
-        SELECT DISTINCT ON (drone_id)
-               drone_id, latitude, longitude, criado_em
-        FROM   telemetria
-        WHERE  drone_id IN ({ids_param})
-        ORDER  BY drone_id, criado_em DESC
-        """
-    ))
+    drone_ids = [d.id for d in drones]
+    result = await db.execute(
+        select(
+            Telemetria.drone_id,
+            Telemetria.latitude,
+            Telemetria.longitude,
+            Telemetria.criado_em,
+        )
+        .where(Telemetria.drone_id.in_(drone_ids))
+        .distinct(Telemetria.drone_id)
+        .order_by(Telemetria.drone_id, Telemetria.criado_em.desc())
+    )
     ultimas = {row["drone_id"]: row for row in result.mappings().all()}
 
     frota = []
@@ -237,7 +241,11 @@ async def resumo_drone(drone_id: str, db: AsyncSession = Depends(get_db)):
     "/{drone_id}/retornar",
     summary="Acionar retorno de emergência",
 )
-async def acionar_retorno(drone_id: str, db: AsyncSession = Depends(get_db)):
+async def acionar_retorno(
+    drone_id: str,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
+):
     drone_repo = DroneRepository(db)
     drone = await drone_repo.buscar_por_id(drone_id)
     if not drone:
@@ -267,6 +275,7 @@ async def colocar_em_manutencao(
     drone_id: str,
     motivo: str = Query("Manutenção programada"),
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     drone_repo = DroneRepository(db)
     drone = await drone_repo.buscar_por_id(drone_id)
@@ -297,6 +306,7 @@ async def reativar_drone(
     drone_id:    str,
     bateria_pct: float = Query(1.0, ge=0.0, le=1.0, description="Nível de bateria após recarga"),
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     drone_repo = DroneRepository(db)
     drone = await drone_repo.buscar_por_id(drone_id)

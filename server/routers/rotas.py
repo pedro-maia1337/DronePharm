@@ -30,6 +30,7 @@ from constraints.verificador import Verificador
 from apis.clima import cliente_clima
 from apis.elevacao import cliente_elevacao
 from config.settings import DRONE_ALTITUDE_VOO_M
+from server.security.rest_auth import require_rest_admin, require_rest_write
 
 import logging
 log = logging.getLogger(__name__)
@@ -114,6 +115,7 @@ def _calcular_altitude_voo_segura(coords_todos: List[Coordenada]) -> float:
 async def calcular_rotas(
     body: RoteirizarRequest,
     db:   AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
 ):
     pedido_repo   = PedidoRepository(db)
     drone_repo    = DroneRepository(db)
@@ -342,7 +344,11 @@ async def buscar_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
         "e registra o histórico de entregas para KPIs."
     ),
 )
-async def concluir_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
+async def concluir_rota(
+    rota_id: int,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
+):
     rota_repo      = RotaRepository(db)
     pedido_repo    = PedidoRepository(db)
     drone_repo     = DroneRepository(db)
@@ -401,6 +407,7 @@ async def abortar_rota(
     rota_id: int,
     body: RotaAbortarRequest = RotaAbortarRequest(),
     db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_admin),
 ):
     rota_repo   = RotaRepository(db)
     pedido_repo = PedidoRepository(db)

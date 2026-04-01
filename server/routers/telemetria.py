@@ -15,6 +15,7 @@ from bd.repositories.telemetria_repo import TelemetriaRepository
 from bd.repositories.drone_repo import DroneRepository
 from config.settings import DRONE_BATERIA_MINIMA, VENTO_MAX_OPERACIONAL_MS
 from server.websocket.connection_manager import manager
+from server.security.rest_auth import require_rest_ingest
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,6 +35,7 @@ router = APIRouter()
 async def receber_telemetria(
     body: TelemetriaCreate,
     db:   AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_ingest),
 ):
     repo       = TelemetriaRepository(db)
     drone_repo = DroneRepository(db)

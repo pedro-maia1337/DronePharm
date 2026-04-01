@@ -170,3 +170,14 @@ WS_INFO_REQUIRE_AUTH = (
         "true" if CORS_MODE == "production" else "false",
     ).lower() == "true"
 )
+
+# Autenticacao/autorizacao para escrita REST.
+REST_AUTH_ENABLED = (
+    os.getenv(
+        "REST_AUTH_ENABLED",
+        "true" if CORS_MODE == "production" else "false",
+    ).lower() == "true"
+)
+REST_WRITE_TOKEN = os.getenv("REST_WRITE_TOKEN", "")
+REST_ADMIN_TOKEN = os.getenv("REST_ADMIN_TOKEN", "")
+REST_INGEST_TOKEN = os.getenv("REST_INGEST_TOKEN", "")

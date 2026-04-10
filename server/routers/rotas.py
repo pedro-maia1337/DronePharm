@@ -3,6 +3,7 @@
 # Roteirização e gestão de rotas — /api/v1/rotas
 # =============================================================================
 
+import asyncio
 from datetime import datetime
 from typing import List, Optional
 
@@ -72,7 +73,7 @@ def _rota_orm_para_response(rota) -> RotaResponse:
     )
 
 
-def _calcular_altitude_voo_segura(coords_todos: List[Coordenada]) -> float:
+async def _calcular_altitude_voo_segura(coords_todos: List[Coordenada]) -> float:
     """
     Resolve a altitude de voo da rota com fallback local.
 
@@ -87,7 +88,7 @@ def _calcular_altitude_voo_segura(coords_todos: List[Coordenada]) -> float:
         return DRONE_ALTITUDE_VOO_M
 
     try:
-        return cliente_elevacao.altitude_voo_rota(coords_todos)
+        return await asyncio.to_thread(cliente_elevacao.altitude_voo_rota, coords_todos)
     except Exception as exc:
         log.warning(
             "Falha ao calcular altitude via OpenTopoData (%s); usando altitude padrao de %.1fm.",
@@ -191,7 +192,11 @@ async def calcular_rotas(
     else:
         vento_ms = 0.0
         if cliente_clima:
-            dados_clima = cliente_clima.consultar(deposito.latitude, deposito.longitude)
+            dados_clima = await asyncio.to_thread(
+                cliente_clima.consultar,
+                deposito.latitude,
+                deposito.longitude,
+            )
             if dados_clima:
                 vento_ms = dados_clima.vento_ms
                 log.info(f"Vento OpenWeatherMap: {vento_ms:.1f} m/s")
@@ -202,7 +207,7 @@ async def calcular_rotas(
                     )
 
     coords_todos = [p.coordenada for p in pedidos]
-    altitude_voo = _calcular_altitude_voo_segura(coords_todos)
+    altitude_voo = await _calcular_altitude_voo_segura(coords_todos)
     log.info(f"Altitude de voo: {altitude_voo:.1f}m | Vento: {vento_ms:.1f} m/s | Pedidos: {len(pedidos)}")
 
     # ── 6. Algoritmo de roteirização ──────────────────────────────────────────

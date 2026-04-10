@@ -1,9 +1,11 @@
 # =============================================================================
 # servidor/routers/clima.py
-# Dados climáticos via OpenWeatherMap — /api/v1/clima
+# Dados climaticos via OpenWeatherMap - /api/v1/clima
 # =============================================================================
 
+import asyncio
 from datetime import datetime
+
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,26 +17,42 @@ from apis.clima import cliente_clima
 router = APIRouter()
 
 
+async def _consultar_clima_async(lat: float, lon: float, forcar: bool = False):
+    """
+    Executa o cliente sincrono de clima em uma thread separada.
+
+    O cliente atual usa requests.get(). Se ele rodar direto dentro do endpoint
+    async, uma consulta lenta pode bloquear o event loop do worker inteiro.
+    """
+    return await asyncio.to_thread(
+        cliente_clima.consultar,
+        lat,
+        lon,
+        forcar_atualizacao=forcar,
+    )
+
+
 @router.get(
     "/",
     response_model=ClimaResponse,
     summary="Consultar clima por coordenada",
     description=(
-        "Retorna condições climáticas reais via OpenWeatherMap. "
-        "Inclui `operacional` indicando se as condições permitem voo seguro (vento < 12 m/s)."
+        "Retorna condicoes climaticas reais via OpenWeatherMap. "
+        "Inclui `operacional` indicando se as condicoes permitem voo seguro."
     ),
 )
 async def consultar_clima(
-    lat:    float = Query(..., ge=-90,  le=90,  description="Latitude"),
-    lon:    float = Query(..., ge=-180, le=180, description="Longitude"),
-    forcar: bool  = Query(False, description="Ignorar cache e forçar nova consulta"),
+    lat: float = Query(..., ge=-90, le=90, description="Latitude"),
+    lon: float = Query(..., ge=-180, le=180, description="Longitude"),
+    forcar: bool = Query(False, description="Ignorar cache e forcar nova consulta"),
 ):
     if not cliente_clima:
         raise HTTPException(
             status_code=503,
-            detail="API de clima não configurada. Defina OPENWEATHER_API_KEY no .env.",
+            detail="API de clima nao configurada. Defina OPENWEATHER_API_KEY no .env.",
         )
-    dados = cliente_clima.consultar(lat, lon, forcar_atualizacao=forcar)
+
+    dados = await _consultar_clima_async(lat, lon, forcar=forcar)
     if not dados:
         raise HTTPException(status_code=503, detail="Falha ao consultar OpenWeatherMap.")
 
@@ -56,20 +74,19 @@ async def consultar_clima(
 @router.get(
     "/deposito",
     response_model=ClimaResponse,
-    summary="Clima no depósito principal",
-    description="Consulta o clima diretamente na coordenada do depósito cadastrado no banco.",
+    summary="Clima no deposito principal",
+    description="Consulta o clima diretamente na coordenada do deposito cadastrado no banco.",
 )
 async def clima_deposito(db: AsyncSession = Depends(get_db)):
     if not cliente_clima:
-        raise HTTPException(status_code=503, detail="API de clima não configurada.")
+        raise HTTPException(status_code=503, detail="API de clima nao configurada.")
 
-    # Busca coordenada do depósito do banco (dinâmico)
     farmacia_repo = FarmaciaRepository(db)
-    deposito      = await farmacia_repo.buscar_deposito_principal()
+    deposito = await farmacia_repo.buscar_deposito_principal()
     if not deposito:
-        raise HTTPException(status_code=404, detail="Nenhum depósito cadastrado.")
+        raise HTTPException(status_code=404, detail="Nenhum deposito cadastrado.")
 
-    dados = cliente_clima.consultar(deposito.latitude, deposito.longitude)
+    dados = await _consultar_clima_async(deposito.latitude, deposito.longitude)
     if not dados:
         raise HTTPException(status_code=503, detail="Falha ao consultar OpenWeatherMap.")
 

@@ -181,3 +181,17 @@ REST_AUTH_ENABLED = (
 REST_WRITE_TOKEN = os.getenv("REST_WRITE_TOKEN", "")
 REST_ADMIN_TOKEN = os.getenv("REST_ADMIN_TOKEN", "")
 REST_INGEST_TOKEN = os.getenv("REST_INGEST_TOKEN", "")
+
+# -----------------------------------------------------------------------------
+# Orquestração pós-pedido (Fase B) — roteirização automática em background
+# -----------------------------------------------------------------------------
+ORQUESTRACAO_APOS_PEDIDO = (
+    os.getenv("ORQUESTRACAO_APOS_PEDIDO", "false").lower() == "true"
+)
+
+# -----------------------------------------------------------------------------
+# Telemetria / despacho (Fase C) — confirmação em voo por movimento
+# -----------------------------------------------------------------------------
+VELOCIDADE_CONFIRMA_EM_VOO_MS = float(
+    os.getenv("VELOCIDADE_CONFIRMA_EM_VOO_MS", "2.0")
+)

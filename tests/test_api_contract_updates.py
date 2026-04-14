@@ -112,11 +112,15 @@ def client():
 
     app.dependency_overrides[get_db] = _fake_db
 
+    _sync_telem = AsyncMock(
+        return_value={"pedido_ids": [], "eta_seg": None, "eventos": []}
+    )
     with patch("bd.database.engine", _make_engine_mock()), \
          patch("bd.database.AsyncSessionLocal", _make_session_factory_mock()), \
          patch("bd.database.init_db", AsyncMock()), \
          patch("bd.database.close_db", AsyncMock()), \
-         patch("bd.database.check_db_connection", AsyncMock(return_value=True)):
+         patch("bd.database.check_db_connection", AsyncMock(return_value=True)), \
+         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem):
         with TestClient(app) as c:
             yield c
 
@@ -172,8 +176,8 @@ class TestApiContractUpdates:
         assert response.status_code == 422
 
     def test_recalculo_forcado_nao_permite_drone_em_voo(self, client):
-        with patch("server.routers.rotas.PedidoRepository") as pedido_repo_cls, \
-             patch("server.routers.rotas.DroneRepository") as drone_repo_cls:
+        with patch("server.services.roteirizacao_service.PedidoRepository") as pedido_repo_cls, \
+             patch("server.services.roteirizacao_service.DroneRepository") as drone_repo_cls:
             pedido_repo_cls.return_value.buscar_por_ids = AsyncMock(return_value=[_pedido(1)])
             drone_repo_cls.return_value.buscar_por_id = AsyncMock(return_value=_drone(status="em_voo"))
 

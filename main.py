@@ -16,6 +16,7 @@
     #pytest tests/test_suite_api.py
     #pytest tests/test_suite_distancia.py
     #pytest tests/test_suite_modelos.py
+    #pytest tests/test_pedido_estado_fase_a.py
 # =============================================================================
 
 import asyncio

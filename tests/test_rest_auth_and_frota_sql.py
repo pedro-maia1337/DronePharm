@@ -112,11 +112,15 @@ def client():
     app.dependency_overrides[get_db] = _fake_db
     app.state.force_rest_auth_for_tests = False
 
+    _sync_telem = AsyncMock(
+        return_value={"pedido_ids": [], "eta_seg": None, "eventos": []}
+    )
     with patch("bd.database.engine", _make_engine_mock()), \
          patch("bd.database.AsyncSessionLocal", _make_session_factory_mock()), \
          patch("bd.database.init_db", AsyncMock()), \
          patch("bd.database.close_db", AsyncMock()), \
-         patch("bd.database.check_db_connection", AsyncMock(return_value=True)):
+         patch("bd.database.check_db_connection", AsyncMock(return_value=True)), \
+         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem):
         with TestClient(app) as c:
             yield c
 

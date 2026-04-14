@@ -5,7 +5,7 @@
 
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.schemas.schemas import (
@@ -14,8 +14,14 @@ from server.schemas.schemas import (
 from bd.database import get_db
 from bd.repositories.pedido_repo import PedidoRepository
 from bd.repositories.farmacia_repo import FarmaciaRepository
-from config.settings import PRIORIDADE_JANELA_H
+from config.settings import ORQUESTRACAO_APOS_PEDIDO, PRIORIDADE_JANELA_H
+from server.services.orquestracao_pedido import tarefa_background_orquestrar_pedido
 from server.security.rest_auth import require_rest_admin, require_rest_write
+from domain.pedido_estado import (
+    OperacaoTransicaoPedido,
+    StatusPedido,
+    TransicaoPedidoInvalidaError,
+)
 
 router = APIRouter()
 
@@ -28,11 +34,13 @@ router = APIRouter()
     description=(
         "Registra um novo pedido de medicamento. "
         "A `janela_fim` é calculada automaticamente pela prioridade se não informada: "
-        "P1=1h, P2=4h, P3=24h."
+        "P1=1h, P2=4h, P3=24h. "
+        "Com `ORQUESTRACAO_APOS_PEDIDO=true`, agenda roteirização automática em background."
     ),
 )
 async def criar_pedido(
     body: PedidoCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     _auth=Depends(require_rest_write),
 ):
@@ -60,6 +68,8 @@ async def criar_pedido(
         farmacia_id=body.farmacia_id,
         janela_fim=janela_fim,
     )
+    if ORQUESTRACAO_APOS_PEDIDO:
+        background_tasks.add_task(tarefa_background_orquestrar_pedido, pedido.id)
     return pedido
 
 
@@ -70,7 +80,12 @@ async def criar_pedido(
     description="Retorna pedidos com filtros opcionais por status, prioridade e farmácia.",
 )
 async def listar_pedidos(
-    status:      Optional[str] = Query(None, description="pendente | em_rota | entregue | cancelado"),
+    status:      Optional[str] = Query(
+        None,
+        description=(
+            "pendente | calculado | despachado | em_voo | entregue | cancelado | falha"
+        ),
+    ),
     prioridade:  Optional[int] = Query(None, ge=1, le=3, description="1=Urgente 2=Normal 3=Reabastec"),
     farmacia_id: Optional[int] = Query(None),
     limite:      int           = Query(100, ge=1, le=500),
@@ -145,17 +160,26 @@ async def atualizar_pedido(
     pedido = await repo.buscar_por_id(pedido_id)
     if not pedido:
         raise HTTPException(status_code=404, detail=f"Pedido {pedido_id} não encontrado.")
-    if pedido.status == "entregue":
-        raise HTTPException(status_code=409, detail="Pedidos entregues não podem ser modificados.")
+    if pedido.status in (StatusPedido.ENTREGUE, StatusPedido.CANCELADO, StatusPedido.FALHA):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Pedidos com status '{pedido.status}' não podem ser modificados.",
+        )
 
     campos = body.model_dump(exclude_none=True)
-    return await repo.atualizar(pedido_id, **campos)
+    try:
+        return await repo.atualizar(pedido_id, **campos)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.patch(
     "/{pedido_id}/cancelar",
     summary="Cancelar pedido",
-    description="Cancela um pedido pendente. Pedidos em rota não podem ser cancelados.",
+    description=(
+        "Cancela um pedido em `pendente` ou `calculado`. "
+        "Pedidos já despachados ou em voo não podem ser cancelados por este endpoint."
+    ),
 )
 async def cancelar_pedido(
     pedido_id: int,
@@ -166,18 +190,26 @@ async def cancelar_pedido(
     pedido = await repo.buscar_por_id(pedido_id)
     if not pedido:
         raise HTTPException(status_code=404, detail=f"Pedido {pedido_id} não encontrado.")
-    if pedido.status == "em_rota":
-        raise HTTPException(status_code=409, detail="Não é possível cancelar pedido já em rota.")
-    if pedido.status in ("entregue", "cancelado"):
+    if pedido.status in (StatusPedido.ENTREGUE, StatusPedido.CANCELADO):
         raise HTTPException(status_code=409, detail=f"Pedido já está '{pedido.status}'.")
-    await repo.atualizar_status(pedido_id, "cancelado")
+    try:
+        await repo.atualizar_status(
+            pedido_id,
+            StatusPedido.CANCELADO,
+            operacao=OperacaoTransicaoPedido.API_CANCELAR,
+        )
+    except TransicaoPedidoInvalidaError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"mensagem": f"Pedido {pedido_id} cancelado.", "pedido_id": pedido_id}
 
 
 @router.patch(
     "/{pedido_id}/entregar",
     summary="Marcar pedido como entregue",
-    description="Confirma a entrega manual de um pedido (para testes ou ajuste operacional).",
+    description=(
+        "Confirma a entrega manual quando o pedido está `em_voo` "
+        "(ajuste operacional ou confirmação no destino)."
+    ),
 )
 async def entregar_pedido(
     pedido_id: int,
@@ -188,7 +220,14 @@ async def entregar_pedido(
     pedido = await repo.buscar_por_id(pedido_id)
     if not pedido:
         raise HTTPException(status_code=404, detail=f"Pedido {pedido_id} não encontrado.")
-    if pedido.status == "entregue":
+    if pedido.status == StatusPedido.ENTREGUE:
         raise HTTPException(status_code=409, detail="Pedido já está entregue.")
-    await repo.atualizar_status(pedido_id, "entregue")
+    try:
+        await repo.atualizar_status(
+            pedido_id,
+            StatusPedido.ENTREGUE,
+            operacao=OperacaoTransicaoPedido.API_ENTREGAR,
+        )
+    except TransicaoPedidoInvalidaError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"mensagem": f"Pedido {pedido_id} marcado como entregue.", "pedido_id": pedido_id}

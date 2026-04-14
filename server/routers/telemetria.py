@@ -16,6 +16,7 @@ from bd.repositories.drone_repo import DroneRepository
 from config.settings import DRONE_BATERIA_MINIMA, VENTO_MAX_OPERACIONAL_MS
 from server.websocket.connection_manager import manager
 from server.security.rest_auth import require_rest_ingest
+from server.services.telemetria_pedidos import sincronizar_pedidos_apos_telemetria
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -67,6 +68,15 @@ async def receber_telemetria(
         status=body.status,
     )
 
+    sync_pedidos = await sincronizar_pedidos_apos_telemetria(
+        db,
+        drone_id=body.drone_id,
+        latitude=body.latitude,
+        longitude=body.longitude,
+        velocidade_ms=body.velocidade_ms,
+        status_payload=body.status,
+    )
+
     # ── Broadcast WebSocket — telemetria ──────────────────────────────────
     payload_telem = {
         "tipo":          "telemetria",
@@ -80,6 +90,9 @@ async def receber_telemetria(
         "direcao_vento": body.direcao_vento,
         "status":        body.status,
         "snapshot_id":   registro.id,
+        "pedido_ids":    sync_pedidos["pedido_ids"],
+        "eta_seg":       sync_pedidos["eta_seg"],
+        "pedido_eventos": sync_pedidos["eventos"],
     }
     await manager.broadcast_telemetria(body.drone_id, payload_telem)
 

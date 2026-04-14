@@ -90,6 +90,7 @@ class ConnectionManager:
         "drone:{id}"      — recebe telemetria de um drone específico
         "alertas"         — recebe alertas críticos (bateria, vento, emergência)
         "frota"           — recebe atualizações de status da frota inteira
+        "pedidos"         — eventos de despacho / em voo (Fase C)
     """
 
     def __init__(self):
@@ -166,6 +167,11 @@ class ConnectionManager:
     async def broadcast_status_frota(self, drones: list) -> None:
         """Envia snapshot completo da frota para o canal 'frota'."""
         await self.broadcast("frota", {"drones": drones})
+
+    async def broadcast_evento_pedido(self, evento: str, detalhe: dict) -> None:
+        """Notifica clientes em `/ws/pedidos` (despacho, em voo, ETA)."""
+        payload = {"tipo": "pedido", "evento": evento, **detalhe}
+        await self.broadcast("pedidos", payload)
 
     # ── Info ──────────────────────────────────────────────────────────────────
 

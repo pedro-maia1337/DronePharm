@@ -146,12 +146,16 @@ def client():
 
     app.dependency_overrides[get_db] = _fake_db
 
+    _sync_telem = AsyncMock(
+        return_value={"pedido_ids": [], "eta_seg": None, "eventos": []}
+    )
     # Mocka init_db e close_db para que o lifespan não tente conectar ao banco real
     with patch("bd.database.engine",             _make_engine_mock(db_ok=True)), \
          patch("bd.database.AsyncSessionLocal", _make_session_factory_mock()), \
          patch("bd.database.init_db",           AsyncMock()), \
          patch("bd.database.close_db",          AsyncMock()), \
-         patch("bd.database.check_db_connection", AsyncMock(return_value=True)):
+         patch("bd.database.check_db_connection", AsyncMock(return_value=True)), \
+         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem):
         with TestClient(app) as c:
             yield c
 
@@ -177,11 +181,15 @@ def client_db_offline():
 
     app.dependency_overrides[get_db] = _fake_db
 
+    _sync_telem = AsyncMock(
+        return_value={"pedido_ids": [], "eta_seg": None, "eventos": []}
+    )
     with patch("bd.database.engine",             _make_engine_mock(db_ok=False)), \
          patch("bd.database.AsyncSessionLocal", _make_session_factory_mock()), \
          patch("bd.database.init_db",           AsyncMock()), \
          patch("bd.database.close_db",          AsyncMock()), \
-         patch("bd.database.check_db_connection", AsyncMock(return_value=False)):
+         patch("bd.database.check_db_connection", AsyncMock(return_value=False)), \
+         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem):
         with TestClient(app) as c:
             yield c
 
@@ -227,9 +235,9 @@ class TestRotasCalculo:
     # CORREÇÃO: router verifica PEDIDOS primeiro (buscar_por_ids), depois DRONE.
     # Para testar drone inexistente, os pedidos devem ser encontrados e estar pendentes.
     def test_calcular_rotas_drone_inexistente_retorna_404(self, client):
-        with patch("server.routers.rotas.PedidoRepository") as PR, \
-             patch("server.routers.rotas.DroneRepository") as DR, \
-             patch("server.routers.rotas.FarmaciaRepository") as FR:
+        with patch("server.services.roteirizacao_service.PedidoRepository") as PR, \
+             patch("server.services.roteirizacao_service.DroneRepository") as DR, \
+             patch("server.services.roteirizacao_service.FarmaciaRepository") as FR:
             PR.return_value.buscar_por_ids   = AsyncMock(return_value=[_pedido(1), _pedido(2)])
             DR.return_value.buscar_por_id    = AsyncMock(return_value=None)
             FR.return_value.buscar_deposito_principal = AsyncMock(return_value=_farmacia(deposito=True))
@@ -238,8 +246,8 @@ class TestRotasCalculo:
 
     # CORREÇÃO: router retorna 404 quando nenhum pedido pendente encontrado
     def test_calcular_rotas_sem_pedidos_disponiveis_retorna_422(self, client):
-        with patch("server.routers.rotas.PedidoRepository") as PR, \
-             patch("server.routers.rotas.DroneRepository") as DR:
+        with patch("server.services.roteirizacao_service.PedidoRepository") as PR, \
+             patch("server.services.roteirizacao_service.DroneRepository") as DR:
             PR.return_value.buscar_por_ids   = AsyncMock(return_value=[])
             DR.return_value.buscar_por_id    = AsyncMock(return_value=_drone())
             r = client.post("/api/v1/rotas/calcular", json=self._payload_rotas())
@@ -296,23 +304,23 @@ class TestRotasCalculo:
             geracoes_ga=0,
         )
 
-        with patch("server.routers.rotas.PedidoRepository") as PR, \
-             patch("server.routers.rotas.DroneRepository") as DR, \
-             patch("server.routers.rotas.RotaRepository") as RR, \
-             patch("server.routers.rotas.FarmaciaRepository") as FR, \
-             patch("server.routers.rotas.cliente_clima", None), \
-             patch("server.routers.rotas.cliente_elevacao", None), \
-             patch("server.routers.rotas.construir_matriz_distancias", return_value=[[0.0, 1.0], [1.0, 0.0]]), \
-             patch("server.routers.rotas.Verificador"), \
-             patch("server.routers.rotas.otimizar_todas_rotas", return_value=[[1]]), \
-             patch("server.routers.rotas.calcular_custo_detalhado", return_value={
+        with patch("server.services.roteirizacao_service.PedidoRepository") as PR, \
+             patch("server.services.roteirizacao_service.DroneRepository") as DR, \
+             patch("server.services.roteirizacao_service.RotaRepository") as RR, \
+             patch("server.services.roteirizacao_service.FarmaciaRepository") as FR, \
+             patch("server.services.roteirizacao_service.cliente_clima", None), \
+             patch("server.services.roteirizacao_service.cliente_elevacao", None), \
+             patch("server.services.roteirizacao_service.construir_matriz_distancias", return_value=[[0.0, 1.0], [1.0, 0.0]]), \
+             patch("server.services.roteirizacao_service.Verificador"), \
+             patch("server.services.roteirizacao_service.otimizar_todas_rotas", return_value=[[1]]), \
+             patch("server.services.roteirizacao_service.calcular_custo_detalhado", return_value={
                  "distancia_km": 1.0,
                  "tempo_min": 2.0,
                  "energia_wh": 3.0,
                  "carga_kg": 0.5,
                  "custo_total": 4.0,
              }), \
-             patch("server.routers.rotas.ClarkeWright") as CW:
+             patch("server.services.roteirizacao_service.ClarkeWright") as CW:
             PR.return_value.buscar_por_ids = AsyncMock(return_value=[_pedido(1)])
             PR.return_value.atualizar_status_lote = AsyncMock()
             DR.return_value.buscar_por_id = AsyncMock(return_value=_drone())

@@ -5,10 +5,15 @@
 
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Sequence
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from bd.models import Pedido, RastreabilidadePedido
+from domain.pedido_estado import (
+    OperacaoTransicaoPedido,
+    TransicaoPedidoInvalidaError,
+    validar_transicao_pedido,
+)
 
 log = logging.getLogger(__name__)
 
@@ -45,13 +50,16 @@ class PedidoRepository:
     async def listar(
         self,
         status:      Optional[str] = None,
+        statuses:    Optional[Sequence[str]] = None,
         prioridade:  Optional[int] = None,
         farmacia_id: Optional[int] = None,
         limite:      int           = 100,
         offset:      int           = 0,
     ) -> List[Pedido]:
         query = select(Pedido)
-        if status:
+        if statuses:
+            query = query.where(Pedido.status.in_(tuple(statuses)))
+        elif status:
             query = query.where(Pedido.status == status)
         if prioridade:
             query = query.where(Pedido.prioridade == prioridade)
@@ -64,11 +72,14 @@ class PedidoRepository:
     async def contar(
         self,
         status:      Optional[str] = None,
+        statuses:    Optional[Sequence[str]] = None,
         prioridade:  Optional[int] = None,
         farmacia_id: Optional[int] = None,
     ) -> int:
         query = select(func.count()).select_from(Pedido)
-        if status:
+        if statuses:
+            query = query.where(Pedido.status.in_(tuple(statuses)))
+        elif status:
             query = query.where(Pedido.status == status)
         if prioridade:
             query = query.where(Pedido.prioridade == prioridade)
@@ -79,35 +90,52 @@ class PedidoRepository:
 
     async def atualizar(self, pedido_id: int, **campos) -> Optional[Pedido]:
         campos_validos = {k: v for k, v in campos.items() if v is not None}
+        if "status" in campos_validos:
+            raise ValueError(
+                "O status do pedido não pode ser alterado via atualização genérica; "
+                "use os endpoints dedicados ou operações de rota."
+            )
         pedido = await self.buscar_por_id(pedido_id)
         if not pedido:
             return None
         if not campos_validos:
             return pedido
 
-        status_anterior = pedido.status
-        novo_status = campos_validos.get("status")
-        if novo_status == "entregue":
-            campos_validos["entregue_em"] = datetime.now()
-
         await self.db.execute(
             update(Pedido).where(Pedido.id == pedido_id).values(**campos_validos)
         )
 
-        if novo_status and novo_status != status_anterior:
-            await self._rastrear(pedido_id, status_anterior, novo_status)
-
         return await self.buscar_por_id(pedido_id)
 
-    async def atualizar_status(self, pedido_id: int, status: str,
-                                drone_id: Optional[str] = None,
-                                rota_id: Optional[int] = None):
+    async def atualizar_status(
+        self,
+        pedido_id: int,
+        status: str,
+        operacao: OperacaoTransicaoPedido,
+        drone_id: Optional[str] = None,
+        rota_id: Optional[int] = None,
+        despachado_em: Optional[datetime] = None,
+        estimativa_entrega_em: Optional[datetime] = None,
+    ):
         pedido = await self.buscar_por_id(pedido_id)
-        status_anterior = pedido.status if pedido else "desconhecido"
+        if not pedido:
+            return
+        status_anterior = pedido.status
+        validar_transicao_pedido(status_anterior, status, operacao)
 
         kwargs: dict = {"status": status}
+        if rota_id is not None:
+            kwargs["rota_id"] = rota_id
         if status == "entregue":
             kwargs["entregue_em"] = datetime.now()
+        if status == "pendente":
+            kwargs["rota_id"] = None
+            kwargs["despachado_em"] = None
+            kwargs["estimativa_entrega_em"] = None
+        if status == "despachado":
+            kwargs["despachado_em"] = despachado_em or datetime.now()
+        if estimativa_entrega_em is not None:
+            kwargs["estimativa_entrega_em"] = estimativa_entrega_em
         await self.db.execute(
             update(Pedido).where(Pedido.id == pedido_id).values(**kwargs)
         )
@@ -118,17 +146,31 @@ class PedidoRepository:
         self,
         ids:      List[int],
         status:   str,
+        operacao: OperacaoTransicaoPedido,
         rota_id:  Optional[int] = None,
         drone_id: Optional[str] = None,
+        despachado_em: Optional[datetime] = None,
+        estimativa_entrega_em: Optional[datetime] = None,
     ):
         pedidos_antes = await self.buscar_por_ids(ids)
         status_map    = {p.id: p.status for p in pedidos_antes}
+
+        for p in pedidos_antes:
+            validar_transicao_pedido(p.status, status, operacao)
 
         kwargs: dict = {"status": status}
         if rota_id is not None:
             kwargs["rota_id"] = rota_id
         if status == "entregue":
             kwargs["entregue_em"] = datetime.now()
+        if status == "pendente":
+            kwargs["rota_id"] = None
+            kwargs["despachado_em"] = None
+            kwargs["estimativa_entrega_em"] = None
+        if status == "despachado":
+            kwargs["despachado_em"] = despachado_em or datetime.now()
+        if estimativa_entrega_em is not None:
+            kwargs["estimativa_entrega_em"] = estimativa_entrega_em
 
         await self.db.execute(
             update(Pedido).where(Pedido.id.in_(ids)).values(**kwargs)

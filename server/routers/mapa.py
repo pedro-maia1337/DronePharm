@@ -25,16 +25,21 @@ from bd.repositories.farmacia_repo import FarmaciaRepository
 from bd.repositories.pedido_repo import PedidoRepository
 from bd.repositories.rota_repo import RotaRepository
 from bd.repositories.drone_repo import DroneRepository
+from domain.pedido_estado import STATUS_ATIVOS_MAPA
 
 router = APIRouter()
 
 # Cores por prioridade de pedido
 _COR_PRIORIDADE = {1: "#B71C1C", 2: "#1565C0", 3: "#2E7D32"}
 _COR_STATUS     = {
-    "pendente":  "#FF9800",
-    "em_rota":   "#2196F3",
-    "entregue":  "#4CAF50",
-    "cancelado": "#9E9E9E",
+    "pendente":   "#FF9800",
+    "calculado":  "#2196F3",
+    "despachado": "#7B1FA2",
+    "em_voo":     "#0277BD",
+    "em_rota":    "#2196F3",  # legado pré–Fase A (se ainda existir em cache)
+    "entregue":   "#4CAF50",
+    "cancelado":  "#9E9E9E",
+    "falha":      "#B71C1C",
 }
 # Cores para rotas (até 10 voos)
 _CORES_ROTAS = [
@@ -100,11 +105,11 @@ async def geojson_deposito(db: AsyncSession = Depends(get_db)):
     summary="GeoJSON dos pedidos ativos",
     description=(
         "Retorna pedidos como GeoJSON FeatureCollection. "
-        "Filtre por status: pendente | em_rota | entregue | cancelado."
+        "Filtre por status: pendente | calculado | despachado | em_voo | entregue | cancelado | falha."
     ),
 )
 async def geojson_pedidos(
-    status:      Optional[str] = Query(None, description="pendente | em_rota | entregue"),
+    status:      Optional[str] = Query(None, description="pendente | calculado | em_voo | …"),
     farmacia_id: Optional[int] = Query(None),
     limite:      int           = Query(500, ge=1, le=2000),
     db: AsyncSession = Depends(get_db),
@@ -342,8 +347,7 @@ async def geojson_snapshot(db: AsyncSession = Depends(get_db)):
     drone_repo    = DroneRepository(db)
 
     deposito     = await farmacia_repo.buscar_deposito_principal()
-    pedidos      = await pedido_repo.listar(status="pendente", limite=500)
-    pedidos     += await pedido_repo.listar(status="em_rota",  limite=200)
+    pedidos      = await pedido_repo.listar(statuses=STATUS_ATIVOS_MAPA, limite=800)
     rotas        = await rota_repo.listar_por_status("em_execucao")
     rotas       += await rota_repo.listar_recentes(limite=10)
     drones       = await drone_repo.listar()

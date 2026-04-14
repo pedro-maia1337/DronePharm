@@ -11,6 +11,7 @@
 #   WS  /ws/telemetria/{drone_id}   → stream de um drone específico
 #   WS  /ws/alertas                 → alertas críticos
 #   WS  /ws/frota                   → status da frota
+#   WS  /ws/pedidos                 → eventos de pedido (despacho / em voo)
 #   GET /ws/info                    → estatísticas de conexões (debug)
 # =============================================================================
 
@@ -160,6 +161,24 @@ async def ws_frota(websocket: WebSocket):
 
 
 # =============================================================================
+# CANAL DE PEDIDOS — despacho / em voo (telemetria)
+# =============================================================================
+
+@router.websocket("/pedidos")
+async def ws_pedidos(websocket: WebSocket):
+    canal = "pedidos"
+    if not await _conectar_autenticado(websocket, canal):
+        return
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_json({"tipo": "pong"})
+    except WebSocketDisconnect:
+        manager.desconectar(websocket, canal)
+
+
+# =============================================================================
 # INFO (HTTP) — estatísticas de conexões
 # =============================================================================
 
@@ -177,5 +196,6 @@ async def ws_info(request: Request):
             "ws://host/ws/telemetria/{drone_id}?token=<WS_TOKEN>",
             "ws://host/ws/alertas?token=<WS_TOKEN>",
             "ws://host/ws/frota?token=<WS_TOKEN>",
+            "ws://host/ws/pedidos?token=<WS_TOKEN>",
         ],
     }

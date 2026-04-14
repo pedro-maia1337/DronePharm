@@ -167,9 +167,12 @@ class PedidoCreate(BaseModel):
 
 
 class PedidoUpdate(BaseModel):
-    status:     Optional[str]      = None
+    """Atualização parcial; o status do pedido é exclusivo da máquina de estados no backend."""
+
     descricao:  Optional[str]      = None
     janela_fim: Optional[datetime] = None
+
+    model_config = {"extra": "forbid"}
 
 
 class PedidoResponse(BaseModel):
@@ -185,6 +188,8 @@ class PedidoResponse(BaseModel):
     janela_fim:  Optional[datetime]
     criado_em:   datetime
     entregue_em: Optional[datetime]
+    despachado_em: Optional[datetime] = None
+    estimativa_entrega_em: Optional[datetime] = None
 
     @computed_field
     @property

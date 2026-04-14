@@ -172,6 +172,7 @@ async def root():
             "telemetria_drone":  "ws://localhost:8000/ws/telemetria/{drone_id}",
             "alertas":           "ws://localhost:8000/ws/alertas",
             "frota":             "ws://localhost:8000/ws/frota",
+            "pedidos":           "ws://localhost:8000/ws/pedidos",
         },
     }
 

@@ -89,6 +89,8 @@ class Pedido(Base):
     janela_fim:  Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     criado_em:   Mapped[datetime]          = mapped_column(DateTime, default=func.now())
     entregue_em: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    despachado_em: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    estimativa_entrega_em: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     farmacia: Mapped["Farmacia"]       = relationship("Farmacia", back_populates="pedidos")
     rota:     Mapped[Optional["Rota"]] = relationship("Rota", back_populates="pedidos",

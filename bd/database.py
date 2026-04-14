@@ -241,6 +241,34 @@ async def init_db():
 
         await conn.run_sync(Base.metadata.create_all)
 
+        # Migração Fase A — valor legado `em_rota` → `calculado` (máquina de estados)
+        try:
+            res = await conn.execute(
+                text("UPDATE pedidos SET status = 'calculado' WHERE status = 'em_rota'")
+            )
+            n = res.rowcount if res else 0
+            if n:
+                log.info("Migração Fase A: %s pedido(s) atualizados (em_rota → calculado).", n)
+        except Exception as exc:
+            log.warning("Migração Fase A (em_rota → calculado) não aplicada: %s", exc)
+
+        # Migração Fase C — timestamps de despacho e ETA (bases já existentes)
+        for sql, label in (
+            (
+                "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS despachado_em TIMESTAMP",
+                "despachado_em",
+            ),
+            (
+                "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS estimativa_entrega_em TIMESTAMP",
+                "estimativa_entrega_em",
+            ),
+        ):
+            try:
+                await conn.execute(text(sql))
+                log.info("Migração Fase C: coluna %s verificada.", label)
+            except Exception as exc:
+                log.warning("Migração Fase C (%s): %s", label, exc)
+
     log.info("Azure PostgreSQL inicializado — tabelas criadas/verificadas.")
 
 

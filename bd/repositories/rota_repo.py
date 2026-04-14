@@ -52,6 +52,19 @@ class RotaRepository:
         result = await self.db.execute(select(Rota).where(Rota.id == rota_id))
         return result.scalar_one_or_none()
 
+    async def buscar_ativa_por_drone(self, drone_id: str) -> Optional[Rota]:
+        """Rota em andamento (calculada ou em execução) mais recente do drone."""
+        result = await self.db.execute(
+            select(Rota)
+            .where(
+                Rota.drone_id == drone_id,
+                Rota.status.in_(("calculada", "em_execucao")),
+            )
+            .order_by(Rota.criada_em.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def listar_recentes(
         self, limite: int = 50, drone_id: Optional[str] = None
     ) -> List[Rota]:

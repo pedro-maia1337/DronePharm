@@ -46,6 +46,8 @@ _CORES_ROTAS = [
     "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336",
     "#00BCD4", "#FF5722", "#8BC34A", "#E91E63", "#607D8B",
 ]
+_STATUS_ROTAS_ATIVAS = {"calculada", "em_execucao"}
+_STATUS_DRONES_ATIVOS = {"em_voo", "retornando", "carregando", "emergencia"}
 
 
 def _feature(geometry: dict, properties: dict) -> dict:
@@ -348,8 +350,9 @@ async def geojson_snapshot(db: AsyncSession = Depends(get_db)):
 
     deposito     = await farmacia_repo.buscar_deposito_principal()
     pedidos      = await pedido_repo.listar(statuses=STATUS_ATIVOS_MAPA, limite=800)
-    rotas        = await rota_repo.listar_por_status("em_execucao")
-    rotas       += await rota_repo.listar_recentes(limite=10)
+    rotas_exec   = await rota_repo.listar_por_status("em_execucao")
+    rotas_calc   = await rota_repo.listar_por_status("calculada")
+    rotas        = list(rotas_exec) + list(rotas_calc)
     drones       = await drone_repo.listar()
 
     features: List[dict] = []
@@ -381,6 +384,8 @@ async def geojson_snapshot(db: AsyncSession = Depends(get_db)):
     for idx, rota in enumerate(rotas):
         if rota.id in vistas:
             continue
+        if rota.status not in _STATUS_ROTAS_ATIVAS:
+            continue
         vistas.add(rota.id)
 
         cor       = _CORES_ROTAS[idx % len(_CORES_ROTAS)]
@@ -397,7 +402,10 @@ async def geojson_snapshot(db: AsyncSession = Depends(get_db)):
             ))
 
     # Frota
+    drone_ids_ativos = {rota.drone_id for rota in rotas if rota.status in _STATUS_ROTAS_ATIVAS}
     for drone in drones:
+        if drone.id not in drone_ids_ativos and drone.status not in _STATUS_DRONES_ATIVOS:
+            continue
         if drone.latitude_atual is None or drone.longitude_atual is None:
             continue
         features.append(_feature(

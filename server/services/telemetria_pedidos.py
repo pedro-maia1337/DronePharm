@@ -18,6 +18,7 @@ from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
 from bd.models import Pedido as PedidoORM
 from models.pedido import Coordenada
 from server.websocket.connection_manager import manager
+from server.services.pedido_tracking import listar_pedidos_ativos_por_ids
 
 # Pedidos com entrega pendente (ETA no mapa / WS)
 STATUS_COM_ENTREGA_PENDENTE: Tuple[str, ...] = (
@@ -68,9 +69,9 @@ async def sincronizar_pedidos_apos_telemetria(
     status_payload: str,
 ) -> Dict[str, Any]:
     """
-    Atualiza estados dos pedidos da rota ativa do drone e emite eventos WS.
+    Atualiza estados dos pedidos da rota ativa do drone e monta payload de tracking.
 
-    Retorna dicionário com pedido_ids, eta_seg e lista de eventos emitidos.
+    Retorna dicionário com pedido_ids, pedido_id principal, eta_seg e lista de eventos.
     """
     rota_repo   = RotaRepository(db)
     pedido_repo = PedidoRepository(db)
@@ -139,9 +140,9 @@ async def sincronizar_pedidos_apos_telemetria(
             "pedido_em_voo",
             {
                 "pedido_id": primeiro_desp.id,
-                "drone_id":  drone_id,
-                "rota_id":   rota.id,
-                "eta_seg":   eta_seg,
+                "drone_id": drone_id,
+                "rota_id": rota.id,
+                "eta_seg": eta_seg,
             },
         )
         pedidos = await pedido_repo.buscar_por_ids(list(rota.pedido_ids))
@@ -160,8 +161,25 @@ async def sincronizar_pedidos_apos_telemetria(
                 velocidade_ms,
             )
 
+    try:
+        pedidos_ativos = await listar_pedidos_ativos_por_ids(db, rota.pedido_ids)
+    except Exception:
+        pedidos_ativos = []
+    pedido_principal = next(
+        (
+            item["pedido_id"]
+            for item in pedidos_ativos
+            if item["status"] == StatusPedido.EM_VOO
+        ),
+        None,
+    )
+    if pedido_principal is None and pedidos_ativos:
+        pedido_principal = pedidos_ativos[0]["pedido_id"]
+
     return {
         "pedido_ids": p_ids,
-        "eta_seg":    eta_seg,
-        "eventos":    eventos,
+        "pedido_id": pedido_principal,
+        "eta_seg": eta_seg,
+        "eventos": eventos,
+        "pedidos_ativos": pedidos_ativos,
     }

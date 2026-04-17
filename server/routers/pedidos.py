@@ -9,13 +9,14 @@ from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.schemas.schemas import (
-    PedidoCreate, PedidoUpdate, PedidoResponse, PedidoListResponse
+    PedidoAtivoResponse, PedidoCreate, PedidoUpdate, PedidoResponse, PedidoListResponse
 )
 from bd.database import get_db
 from bd.repositories.pedido_repo import PedidoRepository
 from bd.repositories.farmacia_repo import FarmaciaRepository
 from config.settings import ORQUESTRACAO_APOS_PEDIDO, PRIORIDADE_JANELA_H
 from server.services.orquestracao_pedido import tarefa_background_orquestrar_pedido
+from server.services.pedido_tracking import obter_pedido_ativo
 from server.security.rest_auth import require_rest_admin, require_rest_write
 from domain.pedido_estado import (
     OperacaoTransicaoPedido,
@@ -142,6 +143,28 @@ async def buscar_pedido(pedido_id: int, db: AsyncSession = Depends(get_db)):
     if not pedido:
         raise HTTPException(status_code=404, detail=f"Pedido {pedido_id} não encontrado.")
     return pedido
+
+
+@router.get(
+    "/{pedido_id}/ativo",
+    response_model=PedidoAtivoResponse,
+    summary="Acompanhamento enriquecido de pedido ativo",
+    description=(
+        "Retorna o payload consolidado de acompanhamento do pedido em tempo real, "
+        "incluindo rota, drone, ETA, tempos e posição GPS atual."
+    ),
+)
+async def buscar_pedido_ativo(pedido_id: int, db: AsyncSession = Depends(get_db)):
+    payload = await obter_pedido_ativo(db, pedido_id)
+    if not payload:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Pedido {pedido_id} não está ativo para acompanhamento "
+                "(esperado: calculado, despachado ou em_voo)."
+            ),
+        )
+    return payload
 
 
 @router.patch(

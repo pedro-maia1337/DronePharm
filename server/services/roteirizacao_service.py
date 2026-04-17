@@ -214,8 +214,6 @@ async def calcular_rotas_para_pedidos(
             status="calculada",
         ))
 
-    await drone_repo.atualizar(drone_id, status="em_voo")
-
     return RoteirizarResponse(
         sucesso=True,
         rotas=rotas_response,

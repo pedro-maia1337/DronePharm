@@ -81,6 +81,7 @@ async def receber_telemetria(
     payload_telem = {
         "tipo":          "telemetria",
         "drone_id":      body.drone_id,
+        "pedido_id":     sync_pedidos.get("pedido_id"),
         "latitude":      body.latitude,
         "longitude":     body.longitude,
         "altitude_m":    body.altitude_m,
@@ -92,6 +93,7 @@ async def receber_telemetria(
         "snapshot_id":   registro.id,
         "pedido_ids":    sync_pedidos["pedido_ids"],
         "eta_seg":       sync_pedidos["eta_seg"],
+        "pedidos_ativos": sync_pedidos.get("pedidos_ativos", []),
         "pedido_eventos": sync_pedidos["eventos"],
     }
     await manager.broadcast_telemetria(body.drone_id, payload_telem)

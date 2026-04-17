@@ -4,7 +4,7 @@
 # =============================================================================
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Sequence
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from domain.pedido_estado import (
     TransicaoPedidoInvalidaError,
     validar_transicao_pedido,
 )
+from server.websocket.connection_manager import manager
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +30,13 @@ class PedidoRepository:
         await self.db.refresh(pedido)
         # Rastreabilidade: criação
         await self._rastrear(pedido.id, "—", "pendente", observacao="Pedido criado")
+        await self._emitir_evento_status(
+            pedido.id,
+            "pedido_criado",
+            status_de=None,
+            status_para="pendente",
+            rota_id=pedido.rota_id,
+        )
         return pedido
 
     async def buscar_por_id(self, pedido_id: int) -> Optional[Pedido]:
@@ -141,6 +149,18 @@ class PedidoRepository:
         )
         await self._rastrear(pedido_id, status_anterior, status,
                              drone_id=drone_id, rota_id=rota_id)
+        if operacao not in (
+            OperacaoTransicaoPedido.TELEM_DESPACHO,
+            OperacaoTransicaoPedido.TELEM_EM_VOO,
+        ):
+            await self._emitir_evento_status(
+                pedido_id,
+                self._nome_evento_status(status),
+                status_de=status_anterior,
+                status_para=status,
+                drone_id=drone_id,
+                rota_id=rota_id,
+            )
 
     async def atualizar_status_lote(
         self,
@@ -183,6 +203,18 @@ class PedidoRepository:
                 drone_id=drone_id,
                 rota_id=rota_id,
             )
+            if operacao not in (
+                OperacaoTransicaoPedido.TELEM_DESPACHO,
+                OperacaoTransicaoPedido.TELEM_EM_VOO,
+            ):
+                await self._emitir_evento_status(
+                    pid,
+                    self._nome_evento_status(status),
+                    status_de=status_map.get(pid),
+                    status_para=status,
+                    drone_id=drone_id,
+                    rota_id=rota_id,
+                )
 
     # ── Rastreabilidade interna ───────────────────────────────────────────────
 
@@ -214,3 +246,29 @@ class PedidoRepository:
         except Exception as exc:
             # Rastreabilidade nunca deve bloquear a operação principal
             log.warning(f"Falha ao registrar rastreabilidade pedido={pedido_id}: {exc}")
+
+    @staticmethod
+    def _nome_evento_status(status: str) -> str:
+        return f"pedido_{status}"
+
+    async def _emitir_evento_status(
+        self,
+        pedido_id: int,
+        evento: str,
+        *,
+        status_de: Optional[str],
+        status_para: Optional[str],
+        drone_id: Optional[str] = None,
+        rota_id: Optional[int] = None,
+    ) -> None:
+        await manager.broadcast_evento_pedido(
+            evento,
+            {
+                "pedido_id": pedido_id,
+                "status_de": status_de,
+                "status_para": status_para,
+                "drone_id": drone_id,
+                "rota_id": rota_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        )

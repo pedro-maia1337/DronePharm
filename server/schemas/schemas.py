@@ -208,6 +208,38 @@ class PedidoListResponse(BaseModel):
     has_more:    bool = False
 
 
+class PosicaoAtualResponse(BaseModel):
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    altitude_m: Optional[float] = None
+    atualizado_em: Optional[datetime] = None
+
+
+class DestinoPedidoResponse(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class PedidoResumoTrackingResponse(BaseModel):
+    prioridade: int
+    descricao: Optional[str] = None
+    farmacia_id: int
+    janela_fim: Optional[datetime] = None
+
+
+class PedidoAtivoResponse(BaseModel):
+    pedido_id: int
+    rota_id: Optional[int] = None
+    drone_id: Optional[str] = None
+    status: str
+    estimativa_entrega_em: Optional[datetime] = None
+    tempo_decorrido_seg: Optional[int] = None
+    tempo_restante_seg: Optional[int] = None
+    posicao_atual: PosicaoAtualResponse
+    destino: DestinoPedidoResponse
+    pedido: PedidoResumoTrackingResponse
+
+
 # =============================================================================
 # ROTEIRIZAÇÃO
 # =============================================================================
@@ -367,3 +399,11 @@ class KpiFarmaciaResponse(BaseModel):
     tempo_medio_min:    Optional[float]
     distancia_media_km: Optional[float]
     peso_total_kg:      Optional[float]
+
+
+class KpiTempoRealResponse(BaseModel):
+    total_ativos: int = 0
+    pedidos_em_voo: int = 0
+    concluidos: int = 0
+    pontualidade_pct: float = 0.0
+    eta_medio_seg: float = 0.0

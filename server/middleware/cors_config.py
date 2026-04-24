@@ -22,7 +22,8 @@ ORIGENS_PRODUCAO = [o.strip() for o in _ORIGINS_ENV.split(",") if o.strip()] or 
     "http://localhost:3000",       # Dashboard React (desenvolvimento)
     "http://localhost:8080",       # Dashboard Vue (desenvolvimento)
     "http://192.168.1.100",        # Raspberry Pi (alterar para IP real)
-    "http://raspberrypi.local",    # mDNS do Raspberry Pi
+    "http://raspberrypi.local",
+    "http://localhost:5173"# mDNS do Raspberry Pi
 ]
 
 ORIGENS_DEV = ["*"]  # Permite qualquer origem em desenvolvimento

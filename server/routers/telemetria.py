@@ -16,6 +16,7 @@ from bd.repositories.drone_repo import DroneRepository
 from config.settings import DRONE_BATERIA_MINIMA, VENTO_MAX_OPERACIONAL_MS
 from server.websocket.connection_manager import manager
 from server.security.rest_auth import require_rest_ingest
+from server.services.monitoramento import montar_payload_monitoramento
 from server.services.telemetria_pedidos import sincronizar_pedidos_apos_telemetria
 
 log = logging.getLogger(__name__)
@@ -78,24 +79,16 @@ async def receber_telemetria(
     )
 
     # ── Broadcast WebSocket — telemetria ──────────────────────────────────
-    payload_telem = {
-        "tipo":          "telemetria",
-        "drone_id":      body.drone_id,
-        "pedido_id":     sync_pedidos.get("pedido_id"),
-        "latitude":      body.latitude,
-        "longitude":     body.longitude,
-        "altitude_m":    body.altitude_m,
-        "velocidade_ms": body.velocidade_ms,
-        "bateria_pct":   body.bateria_pct,
-        "vento_ms":      body.vento_ms,
-        "direcao_vento": body.direcao_vento,
-        "status":        body.status,
-        "snapshot_id":   registro.id,
-        "pedido_ids":    sync_pedidos["pedido_ids"],
-        "eta_seg":       sync_pedidos["eta_seg"],
-        "pedidos_ativos": sync_pedidos.get("pedidos_ativos", []),
-        "pedido_eventos": sync_pedidos["eventos"],
-    }
+    payload_telem = montar_payload_monitoramento(
+        drone_id=body.drone_id,
+        pedido_id=sync_pedidos.get("pedido_id"),
+        latitude=body.latitude,
+        longitude=body.longitude,
+        velocidade_ms=body.velocidade_ms,
+        direcao=body.direcao if body.direcao is not None else body.direcao_vento,
+        status_missao=sync_pedidos.get("status_missao") or body.status,
+        eta_segundos=sync_pedidos.get("eta_seg"),
+    )
     await manager.broadcast_telemetria(body.drone_id, payload_telem)
 
     # ── Broadcast WebSocket — alertas críticos ────────────────────────────

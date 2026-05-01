@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from bd.models import Telemetria
@@ -32,3 +32,22 @@ class TelemetriaRepository:
             .limit(limite)
         )
         return list(result.scalars().all())
+
+    async def buscar_ultimas_por_drones(
+        self,
+        drone_ids: Sequence[str],
+    ) -> Dict[str, Telemetria]:
+        ids = list(dict.fromkeys(drone_ids))
+        if not ids:
+            return {}
+
+        result = await self.db.execute(
+            select(Telemetria)
+            .where(Telemetria.drone_id.in_(ids))
+            .distinct(Telemetria.drone_id)
+            .order_by(Telemetria.drone_id, Telemetria.criado_em.desc())
+        )
+        return {
+            registro.drone_id: registro
+            for registro in result.scalars().all()
+        }

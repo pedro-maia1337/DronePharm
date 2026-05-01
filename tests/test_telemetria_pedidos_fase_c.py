@@ -26,7 +26,14 @@ async def test_sincronizar_sem_rota_ativa():
             velocidade_ms=8.0,
             status_payload="em_voo",
         )
-    assert out == {"pedido_ids": [], "eta_seg": None, "eventos": []}
+    assert out == {
+        "pedido_id": None,
+        "pedido_ids": [],
+        "eta_seg": None,
+        "eventos": [],
+        "pedidos_ativos": [],
+        "status_missao": None,
+    }
 
 
 @pytest.mark.asyncio

@@ -22,6 +22,7 @@ from bd.repositories.historico_repo import HistoricoRepository
 from server.security.rest_auth import require_rest_admin, require_rest_write
 from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
 from server.services.roteirizacao_service import calcular_rotas_para_pedidos
+from server.services.despacho import despachar_rota
 
 import logging
 log = logging.getLogger(__name__)
@@ -134,6 +135,26 @@ async def buscar_rota(rota_id: int, db: AsyncSession = Depends(get_db)):
     if not rota:
         raise HTTPException(status_code=404, detail=f"Rota {rota_id} não encontrada.")
     return _rota_orm_para_response(rota)
+
+
+# =============================================================================
+# CONCLUIR ROTA
+# =============================================================================
+
+@router.post(
+    "/{rota_id}/despachar",
+    summary="Despachar rota e iniciar missão",
+    description=(
+        "Marca a rota como em execução e promove todos os pedidos da rota "
+        "para o estado de despacho no início físico da missão."
+    ),
+)
+async def iniciar_rota(
+    rota_id: int,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
+):
+    return await despachar_rota(db, rota_id)
 
 
 # =============================================================================

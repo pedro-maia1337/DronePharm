@@ -79,6 +79,7 @@ def _telemetria(drone_id: str = "DP-01"):
         velocidade_ms=10.5,
         bateria_pct=0.81,
         vento_ms=2.0,
+        direcao=120.0,
         direcao_vento=180.0,
         status="em_voo",
         criado_em=datetime.now(),
@@ -238,6 +239,7 @@ async def test_receber_telemetria_broadcast_inclui_pedido_id():
         longitude=-43.95,
         altitude_m=50.0,
         velocidade_ms=12.0,
+        direcao=120.0,
         bateria_pct=0.77,
         vento_ms=2.1,
         direcao_vento=180.0,
@@ -260,11 +262,17 @@ async def test_receber_telemetria_broadcast_inclui_pedido_id():
             "eta_seg": 180,
             "eventos": [{"evento": "pedido_em_voo", "pedido_id": 1}],
             "pedidos_ativos": [{"pedido_id": 1, "status": "em_voo"}],
+            "status_missao": "em_voo",
         }
 
         await receber_telemetria(body=body, db=db, _auth=True)
 
     payload = bc_telem.await_args.args[1]
     assert payload["pedido_id"] == 1
-    assert payload["pedido_ids"] == [1, 2]
-    assert payload["pedidos_ativos"][0]["pedido_id"] == 1
+    assert payload["drone_id"] == "DP-01"
+    assert payload["posicao"]["lat"] == body.latitude
+    assert payload["posicao"]["lng"] == body.longitude
+    assert payload["vetor"]["velocidade_ms"] == body.velocidade_ms
+    assert payload["vetor"]["direcao"] == body.direcao
+    assert payload["status_missao"] == "em_voo"
+    assert payload["eta_segundos"] == 180

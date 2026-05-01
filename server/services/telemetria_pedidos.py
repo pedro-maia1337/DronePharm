@@ -79,14 +79,24 @@ async def sincronizar_pedidos_apos_telemetria(
     rota = await rota_repo.buscar_ativa_por_drone(drone_id)
     if not rota or not rota.pedido_ids:
         return {
+            "pedido_id": None,
             "pedido_ids": [],
-            "eta_seg":    None,
-            "eventos":    [],
+            "eta_seg": None,
+            "eventos": [],
+            "pedidos_ativos": [],
+            "status_missao": None,
         }
 
     pedidos = await pedido_repo.buscar_por_ids(list(rota.pedido_ids))
     if not pedidos:
-        return {"pedido_ids": [], "eta_seg": None, "eventos": []}
+        return {
+            "pedido_id": None,
+            "pedido_ids": [],
+            "eta_seg": None,
+            "eventos": [],
+            "pedidos_ativos": [],
+            "status_missao": None,
+        }
 
     agora = datetime.now()
     eventos: List[Dict[str, Any]] = []
@@ -175,6 +185,14 @@ async def sincronizar_pedidos_apos_telemetria(
     )
     if pedido_principal is None and pedidos_ativos:
         pedido_principal = pedidos_ativos[0]["pedido_id"]
+    status_missao = next(
+        (
+            item["status"]
+            for item in pedidos_ativos
+            if item["pedido_id"] == pedido_principal
+        ),
+        None,
+    )
 
     return {
         "pedido_ids": p_ids,
@@ -182,4 +200,5 @@ async def sincronizar_pedidos_apos_telemetria(
         "eta_seg": eta_seg,
         "eventos": eventos,
         "pedidos_ativos": pedidos_ativos,
+        "status_missao": status_missao,
     }

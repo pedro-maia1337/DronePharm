@@ -187,3 +187,40 @@ class TestApiContractUpdates:
             )
 
         assert response.status_code == 409
+
+    def test_snapshot_monitoramento_retorna_lista_consolidada(self, client):
+        snapshot = [
+            {
+                "drone_id": "DP-01",
+                "pedido_id": 123,
+                "posicao": {"lat": -19.9213, "lng": -43.9456},
+                "vetor": {"velocidade_ms": 15.5, "direcao": 120.0},
+                "status_missao": "em_voo",
+                "eta_segundos": 145,
+            }
+        ]
+
+        with patch(
+            "server.routers.monitoramento.listar_snapshot_monitoramento",
+            AsyncMock(return_value=snapshot),
+        ):
+            response = client.get("/api/v1/monitoramento/snapshot")
+
+        assert response.status_code == 200
+        assert response.json() == snapshot
+
+    def test_despachar_rota_retorna_estado_inicial_da_missao(self, client):
+        resposta = {
+            "mensagem": "Rota 7 despachada com sucesso.",
+            "rota_id": 7,
+            "drone_id": "DP-01",
+            "status_rota": "em_execucao",
+            "status_pedidos": "despachado",
+            "pedidos_despachados": [11, 12],
+        }
+
+        with patch("server.routers.rotas.despachar_rota", AsyncMock(return_value=resposta)):
+            response = client.post("/api/v1/rotas/7/despachar")
+
+        assert response.status_code == 200
+        assert response.json() == resposta

@@ -285,6 +285,12 @@ class TestRotasCalculo:
             r = client.patch("/api/v1/rotas/9999/concluir")
         assert r.status_code == 404
 
+    def test_despachar_rota_inexistente_retorna_404(self, client):
+        with patch("server.services.despacho.RotaRepository") as RR:
+            RR.return_value.buscar_por_id = AsyncMock(return_value=None)
+            r = client.post("/api/v1/rotas/9999/despachar")
+        assert r.status_code == 404
+
     def test_abortar_rota_inexistente_retorna_404(self, client):
         with patch("server.routers.rotas.RotaRepository") as RR:
             RR.return_value.buscar_por_id = AsyncMock(return_value=None)

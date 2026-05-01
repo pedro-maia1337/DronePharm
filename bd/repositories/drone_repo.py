@@ -3,7 +3,7 @@
 # =============================================================================
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Sequence
 from sqlalchemy import select, update, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from bd.models import Drone
@@ -81,6 +81,27 @@ class DroneRepository:
                 params["status"] = status
             sql += " ORDER BY id"
             result = await self.db.execute(text(sql), params)
+            return [_row_para_drone(r) for r in result.mappings().all()]
+
+    async def buscar_por_ids(self, drone_ids: Sequence[str]) -> List[Drone]:
+        ids = list(dict.fromkeys(drone_ids))
+        if not ids:
+            return []
+
+        try:
+            result = await self.db.execute(
+                select(Drone).where(Drone.id.in_(ids)).order_by(Drone.id)
+            )
+            return list(result.scalars().all())
+        except Exception as exc:
+            log.warning(f"ORM falhou em buscar_por_ids ({exc}). Usando raw SQL.")
+            result = await self.db.execute(
+                text(
+                    f"SELECT {_COLS_SEGURAS} FROM drones "
+                    "WHERE id = ANY(:ids) ORDER BY id"
+                ),
+                {"ids": ids},
+            )
             return [_row_para_drone(r) for r in result.mappings().all()]
 
     async def buscar_disponiveis(self) -> List[Drone]:

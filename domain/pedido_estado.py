@@ -47,6 +47,7 @@ class OperacaoTransicaoPedido(str, Enum):
     """Quem dispara a mudança de estado (usado na validação central)."""
 
     ROTAS_CALCULAR = "rotas_calcular"      # pendente → calculado (lote)
+    ROTAS_DESPACHAR = "rotas_despachar"    # calculado → despachado (início de rota)
     ROTAS_CONCLUIR = "rotas_concluir"      # calculado|despachado|em_voo → entregue
     ROTAS_ABORTAR = "rotas_abortar"        # calculado|despachado|em_voo → pendente
     API_CANCELAR = "api_cancelar"          # pendente|calculado → cancelado
@@ -74,6 +75,8 @@ def _par_valido(origem: str, destino: str, operacao: OperacaoTransicaoPedido) ->
     o, d = origem, destino
     if operacao == OperacaoTransicaoPedido.ROTAS_CALCULAR:
         return o == StatusPedido.PENDENTE and d == StatusPedido.CALCULADO
+    if operacao == OperacaoTransicaoPedido.ROTAS_DESPACHAR:
+        return o == StatusPedido.CALCULADO and d == StatusPedido.DESPACHADO
     if operacao == OperacaoTransicaoPedido.ROTAS_CONCLUIR:
         return o in (
             StatusPedido.CALCULADO,

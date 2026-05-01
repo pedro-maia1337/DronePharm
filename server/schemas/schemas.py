@@ -309,6 +309,7 @@ class TelemetriaCreate(BaseModel):
     longitude:     float
     altitude_m:    float = Field(0.0, ge=0)
     velocidade_ms: float = Field(0.0, ge=0)
+    direcao:       Optional[float] = Field(None, ge=0.0, le=360.0)
     bateria_pct:   float = Field(..., ge=0.0, le=1.0)
     vento_ms:      float = Field(0.0, ge=0.0)
     direcao_vento: float = Field(0.0, ge=0.0, le=360.0)
@@ -319,7 +320,7 @@ class TelemetriaCreate(BaseModel):
         "json_schema_extra": {
             "example": {
                 "drone_id": "DP-01", "latitude": -19.930, "longitude": -43.950,
-                "altitude_m": 50.0, "velocidade_ms": 10.2, "bateria_pct": 0.78,
+                "altitude_m": 50.0, "velocidade_ms": 10.2, "direcao": 120.0, "bateria_pct": 0.78,
                 "vento_ms": 3.5, "direcao_vento": 180.0, "status": "em_voo",
             }
         }

@@ -1,1 +1,11 @@
-from server.routers import pedidos, rotas, drones, farmacias, clima, telemetria, historico, mapa
+from server.routers import (
+    pedidos,
+    rotas,
+    drones,
+    farmacias,
+    clima,
+    telemetria,
+    historico,
+    mapa,
+    monitoramento,
+)

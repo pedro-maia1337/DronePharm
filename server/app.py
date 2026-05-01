@@ -123,7 +123,7 @@ app.add_middleware(ErrorHandlerMiddleware)
 
 from server.routers import (
     pedidos, rotas, drones, farmacias,
-    clima, telemetria, historico, mapa, frota, logs
+    clima, telemetria, historico, mapa, frota, logs, monitoramento
 )
 
 app.include_router(pedidos.router,    prefix="/api/v1/pedidos",    tags=["Pedidos"])
@@ -136,6 +136,7 @@ app.include_router(historico.router,  prefix="/api/v1/historico",  tags=["Histó
 app.include_router(mapa.router,       prefix="/api/v1/mapa",       tags=["Mapa Interativo"])
 app.include_router(frota.router,      prefix="/api/v1/frota",      tags=["Gestão de Frota"])
 app.include_router(logs.router,       prefix="/api/v1/logs",       tags=["Logs & Rastreabilidade"])
+app.include_router(monitoramento.router, prefix="/api/v1/monitoramento", tags=["Monitoramento"])
 
 # =============================================================================
 # ROUTERS WebSocket
@@ -166,6 +167,7 @@ async def root():
             "mapa":       "/api/v1/mapa/rotas",
             "frota":      "/api/v1/frota/status",
             "logs":       "/api/v1/logs",
+            "monitoramento": "/api/v1/monitoramento/snapshot",
         },
         "endpoints_ws": {
             "telemetria_global": "ws://localhost:8000/ws/telemetria",

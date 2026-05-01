@@ -62,10 +62,10 @@ class Rota:
 
     # ------------------------------------------------------------------
     @classmethod
-    def deposito_waypoint(cls) -> Waypoint:
+    def deposito_waypoint(cls, coordenada: Optional[Coordenada] = None) -> Waypoint:
         """Retorna o waypoint padrão do depósito central."""
         return Waypoint(
-            coordenada=Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE),
+            coordenada=coordenada or Coordenada(DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE),
             pedido=None,
             tempo_espera_s=0
         )

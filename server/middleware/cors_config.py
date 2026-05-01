@@ -20,13 +20,23 @@ _ORIGINS_ENV = os.getenv("CORS_ORIGINS", "")
 
 ORIGENS_PRODUCAO = [o.strip() for o in _ORIGINS_ENV.split(",") if o.strip()] or [
     "http://localhost:3000",       # Dashboard React (desenvolvimento)
+    "http://127.0.0.1:3000",
     "http://localhost:8080",       # Dashboard Vue (desenvolvimento)
+    "http://127.0.0.1:8080",
     "http://192.168.1.100",        # Raspberry Pi (alterar para IP real)
     "http://raspberrypi.local",
-    "http://localhost:5173"# mDNS do Raspberry Pi
+    "http://localhost:5173",       # Vite / React
+    "http://127.0.0.1:5173",
 ]
 
-ORIGENS_DEV = ["*"]  # Permite qualquer origem em desenvolvimento
+ORIGENS_DEV = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
 
 
 def configurar_cors(app: FastAPI) -> None:

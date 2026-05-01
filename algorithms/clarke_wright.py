@@ -7,10 +7,10 @@
 # =============================================================================
 
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 import logging
 
-from models.pedido import Pedido
+from models.pedido import Coordenada, Pedido
 from models.drone import Drone
 from models.rota import Rota, Waypoint
 from algorithms.distancia import (
@@ -36,14 +36,25 @@ class ClarkeWright:
     rotas = cw.resolver()
     """
 
-    def __init__(self, drone: Drone, pedidos: List[Pedido], vento_ms: float = 0.0):
+    def __init__(
+        self,
+        drone: Drone,
+        pedidos: List[Pedido],
+        vento_ms: float = 0.0,
+        deposito: Optional[Coordenada] = None,
+    ):
         self.drone     = drone
         self.pedidos   = pedidos
         self.vento_ms  = vento_ms
+        self.deposito  = deposito
         self.n         = len(pedidos)
 
         # Monta matriz e mapa de pedidos (índice 0 = depósito, 1..N = pedidos)
-        self.matriz        = construir_matriz_distancias(pedidos, incluir_deposito=True)
+        self.matriz        = construir_matriz_distancias(
+            pedidos,
+            incluir_deposito=True,
+            deposito=deposito,
+        )
         self.pedidos_mapa  = {i + 1: p for i, p in enumerate(pedidos)}
         self.verificador   = Verificador(drone, pedidos, self.matriz)
 
@@ -116,14 +127,14 @@ class ClarkeWright:
         rotas_obj = []
         for seq in sequencias:
             rota = Rota()
-            rota.adicionar_waypoint(Rota.deposito_waypoint())
+            rota.adicionar_waypoint(Rota.deposito_waypoint(self.deposito))
 
             pedidos_rota = [self.pedidos_mapa[i] for i in seq]
             for p in pedidos_rota:
                 rota.adicionar_waypoint(
                     Waypoint(coordenada=p.coordenada, pedido=p)
                 )
-            rota.adicionar_waypoint(Rota.deposito_waypoint())
+            rota.adicionar_waypoint(Rota.deposito_waypoint(self.deposito))
 
             metricas = calcular_custo_detalhado(
                 seq, self.matriz, self.pedidos_mapa,

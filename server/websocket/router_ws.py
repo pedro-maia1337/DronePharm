@@ -2,7 +2,7 @@
 # server/websocket/router_ws.py
 # Endpoints WebSocket de telemetria e alertas em tempo real
 #
-# Autenticação: todos os canais exigem o header ou query param `token`.
+# Autenticação: todos os canais exigem query param `token`.
 # Defina WS_TOKEN no .env. Se não definido, o servidor loga aviso mas
 # aceita conexões (modo desenvolvimento).
 #
@@ -33,7 +33,7 @@ _WS_TOKEN = os.getenv("WS_TOKEN", "")
 
 def _autenticar(websocket: WebSocket) -> bool:
     """
-    Verifica o token de autenticação enviado como query param ou header.
+    Verifica o token de autenticação enviado como query param.
 
     O cliente deve conectar com:
       ws://host/ws/telemetria?token=<WS_TOKEN>
@@ -48,10 +48,7 @@ def _autenticar(websocket: WebSocket) -> bool:
         )
         return True
 
-    token_recebido = (
-        websocket.query_params.get("token", "")
-        or websocket.headers.get("x-ws-token", "")
-    )
+    token_recebido = websocket.query_params.get("token", "")
     return hmac.compare_digest(token_recebido, _WS_TOKEN)
 
 
@@ -80,9 +77,13 @@ def _autenticar_http(request: Request) -> bool:
 
 async def _conectar_autenticado(websocket: WebSocket, canal: str) -> bool:
     """
-    Tenta autenticar e conectar. Rejeita com 1008 (Policy Violation)
-    se o token for inválido, sem aceitar a conexão.
+    Aceita a conexão primeiro e depois valida o token.
+
+    Isso permite que o navegador receba o código de fechamento correto
+    (1008) em vez de um erro genérico de handshake.
     """
+    await websocket.accept()
+
     if not _autenticar(websocket):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         log.warning(f"Conexão WS recusada — token inválido | canal={canal!r}")

@@ -102,7 +102,6 @@ class ConnectionManager:
     # ── Conexão ───────────────────────────────────────────────────────────────
 
     async def conectar(self, websocket: WebSocket, canal: str) -> None:
-        await websocket.accept()
         self._canais[canal].append(websocket)
         log.info(f"WS conectado → canal={canal!r} | total no canal: {len(self._canais[canal])}")
 
@@ -118,6 +117,10 @@ class ConnectionManager:
             self._canais[canal].remove(websocket)
         except ValueError:
             pass
+
+        if len(self._canais[canal]) == 0:
+            self._ultimo.pop(canal, None)
+
         log.info(f"WS desconectado ← canal={canal!r} | restantes: {len(self._canais[canal])}")
 
     # ── Broadcast ─────────────────────────────────────────────────────────────

@@ -28,7 +28,7 @@ log    = logging.getLogger("ws.router")
 router = APIRouter()
 
 # Token lido do ambiente. Se vazio, autenticação é desabilitada com aviso.
-_WS_TOKEN = os.getenv("WS_TOKEN", "")
+_WS_TOKEN = os.getenv("REST_ADMIN_TOKEN", "")
 
 
 def _autenticar(websocket: WebSocket) -> bool:

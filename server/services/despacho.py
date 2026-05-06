@@ -9,6 +9,10 @@ from bd.repositories.drone_repo import DroneRepository
 from bd.repositories.pedido_repo import PedidoRepository
 from bd.repositories.rota_repo import RotaRepository
 from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
+from server.services.simulacao_voo import (
+    emitir_primeiro_frame_rota,
+    iniciar_simulacao_rota_em_background,
+)
 
 _STATUS_ROTAS_DESPACHAVEIS = frozenset({"calculada", "criada", "pendente"})
 _STATUS_ROTAS_JA_INICIADAS = frozenset({"em_execucao", "concluida", "abortada"})
@@ -74,3 +78,23 @@ async def despachar_rota(db: AsyncSession, rota_id: int) -> Dict[str, Any]:
         "status_pedidos": StatusPedido.DESPACHADO,
         "pedidos_despachados": pedido_ids,
     }
+
+
+async def forcar_inicio_voo(db: AsyncSession, rota_id: int) -> Dict[str, Any]:
+    resultado = await despachar_rota(db, rota_id)
+    await db.commit()
+
+    await emitir_primeiro_frame_rota(rota_id)
+    simulacao_iniciada = iniciar_simulacao_rota_em_background(
+        rota_id,
+        emitir_frame_inicial=False,
+    )
+
+    resultado.update(
+        {
+            "mensagem": f"Rota {rota_id} iniciou simulacao imediata.",
+            "simulacao_iniciada": simulacao_iniciada,
+            "primeiro_frame_emitido": True,
+        }
+    )
+    return resultado

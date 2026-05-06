@@ -22,7 +22,11 @@ from bd.repositories.historico_repo import HistoricoRepository
 from server.security.rest_auth import require_rest_admin, require_rest_write
 from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
 from server.services.roteirizacao_service import calcular_rotas_para_pedidos
-from server.services.despacho import despachar_rota
+from server.services.despacho import despachar_rota, forcar_inicio_voo
+from server.services.simulacao_voo import (
+    cancelar_simulacao_rota,
+    iniciar_simulacao_rota_em_background,
+)
 
 import logging
 log = logging.getLogger(__name__)
@@ -154,7 +158,26 @@ async def iniciar_rota(
     db: AsyncSession = Depends(get_db),
     _auth=Depends(require_rest_write),
 ):
-    return await despachar_rota(db, rota_id)
+    resultado = await despachar_rota(db, rota_id)
+    await db.commit()
+    resultado["simulacao_iniciada"] = iniciar_simulacao_rota_em_background(rota_id)
+    return resultado
+
+
+@router.post(
+    "/{rota_id}/simular-agora",
+    summary="Forcar inicio imediato da simulacao",
+    description=(
+        "Despacha a rota, emite o primeiro frame de telemetria imediatamente "
+        "e inicia a simulacao em background sem aguardar polling."
+    ),
+)
+async def simular_agora(
+    rota_id: int,
+    db: AsyncSession = Depends(get_db),
+    _auth=Depends(require_rest_write),
+):
+    return await forcar_inicio_voo(db, rota_id)
 
 
 # =============================================================================
@@ -238,6 +261,7 @@ async def abortar_rota(
     db: AsyncSession = Depends(get_db),
     _auth=Depends(require_rest_admin),
 ):
+    simulacao_cancelada = cancelar_simulacao_rota(rota_id)
     rota_repo   = RotaRepository(db)
     pedido_repo = PedidoRepository(db)
     drone_repo  = DroneRepository(db)
@@ -267,4 +291,5 @@ async def abortar_rota(
         "rota_id": rota_id,
         "pedidos_liberados": pedido_ids,
         "motivo": motivo,
+        "simulacao_cancelada": simulacao_cancelada,
     }

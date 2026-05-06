@@ -177,6 +177,9 @@ async def ws_pedidos(websocket: WebSocket):
                 await websocket.send_json({"tipo": "pong"})
     except WebSocketDisconnect:
         manager.desconectar(websocket, canal)
+    except Exception as exc:
+        log.warning("Canal 'pedidos' encerrado com erro: %s", exc)
+        manager.desconectar(websocket, canal)
 
 
 # =============================================================================

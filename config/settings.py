@@ -94,6 +94,15 @@ MAVLINK_PORTA_SERIAL  = os.getenv("MAVLINK_PORTA", "/dev/ttyUSB0")
 MAVLINK_BAUDRATE      = int(os.getenv("MAVLINK_BAUD", "57600"))
 MAVLINK_TIMEOUT_S     = 10    # Timeout de conexão (s)
 MAVLINK_CICLO_TELEM_S = 2     # Intervalo do loop de telemetria (s)
+SIMULACAO_VOO_HABILITADA = (
+    os.getenv("SIMULACAO_VOO_HABILITADA", "true").lower() == "true"
+)
+SIMULACAO_TEMPO_MULTIPLICADOR = float(
+    os.getenv("SIMULACAO_TEMPO_MULTIPLICADOR", "10")
+)
+SIMULACAO_INTERVALO_MIN_S = float(
+    os.getenv("SIMULACAO_INTERVALO_MIN_S", "0.25")
+)
 
 # -----------------------------------------------------------------------------
 # API METEOROLÓGICA (OpenWeatherMap)

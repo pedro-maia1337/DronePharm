@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import re
 from datetime import datetime
 from typing import Dict, List, Tuple
 
@@ -21,6 +22,7 @@ from config.settings import (
     SIMULACAO_VOO_HABILITADA,
 )
 from domain.pedido_estado import OperacaoTransicaoPedido
+from domain.pedido_estado import StatusPedido
 from models.pedido import Coordenada
 from server.services.telemetria_runtime import processar_telemetria
 
@@ -71,6 +73,47 @@ def _calcular_direcao_graus(origem: dict, destino: dict) -> float:
     delta_lng = destino["longitude"] - origem["longitude"]
     angulo = math.degrees(math.atan2(delta_lng, delta_lat))
     return (angulo + 360.0) % 360.0
+
+
+def _pedido_id_por_waypoint(waypoint: dict) -> int | None:
+    label = str(waypoint.get("label", ""))
+    match = re.search(r"Pedido\s+#(\d+)", label)
+    if match is None:
+        return None
+
+    return int(match.group(1))
+
+
+def _resolver_pedido_waypoint(
+    waypoint: dict,
+    pedidos: List[object],
+) -> object | None:
+    pedido_id = _pedido_id_por_waypoint(waypoint)
+
+    if pedido_id is not None:
+        for pedido in pedidos:
+            if getattr(pedido, "id", None) == pedido_id:
+                return pedido
+
+    latitude = _safe_float(waypoint.get("latitude"))
+    longitude = _safe_float(waypoint.get("longitude"))
+
+    for pedido in pedidos:
+        if (
+            math.isclose(
+                _safe_float(getattr(pedido, "latitude", None)),
+                latitude,
+                abs_tol=1e-6,
+            )
+            and math.isclose(
+                _safe_float(getattr(pedido, "longitude", None)),
+                longitude,
+                abs_tol=1e-6,
+            )
+        ):
+            return pedido
+
+    return None
 
 
 async def _buscar_contexto_rota(
@@ -129,23 +172,30 @@ async def _concluir_rota_simulada(
     *,
     rota: object,
     pedidos: List[object],
+    pedidos_entregues: set[int],
 ) -> None:
     rota_repo = RotaRepository(db)
     pedido_repo = PedidoRepository(db)
     drone_repo = DroneRepository(db)
     historico_repo = HistoricoRepository(db)
 
+    pedidos_restantes = [
+        pedido for pedido in pedidos if getattr(pedido, "id", None) not in pedidos_entregues
+    ]
+
     await rota_repo.atualizar_status(rota.id, "concluida")
-    await pedido_repo.atualizar_status_lote(
-        ids=[pedido.id for pedido in pedidos],
-        status="entregue",
-        operacao=OperacaoTransicaoPedido.ROTAS_CONCLUIR,
-        rota_id=rota.id,
-        drone_id=rota.drone_id,
-    )
+
+    if pedidos_restantes:
+        await pedido_repo.atualizar_status_lote(
+            ids=[pedido.id for pedido in pedidos_restantes],
+            status="entregue",
+            operacao=OperacaoTransicaoPedido.ROTAS_CONCLUIR,
+            rota_id=rota.id,
+            drone_id=rota.drone_id,
+        )
 
     dist_por_pedido = _safe_float(getattr(rota, "distancia_km", 0.0)) / max(len(pedidos), 1)
-    for pedido in pedidos:
+    for pedido in pedidos_restantes:
         janela_ok = True
         if getattr(pedido, "janela_fim", None):
             janela_ok = datetime.now() <= pedido.janela_fim
@@ -172,6 +222,7 @@ async def _executar_simulacao_rota(
     try:
         async with AsyncSessionLocal() as db:
             rota, drone, pedidos, waypoints = await _buscar_contexto_rota(db, rota_id)
+            pedido_repo = PedidoRepository(db)
 
             if len(waypoints) < 2:
                 log.warning("Rota %s sem waypoints suficientes para simulacao.", rota_id)
@@ -189,6 +240,7 @@ async def _executar_simulacao_rota(
             velocidade_ms = max(_safe_float(getattr(drone, "velocidade_ms", 0.0), 10.0), 1.0)
             autonomia_m = max(_safe_float(getattr(drone, "autonomia_max_km", 0.0), 1.0) * 1000.0, 1.0)
             bateria_pct = float(getattr(drone, "bateria_pct", 1.0) or 1.0)
+            pedidos_entregues: set[int] = set()
 
             for indice in range(len(waypoints) - 1):
                 origem = waypoints[indice]
@@ -223,6 +275,22 @@ async def _executar_simulacao_rota(
                     await db.commit()
                     await asyncio.sleep(real_sleep_s)
 
+                pedido_waypoint = _resolver_pedido_waypoint(destino, pedidos)
+                if (
+                    pedido_waypoint is not None
+                    and not getattr(pedido_waypoint, "status", None) == StatusPedido.ENTREGUE
+                    and getattr(pedido_waypoint, "id", None) not in pedidos_entregues
+                ):
+                    await pedido_repo.atualizar_status_lote(
+                        ids=[pedido_waypoint.id],
+                        status=StatusPedido.ENTREGUE,
+                        operacao=OperacaoTransicaoPedido.ROTAS_CONCLUIR,
+                        rota_id=rota.id,
+                        drone_id=rota.drone_id,
+                    )
+                    pedidos_entregues.add(pedido_waypoint.id)
+                    pedido_waypoint.status = StatusPedido.ENTREGUE
+
             ponto_final = waypoints[-1]
             await processar_telemetria(
                 db,
@@ -237,7 +305,12 @@ async def _executar_simulacao_rota(
                 status="aguardando",
                 direcao=0.0,
             )
-            await _concluir_rota_simulada(db, rota=rota, pedidos=pedidos)
+            await _concluir_rota_simulada(
+                db,
+                rota=rota,
+                pedidos=pedidos,
+                pedidos_entregues=pedidos_entregues,
+            )
             await db.commit()
             log.info(
                 "Simulacao da rota %s concluida com multiplicador %.2fx.",

@@ -10,6 +10,8 @@ from enum import Enum, IntEnum
 
 from pydantic import BaseModel, Field, field_validator, computed_field
 
+from server.utils.datetime_utils import parse_datetime_utc
+
 
 # =============================================================================
 # ENUMS
@@ -155,6 +157,11 @@ class PedidoCreate(BaseModel):
     def peso_valido(cls, v):
         return round(v, 3)
 
+    @field_validator("janela_fim", mode="before")
+    @classmethod
+    def janela_fim_utc(cls, v):
+        return parse_datetime_utc(v)
+
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -171,6 +178,11 @@ class PedidoUpdate(BaseModel):
 
     descricao:  Optional[str]      = None
     janela_fim: Optional[datetime] = None
+
+    @field_validator("janela_fim", mode="before")
+    @classmethod
+    def janela_fim_utc(cls, v):
+        return parse_datetime_utc(v)
 
     model_config = {"extra": "forbid"}
 

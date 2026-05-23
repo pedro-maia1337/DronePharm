@@ -4,7 +4,7 @@
 # =============================================================================
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Optional, Sequence
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +15,7 @@ from domain.pedido_estado import (
     validar_transicao_pedido,
 )
 from server.websocket.connection_manager import manager
+from server.utils.datetime_utils import to_db_datetime, utc_now
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class PedidoRepository:
         self.db = db
 
     async def criar(self, **kwargs) -> Pedido:
+        kwargs = self._normalizar_campos_datetime(kwargs)
         pedido = Pedido(**kwargs)
         self.db.add(pedido)
         await self.db.flush()
@@ -109,6 +111,7 @@ class PedidoRepository:
         if not campos_validos:
             return pedido
 
+        campos_validos = self._normalizar_campos_datetime(campos_validos)
         await self.db.execute(
             update(Pedido).where(Pedido.id == pedido_id).values(**campos_validos)
         )
@@ -135,15 +138,15 @@ class PedidoRepository:
         if rota_id is not None:
             kwargs["rota_id"] = rota_id
         if status == "entregue":
-            kwargs["entregue_em"] = datetime.now()
+            kwargs["entregue_em"] = to_db_datetime(utc_now())
         if status == "pendente":
             kwargs["rota_id"] = None
             kwargs["despachado_em"] = None
             kwargs["estimativa_entrega_em"] = None
         if status == "despachado":
-            kwargs["despachado_em"] = despachado_em or datetime.now()
+            kwargs["despachado_em"] = to_db_datetime(despachado_em or utc_now())
         if estimativa_entrega_em is not None:
-            kwargs["estimativa_entrega_em"] = estimativa_entrega_em
+            kwargs["estimativa_entrega_em"] = to_db_datetime(estimativa_entrega_em)
         await self.db.execute(
             update(Pedido).where(Pedido.id == pedido_id).values(**kwargs)
         )
@@ -182,15 +185,15 @@ class PedidoRepository:
         if rota_id is not None:
             kwargs["rota_id"] = rota_id
         if status == "entregue":
-            kwargs["entregue_em"] = datetime.now()
+            kwargs["entregue_em"] = to_db_datetime(utc_now())
         if status == "pendente":
             kwargs["rota_id"] = None
             kwargs["despachado_em"] = None
             kwargs["estimativa_entrega_em"] = None
         if status == "despachado":
-            kwargs["despachado_em"] = despachado_em or datetime.now()
+            kwargs["despachado_em"] = to_db_datetime(despachado_em or utc_now())
         if estimativa_entrega_em is not None:
-            kwargs["estimativa_entrega_em"] = estimativa_entrega_em
+            kwargs["estimativa_entrega_em"] = to_db_datetime(estimativa_entrega_em)
 
         await self.db.execute(
             update(Pedido).where(Pedido.id.in_(ids)).values(**kwargs)
@@ -215,6 +218,15 @@ class PedidoRepository:
                     drone_id=drone_id,
                     rota_id=rota_id,
                 )
+
+    @staticmethod
+    def _normalizar_campos_datetime(campos: dict) -> dict:
+        normalizados = dict(campos)
+        for chave in ("janela_fim", "entregue_em", "despachado_em", "estimativa_entrega_em"):
+            valor = normalizados.get(chave)
+            if isinstance(valor, datetime):
+                normalizados[chave] = to_db_datetime(valor)
+        return normalizados
 
     # ── Rastreabilidade interna ───────────────────────────────────────────────
 
@@ -269,6 +281,6 @@ class PedidoRepository:
                 "status_para": status_para,
                 "drone_id": drone_id,
                 "rota_id": rota_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": utc_now().isoformat(),
             },
         )

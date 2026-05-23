@@ -4,7 +4,6 @@ import asyncio
 import logging
 import math
 import re
-from datetime import datetime
 from typing import Dict, List, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +22,7 @@ from config.settings import (
 )
 from domain.pedido_estado import OperacaoTransicaoPedido
 from domain.pedido_estado import StatusPedido
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 from models.pedido import Coordenada
 from server.services.telemetria_runtime import processar_telemetria
 
@@ -198,7 +198,7 @@ async def _concluir_rota_simulada(
     for pedido in pedidos_restantes:
         janela_ok = True
         if getattr(pedido, "janela_fim", None):
-            janela_ok = datetime.now() <= pedido.janela_fim
+            janela_ok = utc_now() <= ensure_datetime_utc(pedido.janela_fim)
         await historico_repo.criar(
             pedido_id=pedido.id,
             rota_id=rota.id,

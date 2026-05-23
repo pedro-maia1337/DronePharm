@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import HTTPException
@@ -30,6 +29,7 @@ from apis.clima import cliente_clima
 from apis.elevacao import cliente_elevacao
 from config.settings import DRONE_ALTITUDE_VOO_M
 from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
+from server.utils.datetime_utils import utc_now
 
 log = logging.getLogger(__name__)
 
@@ -210,7 +210,7 @@ async def calcular_rotas_para_pedidos(
             custo=metricas["custo_total"],
             viavel=rota.viavel,
             geracoes_ga=rota.geracoes_ga,
-            criada_em=datetime.now(),
+            criada_em=utc_now(),
             status="calculada",
         ))
 
@@ -225,5 +225,5 @@ async def calcular_rotas_para_pedidos(
             f"{len(pedidos)} pedidos distribuídos em {len(rotas_response)} voo(s). "
             f"Depósito: {deposito.nome}."
         ),
-        calculado_em=datetime.now(),
+        calculado_em=utc_now(),
     )

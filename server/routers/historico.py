@@ -3,7 +3,6 @@
 # Histórico de entregas e KPIs — /api/v1/historico
 # =============================================================================
 
-from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Query, Depends
 from sqlalchemy import func, select
@@ -15,6 +14,7 @@ from server.schemas.schemas import (
 from bd.models import Pedido
 from bd.database import get_db
 from bd.repositories.historico_repo import HistoricoRepository
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 from domain.pedido_estado import STATUS_ATIVOS_MAPA, StatusPedido
 
 router = APIRouter()
@@ -116,9 +116,9 @@ async def kpis_tempo_real(db: AsyncSession = Depends(get_db)):
             )
         ).scalars().all()
     )
-    agora = datetime.now()
+    agora = utc_now()
     etas_restantes = [
-        max(0.0, (estimativa - agora).total_seconds())
+        max(0.0, (ensure_datetime_utc(estimativa) - agora).total_seconds())
         for estimativa in pedidos_com_eta
         if estimativa is not None
     ]

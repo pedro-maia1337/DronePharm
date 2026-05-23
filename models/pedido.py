@@ -11,6 +11,7 @@ from config.settings import (
     PRIORIDADE_NORMAL, PRIORIDADE_URGENTE, PRIORIDADE_REABASTEC,
     PRIORIDADE_JANELA_H
 )
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 
 
 @dataclass
@@ -47,7 +48,7 @@ class Pedido:
     coordenada:     Coordenada
     peso_kg:        float
     prioridade:     int              = PRIORIDADE_NORMAL
-    horario_pedido: datetime         = field(default_factory=datetime.now)
+    horario_pedido: datetime         = field(default_factory=utc_now)
     janela_inicio:  Optional[datetime] = None
     janela_fim:     Optional[datetime] = None
     descricao:      str              = ""
@@ -56,6 +57,11 @@ class Pedido:
 
     # ------------------------------------------------------------------
     def __post_init__(self):
+        self.horario_pedido = ensure_datetime_utc(self.horario_pedido)
+        if self.janela_inicio is not None:
+            self.janela_inicio = ensure_datetime_utc(self.janela_inicio)
+        if self.janela_fim is not None:
+            self.janela_fim = ensure_datetime_utc(self.janela_fim)
         self._validar()
         if self.janela_fim is None:
             self._calcular_janela_padrao()
@@ -94,7 +100,7 @@ class Pedido:
         """Segundos restantes até o fim da janela de entrega."""
         if self.janela_fim is None:
             return float("inf")
-        delta = (self.janela_fim - datetime.now()).total_seconds()
+        delta = (self.janela_fim - utc_now()).total_seconds()
         return max(0.0, delta)
 
     @property
@@ -104,7 +110,7 @@ class Pedido:
     # ------------------------------------------------------------------
     def marcar_entregue(self):
         self.entregue = True
-        self.eta = datetime.now()
+        self.eta = utc_now()
 
     # ------------------------------------------------------------------
     def to_dict(self) -> dict:

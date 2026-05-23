@@ -3,7 +3,6 @@
 # Roteirização e gestão de rotas — /api/v1/rotas
 # =============================================================================
 
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Depends
@@ -22,6 +21,7 @@ from bd.repositories.historico_repo import HistoricoRepository
 from server.security.rest_auth import require_rest_admin, require_rest_write
 from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
 from server.services.roteirizacao_service import calcular_rotas_para_pedidos
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 from server.services.despacho import despachar_rota, forcar_inicio_voo
 from server.services.simulacao_voo import (
     cancelar_simulacao_rota,
@@ -224,7 +224,7 @@ async def concluir_rota(
     for pedido in pedidos:
         janela_ok = True
         if pedido.janela_fim:
-            janela_ok = datetime.now() <= pedido.janela_fim
+            janela_ok = utc_now() <= ensure_datetime_utc(pedido.janela_fim)
         await historico_repo.criar(
             pedido_id=pedido.id,
             rota_id=rota_id,

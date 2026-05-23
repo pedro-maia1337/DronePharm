@@ -11,6 +11,7 @@ from models.pedido import Pedido
 from models.drone import Drone
 from algorithms.distancia import distancia_rota
 from algorithms.custo import estimar_tempo_rota_s, estimar_energia_wh
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 from config.settings import (
     DRONE_BATERIA_MINIMA, VENTO_MAX_OPERACIONAL_MS,
     GA_PENALIDADE_CAPACIDADE, GA_PENALIDADE_AUTONOMIA, GA_PENALIDADE_PRIORIDADE,
@@ -129,15 +130,14 @@ class Verificador:
 
     def _checar_prioridade(self, sequencia: List[int], resultado: ResultadoVerificacao):
         """Verifica se pedidos urgentes podem ser atendidos no prazo."""
-        from datetime import datetime
         tempo_estimado_s = estimar_tempo_rota_s(sequencia, self.matriz)
-        agora = datetime.now()
+        agora = utc_now()
 
         for idx in sequencia:
             pedido = self.pedidos_mapa.get(idx)
             if pedido is None or pedido.janela_fim is None:
                 continue
-            tempo_restante = (pedido.janela_fim - agora).total_seconds()
+            tempo_restante = (ensure_datetime_utc(pedido.janela_fim) - agora).total_seconds()
             if tempo_estimado_s > tempo_restante and pedido.urgente:
                 resultado.viola_prioridade  = True
                 resultado.penalidade_total += GA_PENALIDADE_PRIORIDADE

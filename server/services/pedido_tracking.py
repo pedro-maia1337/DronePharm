@@ -12,6 +12,7 @@ from bd.repositories.rota_repo import RotaRepository
 from bd.repositories.telemetria_repo import TelemetriaRepository
 from domain.pedido_estado import StatusPedido
 from models.pedido import Coordenada
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 
 STATUS_PEDIDOS_ATIVOS_TRACKING: Sequence[str] = (
     StatusPedido.CALCULADO,
@@ -23,7 +24,7 @@ STATUS_PEDIDOS_ATIVOS_TRACKING: Sequence[str] = (
 def _tempo_decorrido_seg(despachado_em: Optional[datetime], agora: datetime) -> Optional[int]:
     if despachado_em is None:
         return None
-    return max(0, int((agora - despachado_em).total_seconds()))
+    return max(0, int((agora - ensure_datetime_utc(despachado_em)).total_seconds()))
 
 
 def _tempo_restante_seg(
@@ -32,7 +33,7 @@ def _tempo_restante_seg(
 ) -> Optional[int]:
     if estimativa_entrega_em is None:
         return None
-    return max(0, int((estimativa_entrega_em - agora).total_seconds()))
+    return max(0, int((ensure_datetime_utc(estimativa_entrega_em) - agora).total_seconds()))
 
 
 def _eta_por_posicao(
@@ -64,7 +65,7 @@ def montar_payload_pedido_ativo(
     telemetria: Optional[Any] = None,
     agora: Optional[datetime] = None,
 ) -> Dict[str, Any]:
-    agora = agora or datetime.now()
+    agora = ensure_datetime_utc(agora) if agora else utc_now()
     latitude_atual = None
     longitude_atual = None
     altitude_atual = None

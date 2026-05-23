@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 from models.pedido import Coordenada, Pedido
 from models.drone import Drone, StatusDrone, Telemetria
+from server.utils.datetime_utils import utc_now
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -59,7 +60,7 @@ class TestPedido:
         """Janela de entrega deve ser calculada se não informada."""
         p = Pedido(id=1, coordenada=Coordenada(-19.93, -43.95), peso_kg=0.5, prioridade=2)
         assert p.janela_fim is not None
-        assert p.janela_fim > datetime.now()
+        assert p.janela_fim > utc_now()
 
     def test_janela_urgente_menor(self):
         """Pedido urgente (P1) deve ter janela menor que normal (P2)."""

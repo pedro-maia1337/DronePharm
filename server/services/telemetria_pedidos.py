@@ -5,7 +5,7 @@
 # =============================================================================
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +18,7 @@ from domain.pedido_estado import OperacaoTransicaoPedido, StatusPedido
 from bd.models import Pedido as PedidoORM
 from models.pedido import Coordenada
 from server.websocket.connection_manager import manager
+from server.utils.datetime_utils import utc_now
 from server.services.pedido_tracking import listar_pedidos_ativos_por_ids
 
 # Pedidos com entrega pendente (ETA no mapa / WS)
@@ -98,7 +99,7 @@ async def sincronizar_pedidos_apos_telemetria(
             "status_missao": None,
         }
 
-    agora = datetime.now()
+    agora = utc_now()
     eventos: List[Dict[str, Any]] = []
 
     ids_calc = [p.id for p in pedidos if p.status == StatusPedido.CALCULADO]

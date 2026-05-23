@@ -3,7 +3,7 @@
 # CRUD completo de pedidos — /api/v1/pedidos
 # =============================================================================
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +18,7 @@ from config.settings import ORQUESTRACAO_APOS_PEDIDO, PRIORIDADE_JANELA_H
 from server.services.orquestracao_pedido import tarefa_background_orquestrar_pedido
 from server.services.pedido_tracking import obter_pedido_ativo
 from server.security.rest_auth import require_rest_admin, require_rest_write
+from server.utils.datetime_utils import utc_now
 from domain.pedido_estado import (
     OperacaoTransicaoPedido,
     StatusPedido,
@@ -57,7 +58,7 @@ async def criar_pedido(
     janela_fim = body.janela_fim
     if janela_fim is None:
         horas      = PRIORIDADE_JANELA_H.get(int(body.prioridade), 4.0)
-        janela_fim = datetime.now() + timedelta(hours=horas)
+        janela_fim = utc_now() + timedelta(hours=horas)
 
     repo   = PedidoRepository(db)
     pedido = await repo.criar(

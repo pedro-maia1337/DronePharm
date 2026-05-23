@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 from typing import List
-from datetime import datetime
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 
 from config.settings import (
     CUSTO_PESO_TEMPO, CUSTO_PESO_ENERGIA, CUSTO_PESO_DISTANCIA, CUSTO_PESO_PRIORIDADE,
@@ -130,7 +130,7 @@ def penalidade_prioridade(
     float : penalidade total (0 = sem atrasos)
     """
     penalidade = 0.0
-    agora      = datetime.now()
+    agora      = utc_now()
 
     for pos, idx in enumerate(sequencia):
         pedido = pedidos_mapa.get(idx)
@@ -144,7 +144,7 @@ def penalidade_prioridade(
             # Fallback legado: usa tempo total (menos preciso)
             tempo_ate_pedido = tempo_estimado_s
 
-        tempo_restante = (pedido.janela_fim - agora).total_seconds()
+        tempo_restante = (ensure_datetime_utc(pedido.janela_fim) - agora).total_seconds()
         if tempo_ate_pedido > tempo_restante:
             atraso_s   = tempo_ate_pedido - tempo_restante
             peso       = PRIORIDADE_PESO_CUSTO.get(pedido.prioridade, 1.0)

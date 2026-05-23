@@ -20,13 +20,13 @@ from __future__ import annotations
 import asyncio
 import time
 import logging
-from datetime import datetime
 from typing import List, Optional, Callable
 
 from models.drone import Drone, Telemetria, StatusDrone
 from models.pedido import Pedido, Coordenada
 from models.rota import Rota
 from algorithms.distancia import haversine
+from server.utils.datetime_utils import ensure_datetime_utc, utc_now
 from config.settings import (
     DRONE_BATERIA_MINIMA, VENTO_MAX_OPERACIONAL_MS,
     MAVLINK_CICLO_TELEM_S, DEPOSITO_LATITUDE, DEPOSITO_LONGITUDE,
@@ -101,10 +101,11 @@ class _MonitorBase:
         for pedido in self._pedidos_pendentes:
             dist_km = haversine(tel.posicao, pedido.coordenada)
             eta_s   = (dist_km * 1000.0) / max(tel.velocidade_ms, 0.1)
-            pedido.eta = datetime.now() + timedelta(seconds=eta_s)
+            agora = utc_now()
+            pedido.eta = agora + timedelta(seconds=eta_s)
 
             if pedido.urgente and pedido.janela_fim:
-                tempo_restante = (pedido.janela_fim - datetime.now()).total_seconds()
+                tempo_restante = (ensure_datetime_utc(pedido.janela_fim) - agora).total_seconds()
                 if eta_s > tempo_restante:
                     msg = (
                         f"Pedido urgente #{pedido.id} em risco: "

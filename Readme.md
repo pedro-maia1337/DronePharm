@@ -366,6 +366,8 @@ Entidades principais:
 
 O codigo assume banco ja provisionado. O startup carrega o deposito ativo no banco e o usa como referencia operacional da aplicacao.
 
+Na tabela `farmacias`, o campo `cnpj` e obrigatorio, unico e deve conter exatamente 14 digitos numericos.
+
 ---
 
 ## Testes

@@ -19,6 +19,7 @@ def _farmacia(id=1, deposito=False, ativa=True):
     return SimpleNamespace(
         id=id,
         nome=f"Farmacia {id}",
+        cnpj=f"{id:014d}",
         latitude=-19.93,
         longitude=-43.95,
         endereco="Rua X",
@@ -120,7 +121,7 @@ def client():
          patch("bd.database.init_db", AsyncMock()), \
          patch("bd.database.close_db", AsyncMock()), \
          patch("bd.database.check_db_connection", AsyncMock(return_value=True)), \
-         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem):
+         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem, create=True):
         with TestClient(app) as c:
             yield c
 

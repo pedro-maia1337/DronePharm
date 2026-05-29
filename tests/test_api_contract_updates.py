@@ -15,10 +15,11 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-def _farmacia(id=1, deposito=False, ativa=True, criada_em=None):
+def _farmacia(id=1, deposito=False, ativa=True, criada_em=None, cnpj=None):
     return SimpleNamespace(
         id=id,
         nome=f"Farmacia {id}",
+        cnpj=cnpj or f"{id:014d}",
         latitude=-19.93,
         longitude=-43.95,
         endereco="Rua X",
@@ -120,7 +121,7 @@ def client():
          patch("bd.database.init_db", AsyncMock()), \
          patch("bd.database.close_db", AsyncMock()), \
          patch("bd.database.check_db_connection", AsyncMock(return_value=True)), \
-         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem):
+         patch("server.routers.telemetria.sincronizar_pedidos_apos_telemetria", _sync_telem, create=True):
         with TestClient(app) as c:
             yield c
 
@@ -170,6 +171,65 @@ class TestApiContractUpdates:
 
         assert response.status_code == 200
         assert response.json()["criada_em"] is None
+        assert response.json()["cnpj"] == "00000000000001"
+
+    def test_criar_farmacia_exige_cnpj(self, client):
+        response = client.post(
+            "/api/v1/farmacias/",
+            json={"nome": "Farm X", "latitude": -19.93, "longitude": -43.95},
+        )
+
+        assert response.status_code == 422
+
+    def test_criar_farmacia_rejeita_cnpj_nao_numerico(self, client):
+        response = client.post(
+            "/api/v1/farmacias/",
+            json={
+                "nome": "Farm X",
+                "cnpj": "12.345.678/0001-95",
+                "latitude": -19.93,
+                "longitude": -43.95,
+            },
+        )
+
+        assert response.status_code == 422
+
+    def test_criar_farmacia_retorna_cnpj(self, client):
+        cnpj = "12345678000195"
+        with patch("server.routers.farmacias.FarmaciaRepository") as repo_cls:
+            repo_cls.return_value.buscar_por_cnpj = AsyncMock(return_value=None)
+            repo_cls.return_value.criar = AsyncMock(return_value=_farmacia(cnpj=cnpj))
+
+            response = client.post(
+                "/api/v1/farmacias/",
+                json={
+                    "nome": "Farm X",
+                    "cnpj": cnpj,
+                    "latitude": -19.93,
+                    "longitude": -43.95,
+                },
+            )
+
+        assert response.status_code == 201
+        assert response.json()["cnpj"] == cnpj
+        repo_cls.return_value.criar.assert_awaited_once()
+
+    def test_criar_farmacia_rejeita_cnpj_duplicado(self, client):
+        cnpj = "12345678000195"
+        with patch("server.routers.farmacias.FarmaciaRepository") as repo_cls:
+            repo_cls.return_value.buscar_por_cnpj = AsyncMock(return_value=_farmacia(id=99, cnpj=cnpj))
+
+            response = client.post(
+                "/api/v1/farmacias/",
+                json={
+                    "nome": "Farm X",
+                    "cnpj": cnpj,
+                    "latitude": -19.93,
+                    "longitude": -43.95,
+                },
+            )
+
+        assert response.status_code == 409
 
     def test_patch_drone_rejeita_status_fora_do_enum(self, client):
         response = client.patch("/api/v1/drones/DP-01", json={"status": "parado"})

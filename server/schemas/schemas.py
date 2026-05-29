@@ -53,6 +53,7 @@ class CoordenadaSchema(BaseModel):
 
 class FarmaciaCreate(BaseModel):
     nome:      str   = Field(..., max_length=200)
+    cnpj:      str   = Field(..., min_length=14, max_length=14, pattern=r"^\d{14}$")
     latitude:  float = Field(..., ge=-90,  le=90)
     longitude: float = Field(..., ge=-180, le=180)
     endereco:  str   = Field("", max_length=300)
@@ -64,6 +65,7 @@ class FarmaciaCreate(BaseModel):
         "json_schema_extra": {
             "example": {
                 "nome": "Farmácia Popular Pampulha",
+                "cnpj": "12345678000195",
                 "latitude": -19.867, "longitude": -43.966,
                 "endereco": "Av. Antônio Carlos, 6627",
                 "cidade": "Belo Horizonte", "uf": "MG", "deposito": False,
@@ -74,6 +76,7 @@ class FarmaciaCreate(BaseModel):
 
 class FarmaciaUpdate(BaseModel):
     nome:     Optional[str]  = None
+    cnpj:     Optional[str]  = Field(None, min_length=14, max_length=14, pattern=r"^\d{14}$")
     endereco: Optional[str]  = None
     cidade:   Optional[str]  = None
     uf:       Optional[str]  = None
@@ -84,6 +87,7 @@ class FarmaciaUpdate(BaseModel):
 class FarmaciaResponse(BaseModel):
     id:        int
     nome:      str
+    cnpj:      str
     latitude:  float
     longitude: float
     endereco:  str
@@ -94,6 +98,11 @@ class FarmaciaResponse(BaseModel):
     criada_em: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class FarmaciaListResponse(BaseModel):
+    total:     int
+    farmacias: List[FarmaciaResponse]
 
 
 # =============================================================================

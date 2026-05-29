@@ -5,14 +5,30 @@
 
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.schemas.schemas import FarmaciaCreate, FarmaciaUpdate, FarmaciaResponse
+from server.schemas.schemas import (
+    FarmaciaCreate,
+    FarmaciaUpdate,
+    FarmaciaResponse,
+    FarmaciaListResponse,
+)
 from bd.database import get_db
 from bd.repositories.farmacia_repo import FarmaciaRepository
 from server.security.rest_auth import require_rest_admin
 
 router = APIRouter()
+
+
+async def _garantir_cnpj_disponivel(
+    repo: FarmaciaRepository,
+    cnpj: str,
+    farmacia_id_atual: Optional[int] = None,
+) -> None:
+    existente = await repo.buscar_por_cnpj(cnpj)
+    if existente and existente.id != farmacia_id_atual:
+        raise HTTPException(status_code=409, detail="CNPJ já cadastrado para outra farmácia.")
 
 
 @router.post(
@@ -28,11 +44,16 @@ async def cadastrar_farmacia(
     _auth=Depends(require_rest_admin),
 ):
     repo = FarmaciaRepository(db)
-    return await repo.criar(**body.model_dump())
+    await _garantir_cnpj_disponivel(repo, body.cnpj)
+    try:
+        return await repo.criar(**body.model_dump())
+    except IntegrityError as exc:
+        raise HTTPException(status_code=409, detail="CNPJ já cadastrado para outra farmácia.") from exc
 
 
 @router.get(
     "/",
+    response_model=FarmaciaListResponse,
     summary="Listar farmácias",
     description="Retorna todas as farmácias ativas. Filtre por `deposito=true` para ver só polos.",
 )
@@ -88,7 +109,13 @@ async def atualizar_farmacia(
     farmacia = await repo.buscar_por_id(farmacia_id)
     if not farmacia:
         raise HTTPException(status_code=404, detail=f"Farmácia {farmacia_id} não encontrada.")
-    atualizada = await repo.atualizar(farmacia_id, **body.model_dump(exclude_none=True))
+    campos = body.model_dump(exclude_none=True)
+    if "cnpj" in campos:
+        await _garantir_cnpj_disponivel(repo, campos["cnpj"], farmacia_id_atual=farmacia_id)
+    try:
+        atualizada = await repo.atualizar(farmacia_id, **campos)
+    except IntegrityError as exc:
+        raise HTTPException(status_code=409, detail="CNPJ já cadastrado para outra farmácia.") from exc
     return atualizada
 
 

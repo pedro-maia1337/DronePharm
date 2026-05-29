@@ -25,6 +25,7 @@ class Farmacia(Base):
 
     id:         Mapped[int]              = mapped_column(Integer, primary_key=True, autoincrement=True)
     nome:       Mapped[str]              = mapped_column(String(200), nullable=False)
+    cnpj:       Mapped[str]              = mapped_column(String(14), nullable=False, unique=True)
     latitude:   Mapped[float]            = mapped_column(Float, nullable=False)
     longitude:  Mapped[float]            = mapped_column(Float, nullable=False)
     endereco:   Mapped[str]              = mapped_column(String(300), default="")

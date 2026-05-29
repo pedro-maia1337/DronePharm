@@ -35,6 +35,12 @@ class FarmaciaRepository:
         )
         return result.scalar_one_or_none()
 
+    async def buscar_por_cnpj(self, cnpj: str) -> Optional[Farmacia]:
+        result = await self.db.execute(
+            select(Farmacia).where(Farmacia.cnpj == cnpj)
+        )
+        return result.scalar_one_or_none()
+
     async def listar(
         self, deposito: Optional[bool] = None, so_ativas: bool = True
     ) -> List[Farmacia]:
@@ -75,7 +81,7 @@ class FarmaciaRepository:
             try:
                 result = await self.db.execute(
                     text(
-                        "SELECT id, nome, latitude, longitude, "
+                        "SELECT id, nome, cnpj, latitude, longitude, "
                         "       endereco, cidade, uf, deposito, ativa "
                         "FROM farmacias "
                         "WHERE deposito = TRUE AND ativa = TRUE "
@@ -89,6 +95,7 @@ class FarmaciaRepository:
                 f            = Farmacia()
                 f.id         = row["id"]
                 f.nome       = row["nome"]
+                f.cnpj       = row["cnpj"]
                 f.latitude   = row["latitude"]
                 f.longitude  = row["longitude"]
                 f.endereco   = row.get("endereco") or ""

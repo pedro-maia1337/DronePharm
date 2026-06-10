@@ -29,6 +29,7 @@ async def processar_telemetria(
     direcao_vento: float,
     status: str,
     direcao: Optional[float] = None,
+    extra_payload: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     repo = TelemetriaRepository(db)
     drone_repo = DroneRepository(db)
@@ -75,6 +76,8 @@ async def processar_telemetria(
             "direcao": direcao if direcao is not None else direcao_vento,
         }
     )
+    if extra_payload:
+        payload_telem.update(extra_payload)
     await manager.broadcast_telemetria(drone_id, payload_telem)
 
     if bateria_pct <= DRONE_BATERIA_MINIMA:

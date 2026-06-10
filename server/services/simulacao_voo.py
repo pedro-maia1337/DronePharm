@@ -4,6 +4,8 @@ import asyncio
 import logging
 import math
 import re
+from datetime import timedelta
+from time import monotonic
 from typing import Dict, List, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,12 +16,7 @@ from bd.repositories.drone_repo import DroneRepository
 from bd.repositories.historico_repo import HistoricoRepository
 from bd.repositories.pedido_repo import PedidoRepository
 from bd.repositories.rota_repo import RotaRepository
-from config.settings import (
-    MAVLINK_CICLO_TELEM_S,
-    SIMULACAO_INTERVALO_MIN_S,
-    SIMULACAO_TEMPO_MULTIPLICADOR,
-    SIMULACAO_VOO_HABILITADA,
-)
+from config.settings import SIMULACAO_VOO_HABILITADA
 from domain.pedido_estado import OperacaoTransicaoPedido
 from domain.pedido_estado import StatusPedido
 from server.utils.datetime_utils import ensure_datetime_utc, utc_now
@@ -29,6 +26,8 @@ from server.services.telemetria_runtime import processar_telemetria
 log = logging.getLogger(__name__)
 
 _tarefas_por_rota: Dict[int, asyncio.Task[None]] = {}
+SIMULACAO_VELOCIDADE_MIN_MS = 100.0 / 3.6
+SIMULACAO_TELEMETRIA_INTERVALO_S = 2.0
 
 
 def _safe_float(value: object, default: float = 0.0) -> float:
@@ -58,6 +57,63 @@ def _distancia_segmento_m(origem: dict, destino: dict) -> float:
         Coordenada(origem["latitude"], origem["longitude"]),
         Coordenada(destino["latitude"], destino["longitude"]),
     ) * 1000.0
+
+
+def _distancia_total_rota_m(waypoints: List[dict]) -> float:
+    return sum(
+        _distancia_segmento_m(waypoints[indice], waypoints[indice + 1])
+        for indice in range(max(0, len(waypoints) - 1))
+    )
+
+
+def _eta_segundos(distancia_restante_m: float, velocidade_ms: float, status: str) -> int:
+    if status == "concluido":
+        return 0
+    if status in {"pausado", "erro"} or velocidade_ms <= 0:
+        return 0
+    return max(0, int(round(max(0.0, distancia_restante_m) / velocidade_ms)))
+
+
+def _payload_simulacao(
+    *,
+    drone_id: str,
+    status_simulacao: str,
+    latitude: float,
+    longitude: float,
+    altitude: float,
+    velocidade_ms: float,
+    distancia_percorrida_m: float,
+    distancia_total_m: float,
+    tempo_decorrido_s: float,
+) -> dict:
+    distancia_percorrida_m = min(max(0.0, distancia_percorrida_m), max(0.0, distancia_total_m))
+    distancia_restante_m = max(0.0, distancia_total_m - distancia_percorrida_m)
+    progresso_percentual = 100.0 if distancia_total_m <= 0 else min(
+        100.0,
+        max(0.0, (distancia_percorrida_m / distancia_total_m) * 100.0),
+    )
+    eta = _eta_segundos(distancia_restante_m, velocidade_ms, status_simulacao)
+    agora = utc_now()
+    return {
+        "timestamp_servidor": agora.isoformat(),
+        "status_simulacao": status_simulacao,
+        "drone_id": drone_id,
+        "latitude": latitude,
+        "longitude": longitude,
+        "altitude": altitude,
+        "velocidade_m_s": velocidade_ms if status_simulacao == "executando" else 0.0,
+        "distancia_percorrida_m": round(distancia_percorrida_m, 2),
+        "distancia_restante_m": round(distancia_restante_m, 2),
+        "progresso_percentual": round(progresso_percentual, 2),
+        "eta_segundos": eta,
+        "horario_estimado_chegada": (agora + timedelta(seconds=eta)).isoformat(),
+        "tempo_decorrido_segundos": round(max(0.0, tempo_decorrido_s), 2),
+        "tempo_total_estimado_segundos": round(
+            _eta_segundos(distancia_total_m, velocidade_ms, "executando"),
+            2,
+        ),
+        "tempo_restante_segundos": eta,
+    }
 
 
 def _interpolar_waypoint(origem: dict, destino: dict, proporcao: float) -> dict:
@@ -150,7 +206,22 @@ async def _emitir_frame_inicial(
     origem = waypoints[0]
     proximo = waypoints[1] if len(waypoints) > 1 else waypoints[0]
     direcao = _calcular_direcao_graus(origem, proximo)
-    velocidade_ms = max(_safe_float(getattr(drone, "velocidade_ms", 0.0), 10.0), 1.0)
+    velocidade_ms = max(
+        _safe_float(getattr(drone, "velocidade_ms", 0.0), SIMULACAO_VELOCIDADE_MIN_MS),
+        SIMULACAO_VELOCIDADE_MIN_MS,
+    )
+    distancia_total_m = _distancia_total_rota_m(waypoints)
+    extra_payload = _payload_simulacao(
+        drone_id=rota.drone_id,
+        status_simulacao="executando",
+        latitude=origem["latitude"],
+        longitude=origem["longitude"],
+        altitude=origem["altitude"],
+        velocidade_ms=velocidade_ms,
+        distancia_percorrida_m=0.0,
+        distancia_total_m=distancia_total_m,
+        tempo_decorrido_s=0.0,
+    )
 
     await processar_telemetria(
         db,
@@ -164,6 +235,7 @@ async def _emitir_frame_inicial(
         direcao_vento=direcao,
         status="em_voo",
         direcao=direcao,
+        extra_payload=extra_payload,
     )
 
 
@@ -232,15 +304,24 @@ async def _executar_simulacao_rota(
                 await _emitir_frame_inicial(db, rota=rota, drone=drone, waypoints=waypoints)
                 await db.commit()
 
-            real_sleep_s = max(
-                SIMULACAO_INTERVALO_MIN_S,
-                MAVLINK_CICLO_TELEM_S / max(SIMULACAO_TEMPO_MULTIPLICADOR, 1.0),
+            intervalo_telemetria_s = SIMULACAO_TELEMETRIA_INTERVALO_S
+            velocidade_ms = max(
+                _safe_float(getattr(drone, "velocidade_ms", 0.0), SIMULACAO_VELOCIDADE_MIN_MS),
+                SIMULACAO_VELOCIDADE_MIN_MS,
             )
-            simulated_step_s = real_sleep_s * max(SIMULACAO_TEMPO_MULTIPLICADOR, 1.0)
-            velocidade_ms = max(_safe_float(getattr(drone, "velocidade_ms", 0.0), 10.0), 1.0)
             autonomia_m = max(_safe_float(getattr(drone, "autonomia_max_km", 0.0), 1.0) * 1000.0, 1.0)
             bateria_pct = float(getattr(drone, "bateria_pct", 1.0) or 1.0)
             pedidos_entregues: set[int] = set()
+            distancia_total_rota_m = _distancia_total_rota_m(waypoints)
+            distancia_rota_percorrida_m = 0.0
+            inicio_rota = monotonic()
+
+            log.info(
+                "Simulacao da rota %s iniciada em 1x: %.2f m, telemetria a cada %.1fs.",
+                rota_id,
+                distancia_total_rota_m,
+                intervalo_telemetria_s,
+            )
 
             for indice in range(len(waypoints) - 1):
                 origem = waypoints[indice]
@@ -252,12 +333,34 @@ async def _executar_simulacao_rota(
                     continue
 
                 progresso_m = 0.0
+                inicio_segmento = monotonic()
+                proximo_tick = inicio_segmento + intervalo_telemetria_s
+                progresso_anterior_m = 0.0
                 while progresso_m < distancia_total_m:
-                    trecho_m = min(velocidade_ms * simulated_step_s, distancia_total_m - progresso_m)
-                    progresso_m += trecho_m
+                    await asyncio.sleep(max(0.0, proximo_tick - monotonic()))
+                    tempo_segmento_s = monotonic() - inicio_segmento
+                    progresso_m = min(distancia_total_m, velocidade_ms * tempo_segmento_s)
+                    trecho_m = max(0.0, progresso_m - progresso_anterior_m)
+                    progresso_anterior_m = progresso_m
                     proporcao = progresso_m / distancia_total_m
                     ponto = _interpolar_waypoint(origem, destino, proporcao)
                     bateria_pct = max(0.0, bateria_pct - (trecho_m / autonomia_m))
+                    if progresso_m >= distancia_total_m:
+                        break
+
+                    distancia_total_percorrida_m = distancia_rota_percorrida_m + progresso_m
+                    tempo_decorrido_s = monotonic() - inicio_rota
+                    extra_payload = _payload_simulacao(
+                        drone_id=rota.drone_id,
+                        status_simulacao="executando",
+                        latitude=ponto["latitude"],
+                        longitude=ponto["longitude"],
+                        altitude=ponto["altitude"],
+                        velocidade_ms=velocidade_ms,
+                        distancia_percorrida_m=distancia_total_percorrida_m,
+                        distancia_total_m=distancia_total_rota_m,
+                        tempo_decorrido_s=tempo_decorrido_s,
+                    )
 
                     await processar_telemetria(
                         db,
@@ -271,9 +374,18 @@ async def _executar_simulacao_rota(
                         direcao_vento=direcao,
                         status="em_voo",
                         direcao=direcao,
+                        extra_payload=extra_payload,
                     )
                     await db.commit()
-                    await asyncio.sleep(real_sleep_s)
+                    log.debug(
+                        "Telemetria simulada rota=%s progresso=%.1f%% eta=%ss",
+                        rota_id,
+                        extra_payload["progresso_percentual"],
+                        extra_payload["eta_segundos"],
+                    )
+                    proximo_tick += intervalo_telemetria_s
+
+                distancia_rota_percorrida_m += distancia_total_m
 
                 pedido_waypoint = _resolver_pedido_waypoint(destino, pedidos)
                 if (
@@ -292,6 +404,17 @@ async def _executar_simulacao_rota(
                     pedido_waypoint.status = StatusPedido.ENTREGUE
 
             ponto_final = waypoints[-1]
+            payload_final = _payload_simulacao(
+                drone_id=rota.drone_id,
+                status_simulacao="concluido",
+                latitude=ponto_final["latitude"],
+                longitude=ponto_final["longitude"],
+                altitude=ponto_final["altitude"],
+                velocidade_ms=0.0,
+                distancia_percorrida_m=distancia_total_rota_m,
+                distancia_total_m=distancia_total_rota_m,
+                tempo_decorrido_s=monotonic() - inicio_rota,
+            )
             await processar_telemetria(
                 db,
                 drone_id=rota.drone_id,
@@ -304,6 +427,7 @@ async def _executar_simulacao_rota(
                 direcao_vento=0.0,
                 status="aguardando",
                 direcao=0.0,
+                extra_payload=payload_final,
             )
             await _concluir_rota_simulada(
                 db,
@@ -313,9 +437,8 @@ async def _executar_simulacao_rota(
             )
             await db.commit()
             log.info(
-                "Simulacao da rota %s concluida com multiplicador %.2fx.",
+                "Simulacao da rota %s concluida em 1x.",
                 rota_id,
-                SIMULACAO_TEMPO_MULTIPLICADOR,
             )
     except asyncio.CancelledError:
         log.info("Simulacao da rota %s cancelada.", rota_id)

@@ -21,6 +21,8 @@ _ORIGINS_ENV = os.getenv("CORS_ORIGINS", "")
 ORIGENS_PRODUCAO = [o.strip() for o in _ORIGINS_ENV.split(",") if o.strip()] or [
     "http://localhost:3000",       # Dashboard React (desenvolvimento)
     "http://127.0.0.1:3000",
+    "http://localhost:4000",
+    "http://127.0.0.1:4000",
     "http://localhost:8080",       # Dashboard Vue (desenvolvimento)
     "http://127.0.0.1:8080",
     "http://192.168.1.100",        # Raspberry Pi (alterar para IP real)
@@ -32,11 +34,22 @@ ORIGENS_PRODUCAO = [o.strip() for o in _ORIGINS_ENV.split(",") if o.strip()] or 
 ORIGENS_DEV = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:4000",
+    "http://127.0.0.1:4000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]
+
+ORIGENS_LOCAIS_REGEX = (
+    r"^https?://("
+    r"localhost|127\.0\.0\.1|0\.0\.0\.0|"
+    r"10(?:\.\d{1,3}){3}|"
+    r"192\.168(?:\.\d{1,3}){2}|"
+    r"172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}"
+    r")(:\d+)?$"
+)
 
 
 def configurar_cors(app: FastAPI) -> None:
@@ -57,6 +70,7 @@ def configurar_cors(app: FastAPI) -> None:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origens,
+        allow_origin_regex=ORIGENS_LOCAIS_REGEX,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],

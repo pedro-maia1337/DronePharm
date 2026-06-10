@@ -98,10 +98,10 @@ SIMULACAO_VOO_HABILITADA = (
     os.getenv("SIMULACAO_VOO_HABILITADA", "true").lower() == "true"
 )
 SIMULACAO_TEMPO_MULTIPLICADOR = float(
-    os.getenv("SIMULACAO_TEMPO_MULTIPLICADOR", "10")
+    os.getenv("SIMULACAO_TEMPO_MULTIPLICADOR", "1")
 )
 SIMULACAO_INTERVALO_MIN_S = float(
-    os.getenv("SIMULACAO_INTERVALO_MIN_S", "0.25")
+    os.getenv("SIMULACAO_INTERVALO_MIN_S", "2")
 )
 
 # -----------------------------------------------------------------------------
